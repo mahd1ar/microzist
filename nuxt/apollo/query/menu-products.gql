@@ -1,0 +1,28 @@
+query menuProducts($id: ID = "products-fa") {
+  category(id: $id, idType: SLUG) {
+    id
+    name
+    contentNodes {
+      edges {
+        node {
+          id
+          ... on Page {
+            id
+            title
+          }
+        }
+      }
+    }
+    children(first: 10) {
+      edges {
+        node {
+          id
+          name
+          translation(language: EN) {
+            id
+          }
+        }
+      }
+    }
+  }
+}

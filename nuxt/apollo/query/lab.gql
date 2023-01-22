@@ -1,0 +1,33 @@
+query LabAndQA($id: ID = "dGVybToxMTc=", $language: LanguageCodeEnum = EN) {
+  category(id: $id) {
+    id
+    name
+    description
+    cat_cf {
+      image {
+        altText
+        sourceUrl
+      }
+    }
+    contentNodes(first: 10) {
+      edges {
+        node {
+          id
+          ... on Page {
+            id
+            title
+            translation(language: $language) {
+              id
+            }
+            featuredImage {
+              node {
+                id
+                sourceUrl
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

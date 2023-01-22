@@ -1,0 +1,23 @@
+query gallery($id: ID!) {
+  category(id: $id) {
+    id
+    name
+    description
+    children {
+      edges {
+        node {
+          id
+          name
+        }
+      }
+    }
+    mediaItems(first: 100) {
+      edges {
+        node {
+          id
+          sourceUrl
+        }
+      }
+    }
+  }
+}

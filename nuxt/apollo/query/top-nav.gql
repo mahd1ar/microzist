@@ -1,0 +1,19 @@
+query MainNav {
+  menus(first: 10) {
+    edges {
+      node {
+        id
+        name
+        menuItems(first: 10) {
+          edges {
+            node {
+              id
+              label
+              uri
+            }
+          }
+        }
+      }
+    }
+  }
+}

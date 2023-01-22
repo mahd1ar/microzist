@@ -1,0 +1,32 @@
+{
+  "name": "keystone-app",
+  "version": "1.0.2",
+  "private": true,
+  "scripts": {
+    "dev": "keystone dev",
+    "start": "keystone start",
+    "build": "keystone build",
+    "postinstall": "keystone postinstall",
+    "frontend:dev": "cd frontend && yarn dev --host",
+    "frontend:codegen": "cd frontend && yarn codegen --watch",
+    "runall": "npm-run-all --parallel dev frontend:*"
+  },
+  "dependencies": {
+    "@keystone-6/auth": "^5.0.1",
+    "@keystone-6/core": "^3.1.2",
+    "@keystone-6/fields-document": "^5.0.2",
+    "dotenv": "^16.0.3",
+    "nodemailer": "^6.8.0",
+    "nodemailer-express-handlebars": "^6.0.0",
+    "reactjs-persian-calendar": "^1.1.7",
+    "typescript": "^4.8.0",
+    "ws": "^8.12.0",
+    "zibal": "^1.0.2"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^6.4.7",
+    "@types/nodemailer-express-handlebars": "^4.0.2",
+    "@types/ws": "^8.5.4",
+    "npm-run-all": "^4.1.5"
+  }
+}
