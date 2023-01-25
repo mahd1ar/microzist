@@ -29,6 +29,7 @@ model User {
   passwordResetIssuedAt     DateTime?
   passwordResetRedeemedAt   DateTime?
   from_CouponPivot_customer CouponPivot[] @relation("CouponPivot_customer")
+  from_Course_participants  Course[]      @relation("Course_participants")
 }
 
 model Coupon {
@@ -65,6 +66,16 @@ model Post {
   from_Settings_highlightedPosts Settings[] @relation("Settings_highlightedPosts")
 
   @@index([authorId])
+}
+
+model Course {
+  id             String  @id @default(cuid())
+  title          String  @default("")
+  participants   User?   @relation("Course_participants", fields: [participantsId], references: [id])
+  participantsId String? @map("participants")
+  price          Int?
+
+  @@index([participantsId])
 }
 
 model Category {

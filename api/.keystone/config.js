@@ -37,9 +37,13 @@ var import_access9 = require("@keystone-6/core/access");
 var import_fields10 = require("@keystone-6/core/fields");
 var import_fields_document = require("@keystone-6/fields-document");
 
-// schemas/CartItem.ts
-var import_core = require("@keystone-6/core");
-var import_fields = require("@keystone-6/core/fields");
+// data/enums.ts
+var Roles = /* @__PURE__ */ ((Roles2) => {
+  Roles2["admin"] = "0";
+  Roles2["member"] = "50";
+  Roles2["subscriber"] = "100";
+  return Roles2;
+})(Roles || {});
 
 // data/utils.ts
 var import_axios = __toESM(require("axios"));
@@ -54,7 +58,19 @@ async function kickout(req) {
   }
 }
 
+// data/access.ts
+function isLoggedIn(args) {
+  if (!!args.session === false)
+    kickout(args.context.req);
+  return !!args.session;
+}
+function isAdmin(args) {
+  return isLoggedIn(args) && args.context.session.data.role === "0" /* admin */;
+}
+
 // schemas/CartItem.ts
+var import_core = require("@keystone-6/core");
+var import_fields = require("@keystone-6/core/fields");
 var isUser = (args) => {
   if (!!args.session === false)
     kickout(args.context.req);
@@ -172,19 +188,10 @@ var Product = (0, import_core4.list)({
 var import_core5 = require("@keystone-6/core");
 var import_access4 = require("@keystone-6/core/access");
 var import_fields5 = require("@keystone-6/core/fields");
-
-// data/enums.ts
-var Roles = /* @__PURE__ */ ((Roles2) => {
-  Roles2[Roles2["admin"] = 0] = "admin";
-  Roles2[Roles2["member"] = 50] = "member";
-  Roles2[Roles2["subscriber"] = 100] = "subscriber";
-  return Roles2;
-})(Roles || {});
-
-// schemas/User.ts
 var keys = Object.keys(Roles).filter((i) => Number(i) > -1);
 var values = Object.keys(Roles).filter((i) => Number(i) > -1 === false);
-var RolesItem = keys.map((key, inx) => ({ label: key, value: values[inx] }));
+var RolesItem = keys.map((key, inx) => ({ value: key, label: values[inx] }));
+console.log(RolesItem);
 var User = (0, import_core5.list)({
   access: import_access4.allowAll,
   ui: {},
@@ -532,7 +539,14 @@ var lists = {
     }
   }),
   Course: (0, import_core11.list)({
-    access: import_access9.allowAll,
+    access: {
+      operation: {
+        create: isAdmin,
+        delete: isAdmin,
+        query: isAdmin,
+        update: isAdmin
+      }
+    },
     fields: {
       title: (0, import_fields10.text)({ validation: { isRequired: true } }),
       participants: (0, import_fields10.relationship)({ ref: "User" }),
@@ -621,7 +635,7 @@ if (!sessionSecret && process.env.NODE_ENV !== "production") {
 var { withAuth } = (0, import_auth.createAuth)({
   listKey: "User",
   identityField: "email",
-  sessionData: "name createdAt",
+  sessionData: "name role createdAt",
   secretField: "password",
   passwordResetLink: {
     sendToken: async ({ identity, itemId, token }) => {

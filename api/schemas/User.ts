@@ -6,7 +6,9 @@ import { Roles } from '../data/enums';
 
 const keys = (Object.keys(Roles).filter(i => (Number(i) > -1)))
 const values = (Object.keys(Roles).filter(i => (Number(i) > -1 === false)))
-const RolesItem = keys.map((key, inx) => ({ label: key, value: values[inx] }))
+const RolesItem = keys.map((key, inx) => ({ value: key, label: values[inx] }))
+
+console.log(RolesItem)
 
 export const User = list({
   access: allowAll,

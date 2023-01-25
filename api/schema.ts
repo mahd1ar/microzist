@@ -30,6 +30,7 @@ import {
 } from '@keystone-6/core/types';
 // the document field is a more complicated field, so it has it's own package
 import { document } from '@keystone-6/fields-document';
+import { isAdmin } from './data/access';
 import { GeneralSession } from './data/types';
 import {
     Category,
@@ -327,12 +328,15 @@ export const lists: Lists = {
         },
     }),
     Course: list({
-        // access: {
-        // operation: {
-        //     create: 
-        // }
-        // },
-        access: allowAll,
+        access: {
+            operation: {
+                create: isAdmin,
+                delete: isAdmin,
+                query: isAdmin,
+                update: isAdmin,
+            }
+        },
+        // access: allowAll,
         fields: {
             title: text({ validation: { isRequired: true } }),
             participants: relationship({ ref: 'User' }),

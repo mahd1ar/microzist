@@ -4,7 +4,6 @@ import { Roles } from "./enums";
 import { kickout } from "./utils";
 
 export function isLoggedIn(args: BaseAccessArgs<BaseListTypeInfo>) {
-
     if (!!args.session === false)
         kickout(args.context.req)
 
