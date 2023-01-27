@@ -8,41 +8,34 @@ import { GeneralSession } from '../data/types';
 import { GraphQLError } from 'graphql';
 import { kickout } from '../data/utils';
 
-
-
-
 const isUser = (args: BaseAccessArgs<BaseListTypeInfo>) => {
+    if (!!args.session === false) kickout(args.context.req);
 
-  if (!!args.session === false)
-    kickout(args.context.req)
-
-
-  return !!args.session;
-}
+    return !!args.session;
+};
 
 export const CartItem = list({
-  access: {
-    operation: {
-      query: isUser,
-      create: isUser,
-      delete: isUser,
-      update: isUser,
-    }
-
-  },
-  ui: {
-    listView: {
-      initialColumns: ["product", "quantity", "user"],
+    access: {
+        operation: {
+            query: isUser,
+            create: isUser,
+            delete: isUser,
+            update: isUser,
+        },
     },
-  },
-  fields: {
-    quantity: integer({
-      defaultValue: 1,
-      validation: {
-        isRequired: true
-      }
-    }),
-    product: relationship({ ref: "Product" }),
-    user: relationship({ ref: "User.cart" }),
-  },
+    ui: {
+        listView: {
+            initialColumns: ['course', 'user'],
+        },
+    },
+    fields: {
+        // quantity: integer({
+        //     defaultValue: 1,
+        //     validation: {
+        //         isRequired: true,
+        //     },
+        // }),
+        course: relationship({ ref: 'Course', many: true }),
+        user: relationship({ ref: 'User.cart' }),
+    },
 });

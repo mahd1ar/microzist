@@ -33,17 +33,13 @@ var import_core12 = require("@keystone-6/core");
 
 // schema.ts
 var import_core11 = require("@keystone-6/core");
-var import_access9 = require("@keystone-6/core/access");
+var import_access10 = require("@keystone-6/core/access");
 var import_fields10 = require("@keystone-6/core/fields");
 var import_fields_document = require("@keystone-6/fields-document");
 
-// data/enums.ts
-var Roles = /* @__PURE__ */ ((Roles2) => {
-  Roles2["admin"] = "0";
-  Roles2["member"] = "50";
-  Roles2["subscriber"] = "100";
-  return Roles2;
-})(Roles || {});
+// schemas/CartItem.ts
+var import_core = require("@keystone-6/core");
+var import_fields = require("@keystone-6/core/fields");
 
 // data/utils.ts
 var import_axios = __toESM(require("axios"));
@@ -58,19 +54,7 @@ async function kickout(req) {
   }
 }
 
-// data/access.ts
-function isLoggedIn(args) {
-  if (!!args.session === false)
-    kickout(args.context.req);
-  return !!args.session;
-}
-function isAdmin(args) {
-  return isLoggedIn(args) && args.context.session.data.role === "0" /* admin */;
-}
-
 // schemas/CartItem.ts
-var import_core = require("@keystone-6/core");
-var import_fields = require("@keystone-6/core/fields");
 var isUser = (args) => {
   if (!!args.session === false)
     kickout(args.context.req);
@@ -87,17 +71,11 @@ var CartItem = (0, import_core.list)({
   },
   ui: {
     listView: {
-      initialColumns: ["product", "quantity", "user"]
+      initialColumns: ["course", "user"]
     }
   },
   fields: {
-    quantity: (0, import_fields.integer)({
-      defaultValue: 1,
-      validation: {
-        isRequired: true
-      }
-    }),
-    product: (0, import_fields.relationship)({ ref: "Product" }),
+    course: (0, import_fields.relationship)({ ref: "Course", many: true }),
     user: (0, import_fields.relationship)({ ref: "User.cart" })
   }
 });
@@ -144,12 +122,34 @@ var OrderItem = (0, import_core3.list)({
   }
 });
 
-// schemas/Product.ts
+// schemas/Course.ts
+var import_fields4 = require("@keystone-6/core/fields");
 var import_core4 = require("@keystone-6/core");
 var import_access3 = require("@keystone-6/core/access");
-var import_fields4 = require("@keystone-6/core/fields");
-var Product = (0, import_core4.list)({
-  access: import_access3.allowAll,
+
+// data/enums.ts
+var Roles = /* @__PURE__ */ ((Roles2) => {
+  Roles2["admin"] = "0";
+  Roles2["member"] = "50";
+  Roles2["subscriber"] = "100";
+  return Roles2;
+})(Roles || {});
+
+// data/access.ts
+function isLoggedIn(args) {
+  if (!!args.session === false)
+    kickout(args.context.req);
+  return !!args.session;
+}
+
+// schemas/Course.ts
+var Course = (0, import_core4.list)({
+  access: {
+    operation: {
+      ...(0, import_access3.allOperations)(import_access3.allowAll),
+      create: isLoggedIn
+    }
+  },
   fields: {
     name: (0, import_fields4.text)({ validation: { isRequired: true } }),
     description: (0, import_fields4.text)({
@@ -161,7 +161,7 @@ var Product = (0, import_core4.list)({
       options: [
         { label: "Draft", value: "DRAFT" },
         { label: "Available", value: "AVAILABLE" },
-        { label: "Unvailable", value: "UNAVAILABLE" }
+        { label: "Unavailable", value: "UNAVAILABLE" }
       ],
       defaultValue: "DRAFT",
       ui: {
@@ -170,14 +170,15 @@ var Product = (0, import_core4.list)({
       }
     }),
     price: (0, import_fields4.integer)(),
-    user: (0, import_fields4.relationship)({
-      ref: "User.products",
+    users: (0, import_fields4.relationship)({
+      ref: "User.courses",
+      many: true,
       hooks: {
-        beforeOperation: async (args) => {
-          if (args.operation === "create") {
-            console.log("resolved data: ");
-            console.log(args.resolvedData);
+        resolveInput({ operation, resolvedData, context }) {
+          if (operation === "create" && !resolvedData.users && context.session?.itemId) {
+            return { connect: { id: context.session?.itemId } };
           }
+          return resolvedData.users;
         }
       }
     })
@@ -186,14 +187,14 @@ var Product = (0, import_core4.list)({
 
 // schemas/User.ts
 var import_core5 = require("@keystone-6/core");
-var import_access4 = require("@keystone-6/core/access");
+var import_access5 = require("@keystone-6/core/access");
 var import_fields5 = require("@keystone-6/core/fields");
 var keys = Object.keys(Roles).filter((i) => Number(i) > -1);
 var values = Object.keys(Roles).filter((i) => Number(i) > -1 === false);
 var RolesItem = keys.map((key, inx) => ({ value: key, label: values[inx] }));
 console.log(RolesItem);
 var User = (0, import_core5.list)({
-  access: import_access4.allowAll,
+  access: import_access5.allowAll,
   ui: {},
   fields: {
     name: (0, import_fields5.text)({ validation: { isRequired: true } }),
@@ -215,8 +216,8 @@ var User = (0, import_core5.list)({
     role: (0, import_fields5.select)({
       options: RolesItem
     }),
-    products: (0, import_fields5.relationship)({
-      ref: "Product.user",
+    courses: (0, import_fields5.relationship)({
+      ref: "Course.users",
       many: true
     }),
     posts: (0, import_fields5.relationship)({ ref: "Post.author", many: true }),
@@ -229,10 +230,10 @@ var User = (0, import_core5.list)({
 
 // schemas/Categoryy.ts
 var import_core6 = require("@keystone-6/core");
-var import_access5 = require("@keystone-6/core/access");
+var import_access6 = require("@keystone-6/core/access");
 var import_fields6 = require("@keystone-6/core/fields");
 var Category = (0, import_core6.list)({
-  access: import_access5.allowAll,
+  access: import_access6.allowAll,
   fields: {
     name: (0, import_fields6.text)({
       validation: { isRequired: true }
@@ -249,10 +250,10 @@ var Category = (0, import_core6.list)({
 
 // schemas/Settings.ts
 var import_core7 = require("@keystone-6/core");
-var import_access6 = require("@keystone-6/core/access");
+var import_access7 = require("@keystone-6/core/access");
 var import_fields7 = require("@keystone-6/core/fields");
 var Settings = (0, import_core7.list)({
-  access: import_access6.allowAll,
+  access: import_access7.allowAll,
   isSingleton: true,
   fields: {
     websiteName: (0, import_fields7.text)(),
@@ -267,10 +268,10 @@ var Settings = (0, import_core7.list)({
 
 // schemas/Image.ts
 var import_core8 = require("@keystone-6/core");
-var import_access7 = require("@keystone-6/core/access");
+var import_access8 = require("@keystone-6/core/access");
 var import_fields8 = require("@keystone-6/core/fields");
 var Image = (0, import_core8.list)({
-  access: import_access7.allowAll,
+  access: import_access8.allowAll,
   ui: {
     label: "media"
   },
@@ -292,10 +293,10 @@ var Image = (0, import_core8.list)({
 
 // schemas/Tag.ts
 var import_core9 = require("@keystone-6/core");
-var import_access8 = require("@keystone-6/core/access");
+var import_access9 = require("@keystone-6/core/access");
 var import_fields9 = require("@keystone-6/core/fields");
 var Tag = (0, import_core9.list)({
-  access: import_access8.allowAll,
+  access: import_access9.allowAll,
   ui: {
     isHidden: true
   },
@@ -363,7 +364,7 @@ var persianCalendar = ({
 var lists = {
   User,
   Coupon: (0, import_core11.list)({
-    access: import_access9.allowAll,
+    access: import_access10.allowAll,
     fields: {
       code: (0, import_fields10.integer)({ validation: { isRequired: true, max: 9999 } }),
       description: (0, import_fields10.text)({ validation: { isRequired: true } }),
@@ -436,7 +437,7 @@ var lists = {
         }
       }
     },
-    access: import_access9.allowAll,
+    access: import_access10.allowAll,
     fields: {
       couponCode: (0, import_fields10.relationship)({
         ref: "Coupon",
@@ -479,7 +480,7 @@ var lists = {
         }
       },
       operation: {
-        ...(0, import_access9.allOperations)(import_access9.allowAll),
+        ...(0, import_access10.allOperations)(import_access10.allowAll),
         query: (args) => {
           return true;
         }
@@ -538,25 +539,11 @@ var lists = {
       })
     }
   }),
-  Course: (0, import_core11.list)({
-    access: {
-      operation: {
-        create: isAdmin,
-        delete: isAdmin,
-        query: isAdmin,
-        update: isAdmin
-      }
-    },
-    fields: {
-      title: (0, import_fields10.text)({ validation: { isRequired: true } }),
-      participants: (0, import_fields10.relationship)({ ref: "User" }),
-      price: (0, import_fields10.integer)()
-    }
-  }),
+  Course,
   Category,
   Tag,
   Image: (0, import_core11.list)({
-    access: import_access9.allowAll,
+    access: import_access10.allowAll,
     ui: {
       label: "media",
       listView: {
@@ -581,8 +568,7 @@ var lists = {
   Settings,
   CartItem,
   Order,
-  OrderItem,
-  Product
+  OrderItem
 };
 
 // auth.ts
@@ -715,14 +701,24 @@ var keystone_default = withAuth(
             res.send(String(error));
           }
         });
-        app.get("/ipg/cb", (req, res) => {
-          res.send(req.query);
+        app.get("/ipg/cb", async (req, res) => {
+          try {
+            const cartItemId = "clcoo3fd65168ishbph5ij0pe";
+            const cartItem = await ctx.prisma.CartItem.findUnique({
+              where: { id: cartItemId },
+              include: { user: true, course: true }
+            });
+            console.log(cartItem);
+            res.json(cartItem);
+          } catch (error) {
+            res.send(error);
+          }
         });
         app.get("/payment", async (req, res) => {
           try {
-            const keyStoneCtx = await ctx(req, res);
-            if (!keyStoneCtx.session)
+            if (!ctx.session) {
               throw new Error("session has expired");
+            }
             const zibal = new Zibal({
               merchant: "zibal",
               callbackUrl: "http://localhost:3030/ipg/cb"

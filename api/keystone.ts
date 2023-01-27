@@ -5,6 +5,7 @@ import { ZibalPaymentResponse, ZibalConfig } from './data/types';
 import { withAuth, session } from './auth';
 import { storage } from './storage';
 import WebSocket from 'ws';
+import { BaseKeystoneTypeInfo, KeystoneContext } from '@keystone-6/core/types';
 
 // TODO load .env
 // import dotenv from 'dotenv';
@@ -15,7 +16,7 @@ import WebSocket from 'ws';
 // dotenv.config({ path: envFile })
 
 type ZibalCBQuery = {
-    success: string; // "1",
+    success: '1' | '0'; // "1",
     status: string; // "2",
     trackId: string; //"3114997853",
     orderId: string; //"ZBL-aaaa"
@@ -77,19 +78,70 @@ export default withAuth(
                     }
                 });
 
-                app.get<ZibalCBQuery>('/ipg/cb', (req, res) => {
-                    // TODO privent double spending
-                    // TODO get user id from session
-                    // TODO save record to database
-                    res.send(req.query);
+                app.get<ZibalCBQuery>('/ipg/cb', async (req, res) => {
+                    try {
+                        // get cart item
+                        const cartItemId = 'clcoo3fd65168ishbph5ij0pe';
+                        const cartItem: {
+                            id: string;
+                            userId: string;
+                            user: {
+                                id: string;
+                                name: string;
+                                lastName: string;
+                                email: string;
+                                password: string;
+                                role: string;
+                                createdAt: Date;
+                                passwordResetToken: string;
+                                passwordResetIssuedAt: Date;
+                                passwordResetRedeemedAt: Date;
+                            };
+                            course: {
+                                id: string;
+                                name: string;
+                                description: string;
+                                status: string;
+                                price: number;
+                            };
+                        } = await ctx.prisma.CartItem.findUnique({
+                            where: { id: cartItemId },
+                            include: { user: true, course: true },
+                        });
+
+                        console.log(cartItem);
+                        res.json(cartItem);
+                        // TODO privent double spending
+
+                        // TODO get user id from session
+                        // const course = await ctx.db.Course.updateOne({
+                        //     data: {
+                        //         users: {
+                        //             connect: {
+                        //                 id: 'cldbbw0rl0711z8hbnfbetvkl',
+                        //             },
+                        //         },
+                        //     },
+                        //     where: {
+                        //         id: 'cldctigfn0168t8lov6xwqau0',
+                        //     },
+                        // });
+
+                        // console.log(course);
+
+                        // TODO save record to database
+                    } catch (error) {
+                        res.send(error);
+                    }
+
+                    // res.send(req.query);
                 });
 
                 app.get('/payment', async (req, res) => {
                     try {
-                        const keyStoneCtx = await ctx(req, res);
-                        if (!keyStoneCtx.session)
+                        if (!ctx.session) {
                             throw new Error('session has expired');
-
+                        }
                         const zibal = new Zibal({
                             merchant: 'zibal', // Your IPG's Merchant Id (You Can Get it From Zibal's Dashboard)
                             callbackUrl: 'http://localhost:3030/ipg/cb', // The URL Where User will be Redirected to After Payment
