@@ -1,7 +1,7 @@
 import { list } from '@keystone-6/core';
 import { allowAll } from '@keystone-6/core/access';
 import { BaseAccessArgs } from '@keystone-6/core/dist/declarations/src/types/config/access-control';
-import { integer, relationship } from '@keystone-6/core/fields';
+import { checkbox, integer, relationship } from '@keystone-6/core/fields';
 import { BaseListTypeInfo } from '@keystone-6/core/types';
 import { GeneralSession } from '../data/types';
 // import { rules, isSignedIn } from "../access";
@@ -37,5 +37,6 @@ export const CartItem = list({
         // }),
         course: relationship({ ref: 'Course', many: true }),
         user: relationship({ ref: 'User.cart' }),
+        isCompleted: checkbox({ defaultValue: false })
     },
 });

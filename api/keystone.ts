@@ -6,7 +6,7 @@ import { withAuth, session } from './auth';
 import { storage } from './storage';
 import WebSocket from 'ws';
 import { BaseKeystoneTypeInfo, KeystoneContext } from '@keystone-6/core/types';
-
+import { Request } from "express"
 // TODO load .env
 // import dotenv from 'dotenv';
 // import path from 'path';
@@ -28,6 +28,31 @@ let wss: WebSocket.Server<WebSocket.WebSocket>;
 
 // "Fe26.2**e8283474544d8ed9c33645bc502f89cc68d6528697b352ee022c36a8aad758bc*WcGnegP3_gqxT00MsGtcIg*CI-QDOaRWAFabLWXVLrjVqXsJ9a_VZS_NYAZMfsWkyvtFAULQ4nRpfLvtlCzJw4UxsnAKRb8RMqj8biubGK1jQ*1675850956562*d9e517c18e9f6ce9ab063daf0e5f907f9291d84ed98869b55b4f4b23aacc0040*GQJtqk1vboKMo5kwZozZ3aN9wmYG8Z8Ol2yvsdVhSEk"
 
+type CartItemDatabase = {
+    id: string;
+    userId: string;
+    isCompleted: boolean;
+    user: {
+        id: string;
+        name: string;
+        lastName: string;
+        email: string;
+        password: string;
+        role: string;
+        createdAt: Date;
+        passwordResetToken: string;
+        passwordResetIssuedAt: Date;
+        passwordResetRedeemedAt: Date;
+    };
+    course: {
+        id: string;
+        name: string;
+        description: string;
+        status: string;
+        price: number;
+    }[];
+}
+
 export default withAuth(
     config({
         db: {
@@ -45,7 +70,7 @@ export default withAuth(
             port: 3030,
             extendExpressApp: (app, ctx) => {
                 app.get('/test', async (req, res) => {
-                    const keystoneContext = await ctx(req, res);
+
 
                     try {
                         // console.log(keystoneContext.prisma.$transaction);
@@ -56,11 +81,11 @@ export default withAuth(
                         //     }),
                         // ]);
                         console.log(
-                            keystoneContext.prisma._hasPreviewFlag(
+                            ctx.prisma._hasPreviewFlag(
                                 'interactiveTransactions'
                             )
                         );
-                        await keystoneContext.prisma.$transaction(
+                        await ctx.prisma.$transaction(
                             async (tx: any) => {
                                 const x = await tx.prisma.Coupon.update({
                                     where: { id: 'clcuazkb30048jglof25krj2v' },
@@ -78,39 +103,58 @@ export default withAuth(
                     }
                 });
 
+
                 app.get<ZibalCBQuery>('/ipg/cb', async (req, res) => {
+
+                    // if (req.query.success === "1") {
+
+                    // }
+                    // else {
+
+                    // }
+
+
                     try {
+
                         // get cart item
                         const cartItemId = 'clcoo3fd65168ishbph5ij0pe';
-                        const cartItem: {
-                            id: string;
-                            userId: string;
-                            user: {
-                                id: string;
-                                name: string;
-                                lastName: string;
-                                email: string;
-                                password: string;
-                                role: string;
-                                createdAt: Date;
-                                passwordResetToken: string;
-                                passwordResetIssuedAt: Date;
-                                passwordResetRedeemedAt: Date;
-                            };
-                            course: {
-                                id: string;
-                                name: string;
-                                description: string;
-                                status: string;
-                                price: number;
-                            };
-                        } = await ctx.prisma.CartItem.findUnique({
+                        const cartItem: CartItemDatabase = await ctx.prisma.CartItem.findUnique({
                             where: { id: cartItemId },
                             include: { user: true, course: true },
                         });
 
-                        console.log(cartItem);
-                        res.json(cartItem);
+                        if (cartItem.isCompleted) {
+                            res.status(200).send('purchase is already completed')
+                            return
+                        }
+
+
+                        const cartItemPromises: Promise<any>[] = cartItem.course.map(({ price, id }) => {
+
+                            return ctx.prisma.OrderItem.create({
+                                name: 'kooft',
+                                description: 'bemiri',
+                                price,
+                                course: {
+                                    connect: {
+                                        id
+                                    }
+                                }
+                            })
+
+                        })
+
+
+                        const x = await Promise.all(cartItemPromises)
+
+                        console.log(x)
+                        // )
+
+
+
+                        // ctx.db.Order.createOne
+
+
                         // TODO privent double spending
 
                         // TODO get user id from session

@@ -828,6 +828,7 @@ type CartItem {
   course(where: CourseWhereInput! = {}, orderBy: [CourseOrderByInput!]! = [], take: Int, skip: Int! = 0): [Course!]
   courseCount(where: CourseWhereInput! = {}): Int
   user: User
+  isCompleted: Boolean
 }
 
 input CartItemWhereUniqueInput {
@@ -841,15 +842,23 @@ input CartItemWhereInput {
   id: IDFilter
   course: CourseManyRelationFilter
   user: UserWhereInput
+  isCompleted: BooleanFilter
+}
+
+input BooleanFilter {
+  equals: Boolean
+  not: BooleanFilter
 }
 
 input CartItemOrderByInput {
   id: OrderDirection
+  isCompleted: OrderDirection
 }
 
 input CartItemUpdateInput {
   course: CourseRelateToManyForUpdateInput
   user: UserRelateToOneForUpdateInput
+  isCompleted: Boolean
 }
 
 input CartItemUpdateArgs {
@@ -860,6 +869,7 @@ input CartItemUpdateArgs {
 input CartItemCreateInput {
   course: CourseRelateToManyForCreateInput
   user: UserRelateToOneForCreateInput
+  isCompleted: Boolean
 }
 
 type Order {
@@ -869,7 +879,8 @@ type Order {
   items(where: OrderItemWhereInput! = {}, orderBy: [OrderItemOrderByInput!]! = [], take: Int, skip: Int! = 0): [OrderItem!]
   itemsCount(where: OrderItemWhereInput! = {}): Int
   user: User
-  charge: String
+  paymentStatus: Int
+  orderDate: DateTime
 }
 
 input OrderWhereUniqueInput {
@@ -884,7 +895,8 @@ input OrderWhereInput {
   total: IntNullableFilter
   items: OrderItemManyRelationFilter
   user: UserWhereInput
-  charge: StringFilter
+  paymentStatus: IntNullableFilter
+  orderDate: DateTimeNullableFilter
 }
 
 input OrderItemManyRelationFilter {
@@ -896,14 +908,16 @@ input OrderItemManyRelationFilter {
 input OrderOrderByInput {
   id: OrderDirection
   total: OrderDirection
-  charge: OrderDirection
+  paymentStatus: OrderDirection
+  orderDate: OrderDirection
 }
 
 input OrderUpdateInput {
   total: Int
   items: OrderItemRelateToManyForUpdateInput
   user: UserRelateToOneForUpdateInput
-  charge: String
+  paymentStatus: Int
+  orderDate: DateTime
 }
 
 input OrderItemRelateToManyForUpdateInput {
@@ -922,7 +936,8 @@ input OrderCreateInput {
   total: Int
   items: OrderItemRelateToManyForCreateInput
   user: UserRelateToOneForCreateInput
-  charge: String
+  paymentStatus: Int
+  orderDate: DateTime
 }
 
 input OrderItemRelateToManyForCreateInput {
@@ -934,8 +949,8 @@ type OrderItem {
   id: ID!
   name: String
   description: String
+  course: Course
   price: Int
-  quantity: Int
   order: Order
 }
 
@@ -950,8 +965,8 @@ input OrderItemWhereInput {
   id: IDFilter
   name: StringFilter
   description: StringFilter
+  course: CourseWhereInput
   price: IntNullableFilter
-  quantity: IntNullableFilter
   order: OrderWhereInput
 }
 
@@ -960,15 +975,20 @@ input OrderItemOrderByInput {
   name: OrderDirection
   description: OrderDirection
   price: OrderDirection
-  quantity: OrderDirection
 }
 
 input OrderItemUpdateInput {
   name: String
   description: String
+  course: CourseRelateToOneForUpdateInput
   price: Int
-  quantity: Int
   order: OrderRelateToOneForUpdateInput
+}
+
+input CourseRelateToOneForUpdateInput {
+  create: CourseCreateInput
+  connect: CourseWhereUniqueInput
+  disconnect: Boolean
 }
 
 input OrderRelateToOneForUpdateInput {
@@ -985,9 +1005,14 @@ input OrderItemUpdateArgs {
 input OrderItemCreateInput {
   name: String
   description: String
+  course: CourseRelateToOneForCreateInput
   price: Int
-  quantity: Int
   order: OrderRelateToOneForCreateInput
+}
+
+input CourseRelateToOneForCreateInput {
+  create: CourseCreateInput
+  connect: CourseWhereUniqueInput
 }
 
 input OrderRelateToOneForCreateInput {

@@ -1,7 +1,7 @@
 import { graphql } from '@graphql-ts/schema';
 import { list } from '@keystone-6/core';
 import { allowAll } from '@keystone-6/core/access';
-import { integer, relationship, text, virtual } from '@keystone-6/core/fields';
+import { integer, relationship, select, text, timestamp, virtual } from '@keystone-6/core/fields';
 // import { isSignedIn, rules } from "../access";
 import { formatMoney } from "../data/utils"
 
@@ -28,6 +28,27 @@ export const Order = list({
     total: integer(),
     items: relationship({ ref: "OrderItem.order", many: true }),
     user: relationship({ ref: "User.orders" }),
-    charge: text(),
+    paymentStatus: select({
+      type: 'integer',
+      options: [
+        {
+          label: "pending",
+          value: 0
+        },
+        {
+          label: "paid",
+          value: 1
+        },
+        {
+          label: "failed",
+          value: -1
+        }
+      ]
+    }),
+    orderDate: timestamp({ defaultValue: { kind: 'now' } })
+    // charge: text(),
   },
+  ui: {
+    isHidden: process.env.NODE_ENV === 'production'
+  }
 });

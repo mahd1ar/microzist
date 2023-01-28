@@ -76,7 +76,8 @@ var CartItem = (0, import_core.list)({
   },
   fields: {
     course: (0, import_fields.relationship)({ ref: "Course", many: true }),
-    user: (0, import_fields.relationship)({ ref: "User.cart" })
+    user: (0, import_fields.relationship)({ ref: "User.cart" }),
+    isCompleted: (0, import_fields.checkbox)({ defaultValue: false })
   }
 });
 
@@ -99,7 +100,27 @@ var Order = (0, import_core2.list)({
     total: (0, import_fields2.integer)(),
     items: (0, import_fields2.relationship)({ ref: "OrderItem.order", many: true }),
     user: (0, import_fields2.relationship)({ ref: "User.orders" }),
-    charge: (0, import_fields2.text)()
+    paymentStatus: (0, import_fields2.select)({
+      type: "integer",
+      options: [
+        {
+          label: "pending",
+          value: 0
+        },
+        {
+          label: "paid",
+          value: 1
+        },
+        {
+          label: "failed",
+          value: -1
+        }
+      ]
+    }),
+    orderDate: (0, import_fields2.timestamp)({ defaultValue: { kind: "now" } })
+  },
+  ui: {
+    isHidden: process.env.NODE_ENV === "production"
   }
 });
 
@@ -116,8 +137,13 @@ var OrderItem = (0, import_core3.list)({
         displayMode: "textarea"
       }
     }),
+    course: (0, import_fields3.relationship)({
+      ref: "Course",
+      ui: {
+        labelField: "name"
+      }
+    }),
     price: (0, import_fields3.integer)(),
-    quantity: (0, import_fields3.integer)(),
     order: (0, import_fields3.relationship)({ ref: "Order.items" })
   }
 });
@@ -678,14 +704,13 @@ var keystone_default = withAuth(
       port: 3030,
       extendExpressApp: (app, ctx) => {
         app.get("/test", async (req, res) => {
-          const keystoneContext = await ctx(req, res);
           try {
             console.log(
-              keystoneContext.prisma._hasPreviewFlag(
+              ctx.prisma._hasPreviewFlag(
                 "interactiveTransactions"
               )
             );
-            await keystoneContext.prisma.$transaction(
+            await ctx.prisma.$transaction(
               async (tx) => {
                 const x = await tx.prisma.Coupon.update({
                   where: { id: "clcuazkb30048jglof25krj2v" },
@@ -708,8 +733,24 @@ var keystone_default = withAuth(
               where: { id: cartItemId },
               include: { user: true, course: true }
             });
-            console.log(cartItem);
-            res.json(cartItem);
+            if (cartItem.isCompleted) {
+              res.status(200).send("purchase is already completed");
+              return;
+            }
+            const cartItemPromises = cartItem.course.map(({ price, id }) => {
+              return ctx.prisma.OrderItem.create({
+                name: "kooft",
+                description: "bemiri",
+                price,
+                course: {
+                  connect: {
+                    id
+                  }
+                }
+              });
+            });
+            const x = await Promise.all(cartItemPromises);
+            console.log(x);
           } catch (error) {
             res.send(error);
           }

@@ -19,6 +19,12 @@ export const OrderItem = list({
                 displayMode: 'textarea',
             },
         }),
+        course: relationship({
+            ref: 'Course',
+            ui: {
+                labelField: 'name',
+            }
+        }),
         // TODO this items has interesting UI filds
         // photo: relationship({
         //   ref: "ProductImage",
@@ -30,7 +36,7 @@ export const OrderItem = list({
         //   },
         // }),
         price: integer(),
-        quantity: integer(),
+
         order: relationship({ ref: 'Order.items' }),
     },
 });

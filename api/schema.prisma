@@ -68,13 +68,14 @@ model Post {
 }
 
 model Course {
-  id                   String     @id @default(cuid())
-  name                 String     @default("")
-  description          String     @default("")
-  status               String?    @default("DRAFT")
-  price                Int?
-  users                User[]     @relation("Course_users")
-  from_CartItem_course CartItem[] @relation("CartItem_course")
+  id                    String      @id @default(cuid())
+  name                  String      @default("")
+  description           String      @default("")
+  status                String?     @default("DRAFT")
+  price                 Int?
+  users                 User[]      @relation("Course_users")
+  from_CartItem_course  CartItem[]  @relation("CartItem_course")
+  from_OrderItem_course OrderItem[] @relation("OrderItem_course")
 }
 
 model Category {
@@ -115,21 +116,23 @@ model Settings {
 }
 
 model CartItem {
-  id     String   @id @default(cuid())
-  course Course[] @relation("CartItem_course")
-  user   User?    @relation("CartItem_user", fields: [userId], references: [id])
-  userId String?  @map("user")
+  id          String   @id @default(cuid())
+  course      Course[] @relation("CartItem_course")
+  user        User?    @relation("CartItem_user", fields: [userId], references: [id])
+  userId      String?  @map("user")
+  isCompleted Boolean  @default(false)
 
   @@index([userId])
 }
 
 model Order {
-  id     String      @id @default(cuid())
-  total  Int?
-  items  OrderItem[] @relation("OrderItem_order")
-  user   User?       @relation("Order_user", fields: [userId], references: [id])
-  userId String?     @map("user")
-  charge String      @default("")
+  id            String      @id @default(cuid())
+  total         Int?
+  items         OrderItem[] @relation("OrderItem_order")
+  user          User?       @relation("Order_user", fields: [userId], references: [id])
+  userId        String?     @map("user")
+  paymentStatus Int?
+  orderDate     DateTime?   @default(now())
 
   @@index([userId])
 }
@@ -138,10 +141,12 @@ model OrderItem {
   id          String  @id @default(cuid())
   name        String  @default("")
   description String  @default("")
+  course      Course? @relation("OrderItem_course", fields: [courseId], references: [id])
+  courseId    String? @map("course")
   price       Int?
-  quantity    Int?
   order       Order?  @relation("OrderItem_order", fields: [orderId], references: [id])
   orderId     String? @map("order")
 
+  @@index([courseId])
   @@index([orderId])
 }
