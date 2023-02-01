@@ -18,7 +18,7 @@ model User {
   lastName                  String        @default("")
   email                     String        @unique @default("")
   password                  String
-  cart                      CartItem[]    @relation("CartItem_user")
+  cart                      Cart[]        @relation("Cart_user")
   orders                    Order[]       @relation("Order_user")
   role                      String?
   courses                   Course[]      @relation("Course_users")
@@ -36,8 +36,11 @@ model Coupon {
   code                        Int
   description                 String        @default("")
   maxAmount                   Int
+  belongsTo                   Course[]      @relation("Coupon_belongsTo")
+  discount                    Int?
   couponItem                  CouponPivot[] @relation("Coupon_couponItem")
   from_CouponPivot_couponCode CouponPivot[] @relation("CouponPivot_couponCode")
+  from_CartItem_coupon        CartItem[]    @relation("CartItem_coupon")
 }
 
 model CouponPivot {
@@ -74,6 +77,7 @@ model Course {
   status                String?     @default("DRAFT")
   price                 Int?
   users                 User[]      @relation("Course_users")
+  from_Coupon_belongsTo Coupon[]    @relation("Coupon_belongsTo")
   from_CartItem_course  CartItem[]  @relation("CartItem_course")
   from_OrderItem_course OrderItem[] @relation("OrderItem_course")
 }
@@ -116,11 +120,25 @@ model Settings {
 }
 
 model CartItem {
-  id          String   @id @default(cuid())
-  course      Course[] @relation("CartItem_course")
-  user        User?    @relation("CartItem_user", fields: [userId], references: [id])
-  userId      String?  @map("user")
-  isCompleted Boolean  @default(false)
+  id       String  @id @default(cuid())
+  course   Course? @relation("CartItem_course", fields: [courseId], references: [id])
+  courseId String? @map("course")
+  coupon   Coupon? @relation("CartItem_coupon", fields: [couponId], references: [id])
+  couponId String? @map("coupon")
+  cart     Cart?   @relation("CartItem_cart", fields: [cartId], references: [id])
+  cartId   String? @map("cart")
+
+  @@index([courseId])
+  @@index([couponId])
+  @@index([cartId])
+}
+
+model Cart {
+  id          String     @id @default(cuid())
+  items       CartItem[] @relation("CartItem_cart")
+  user        User?      @relation("Cart_user", fields: [userId], references: [id])
+  userId      String?    @map("user")
+  isCompleted Boolean    @default(false)
 
   @@index([userId])
 }
@@ -128,10 +146,11 @@ model CartItem {
 model Order {
   id            String      @id @default(cuid())
   total         Int?
+  totalCost     Int?
   items         OrderItem[] @relation("OrderItem_order")
   user          User?       @relation("Order_user", fields: [userId], references: [id])
   userId        String?     @map("user")
-  paymentStatus Int?
+  paymentStatus Int?        @default(0)
   orderDate     DateTime?   @default(now())
 
   @@index([userId])

@@ -37,7 +37,7 @@ export const User = list({
 
         password: password({ validation: { isRequired: true } }),
         cart: relationship({
-            ref: 'CartItem.user',
+            ref: 'Cart.user',
             many: true,
             ui: {
                 createView: { fieldMode: 'hidden' },

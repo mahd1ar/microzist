@@ -39,31 +39,18 @@ import {
     Image,
     Tag,
     CartItem,
+    Cart,
     Order,
     OrderItem,
     Course,
+    Coupon,
 } from './schemas';
 
 import { persianCalendar } from './src/custom-fields/persian-calander';
 
 export const lists: Lists = {
     User,
-    Coupon: list({
-        // TODO only admin can create this
-        access: allowAll,
-        fields: {
-            code: integer({ validation: { isRequired: true, max: 9999 } }),
-            description: text({ validation: { isRequired: true } }),
-            maxAmount: integer({ validation: { isRequired: true } }),
-            couponItem: relationship({
-                ref: 'CouponPivot',
-                many: true,
-                ui: {
-                    // labelField: 'customer',
-                },
-            }),
-        },
-    }),
+    Coupon,
     CouponPivot: list({
         ui: {
             listView: {
@@ -348,6 +335,7 @@ export const lists: Lists = {
     }),
     Settings,
     CartItem,
+    Cart,
     Order,
     OrderItem,
 };

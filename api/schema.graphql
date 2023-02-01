@@ -7,8 +7,8 @@ type User {
   lastName: String
   email: String
   password: PasswordState
-  cart(where: CartItemWhereInput! = {}, orderBy: [CartItemOrderByInput!]! = [], take: Int, skip: Int! = 0): [CartItem!]
-  cartCount(where: CartItemWhereInput! = {}): Int
+  cart(where: CartWhereInput! = {}, orderBy: [CartOrderByInput!]! = [], take: Int, skip: Int! = 0): [Cart!]
+  cartCount(where: CartWhereInput! = {}): Int
   orders(where: OrderWhereInput! = {}, orderBy: [OrderOrderByInput!]! = [], take: Int, skip: Int! = 0): [Order!]
   ordersCount(where: OrderWhereInput! = {}): Int
   role: String
@@ -43,7 +43,7 @@ input UserWhereInput {
   name: StringFilter
   lastName: StringFilter
   email: StringFilter
-  cart: CartItemManyRelationFilter
+  cart: CartManyRelationFilter
   orders: OrderManyRelationFilter
   role: StringNullableFilter
   courses: CourseManyRelationFilter
@@ -94,10 +94,10 @@ input NestedStringFilter {
   not: NestedStringFilter
 }
 
-input CartItemManyRelationFilter {
-  every: CartItemWhereInput
-  some: CartItemWhereInput
-  none: CartItemWhereInput
+input CartManyRelationFilter {
+  every: CartWhereInput
+  some: CartWhereInput
+  none: CartWhereInput
 }
 
 input OrderManyRelationFilter {
@@ -188,7 +188,7 @@ input UserUpdateInput {
   lastName: String
   email: String
   password: String
-  cart: CartItemRelateToManyForUpdateInput
+  cart: CartRelateToManyForUpdateInput
   orders: OrderRelateToManyForUpdateInput
   role: String
   courses: CourseRelateToManyForUpdateInput
@@ -200,11 +200,11 @@ input UserUpdateInput {
   passwordResetRedeemedAt: DateTime
 }
 
-input CartItemRelateToManyForUpdateInput {
-  disconnect: [CartItemWhereUniqueInput!]
-  set: [CartItemWhereUniqueInput!]
-  create: [CartItemCreateInput!]
-  connect: [CartItemWhereUniqueInput!]
+input CartRelateToManyForUpdateInput {
+  disconnect: [CartWhereUniqueInput!]
+  set: [CartWhereUniqueInput!]
+  create: [CartCreateInput!]
+  connect: [CartWhereUniqueInput!]
 }
 
 input OrderRelateToManyForUpdateInput {
@@ -245,7 +245,7 @@ input UserCreateInput {
   lastName: String
   email: String
   password: String
-  cart: CartItemRelateToManyForCreateInput
+  cart: CartRelateToManyForCreateInput
   orders: OrderRelateToManyForCreateInput
   role: String
   courses: CourseRelateToManyForCreateInput
@@ -257,9 +257,9 @@ input UserCreateInput {
   passwordResetRedeemedAt: DateTime
 }
 
-input CartItemRelateToManyForCreateInput {
-  create: [CartItemCreateInput!]
-  connect: [CartItemWhereUniqueInput!]
+input CartRelateToManyForCreateInput {
+  create: [CartCreateInput!]
+  connect: [CartWhereUniqueInput!]
 }
 
 input OrderRelateToManyForCreateInput {
@@ -287,6 +287,10 @@ type Coupon {
   code: Int
   description: String
   maxAmount: Int
+  remaining: Int
+  belongsTo(where: CourseWhereInput! = {}, orderBy: [CourseOrderByInput!]! = [], take: Int, skip: Int! = 0): [Course!]
+  belongsToCount(where: CourseWhereInput! = {}): Int
+  discount: Int
   couponItem(where: CouponPivotWhereInput! = {}, orderBy: [CouponPivotOrderByInput!]! = [], take: Int, skip: Int! = 0): [CouponPivot!]
   couponItemCount(where: CouponPivotWhereInput! = {}): Int
 }
@@ -303,6 +307,8 @@ input CouponWhereInput {
   code: IntFilter
   description: StringFilter
   maxAmount: IntFilter
+  belongsTo: CourseManyRelationFilter
+  discount: IntNullableFilter
   couponItem: CouponPivotManyRelationFilter
 }
 
@@ -317,6 +323,17 @@ input IntFilter {
   not: IntFilter
 }
 
+input IntNullableFilter {
+  equals: Int
+  in: [Int!]
+  notIn: [Int!]
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  not: IntNullableFilter
+}
+
 input CouponPivotManyRelationFilter {
   every: CouponPivotWhereInput
   some: CouponPivotWhereInput
@@ -328,12 +345,15 @@ input CouponOrderByInput {
   code: OrderDirection
   description: OrderDirection
   maxAmount: OrderDirection
+  discount: OrderDirection
 }
 
 input CouponUpdateInput {
   code: Int
   description: String
   maxAmount: Int
+  belongsTo: CourseRelateToManyForUpdateInput
+  discount: Int
   couponItem: CouponPivotRelateToManyForUpdateInput
 }
 
@@ -353,6 +373,8 @@ input CouponCreateInput {
   code: Int
   description: String
   maxAmount: Int
+  belongsTo: CourseRelateToManyForCreateInput
+  discount: Int
   couponItem: CouponPivotRelateToManyForCreateInput
 }
 
@@ -380,17 +402,6 @@ input CouponPivotWhereInput {
   couponCode: CouponWhereInput
   customer: UserWhereInput
   status: IntNullableFilter
-}
-
-input IntNullableFilter {
-  equals: Int
-  in: [Int!]
-  notIn: [Int!]
-  lt: Int
-  lte: Int
-  gt: Int
-  gte: Int
-  not: IntNullableFilter
 }
 
 input CouponPivotOrderByInput {
@@ -535,8 +546,10 @@ type Course {
   description: String
   status: String
   price: Int
+  priceFa: String
   users(where: UserWhereInput! = {}, orderBy: [UserOrderByInput!]! = [], take: Int, skip: Int! = 0): [User!]
   usersCount(where: UserWhereInput! = {}): Int
+  isAccessible: Boolean
 }
 
 input CourseWhereUniqueInput {
@@ -825,10 +838,10 @@ input SettingsCreateInput {
 
 type CartItem {
   id: ID!
-  course(where: CourseWhereInput! = {}, orderBy: [CourseOrderByInput!]! = [], take: Int, skip: Int! = 0): [Course!]
-  courseCount(where: CourseWhereInput! = {}): Int
-  user: User
-  isCompleted: Boolean
+  course: Course
+  coupon: Coupon
+  priceWithDiscount: Float
+  cart: Cart
 }
 
 input CartItemWhereUniqueInput {
@@ -840,25 +853,31 @@ input CartItemWhereInput {
   OR: [CartItemWhereInput!]
   NOT: [CartItemWhereInput!]
   id: IDFilter
-  course: CourseManyRelationFilter
-  user: UserWhereInput
-  isCompleted: BooleanFilter
-}
-
-input BooleanFilter {
-  equals: Boolean
-  not: BooleanFilter
+  course: CourseWhereInput
+  coupon: CouponWhereInput
+  cart: CartWhereInput
 }
 
 input CartItemOrderByInput {
   id: OrderDirection
-  isCompleted: OrderDirection
 }
 
 input CartItemUpdateInput {
-  course: CourseRelateToManyForUpdateInput
-  user: UserRelateToOneForUpdateInput
-  isCompleted: Boolean
+  course: CourseRelateToOneForUpdateInput
+  coupon: CouponRelateToOneForUpdateInput
+  cart: CartRelateToOneForUpdateInput
+}
+
+input CourseRelateToOneForUpdateInput {
+  create: CourseCreateInput
+  connect: CourseWhereUniqueInput
+  disconnect: Boolean
+}
+
+input CartRelateToOneForUpdateInput {
+  create: CartCreateInput
+  connect: CartWhereUniqueInput
+  disconnect: Boolean
 }
 
 input CartItemUpdateArgs {
@@ -867,15 +886,94 @@ input CartItemUpdateArgs {
 }
 
 input CartItemCreateInput {
-  course: CourseRelateToManyForCreateInput
+  course: CourseRelateToOneForCreateInput
+  coupon: CouponRelateToOneForCreateInput
+  cart: CartRelateToOneForCreateInput
+}
+
+input CourseRelateToOneForCreateInput {
+  create: CourseCreateInput
+  connect: CourseWhereUniqueInput
+}
+
+input CartRelateToOneForCreateInput {
+  create: CartCreateInput
+  connect: CartWhereUniqueInput
+}
+
+type Cart {
+  id: ID!
+  summery: String
+  items(where: CartItemWhereInput! = {}, orderBy: [CartItemOrderByInput!]! = [], take: Int, skip: Int! = 0): [CartItem!]
+  itemsCount(where: CartItemWhereInput! = {}): Int
+  user: User
+  priceFa: String
+  isCompleted: Boolean
+}
+
+input CartWhereUniqueInput {
+  id: ID
+}
+
+input CartWhereInput {
+  AND: [CartWhereInput!]
+  OR: [CartWhereInput!]
+  NOT: [CartWhereInput!]
+  id: IDFilter
+  items: CartItemManyRelationFilter
+  user: UserWhereInput
+  isCompleted: BooleanFilter
+}
+
+input CartItemManyRelationFilter {
+  every: CartItemWhereInput
+  some: CartItemWhereInput
+  none: CartItemWhereInput
+}
+
+input BooleanFilter {
+  equals: Boolean
+  not: BooleanFilter
+}
+
+input CartOrderByInput {
+  id: OrderDirection
+  isCompleted: OrderDirection
+}
+
+input CartUpdateInput {
+  items: CartItemRelateToManyForUpdateInput
+  user: UserRelateToOneForUpdateInput
+  isCompleted: Boolean
+}
+
+input CartItemRelateToManyForUpdateInput {
+  disconnect: [CartItemWhereUniqueInput!]
+  set: [CartItemWhereUniqueInput!]
+  create: [CartItemCreateInput!]
+  connect: [CartItemWhereUniqueInput!]
+}
+
+input CartUpdateArgs {
+  where: CartWhereUniqueInput!
+  data: CartUpdateInput!
+}
+
+input CartCreateInput {
+  items: CartItemRelateToManyForCreateInput
   user: UserRelateToOneForCreateInput
   isCompleted: Boolean
 }
 
+input CartItemRelateToManyForCreateInput {
+  create: [CartItemCreateInput!]
+  connect: [CartItemWhereUniqueInput!]
+}
+
 type Order {
   id: ID!
-  label: String
   total: Int
+  totalCost: Int
   items(where: OrderItemWhereInput! = {}, orderBy: [OrderItemOrderByInput!]! = [], take: Int, skip: Int! = 0): [OrderItem!]
   itemsCount(where: OrderItemWhereInput! = {}): Int
   user: User
@@ -893,6 +991,7 @@ input OrderWhereInput {
   NOT: [OrderWhereInput!]
   id: IDFilter
   total: IntNullableFilter
+  totalCost: IntNullableFilter
   items: OrderItemManyRelationFilter
   user: UserWhereInput
   paymentStatus: IntNullableFilter
@@ -908,12 +1007,14 @@ input OrderItemManyRelationFilter {
 input OrderOrderByInput {
   id: OrderDirection
   total: OrderDirection
+  totalCost: OrderDirection
   paymentStatus: OrderDirection
   orderDate: OrderDirection
 }
 
 input OrderUpdateInput {
   total: Int
+  totalCost: Int
   items: OrderItemRelateToManyForUpdateInput
   user: UserRelateToOneForUpdateInput
   paymentStatus: Int
@@ -934,6 +1035,7 @@ input OrderUpdateArgs {
 
 input OrderCreateInput {
   total: Int
+  totalCost: Int
   items: OrderItemRelateToManyForCreateInput
   user: UserRelateToOneForCreateInput
   paymentStatus: Int
@@ -985,12 +1087,6 @@ input OrderItemUpdateInput {
   order: OrderRelateToOneForUpdateInput
 }
 
-input CourseRelateToOneForUpdateInput {
-  create: CourseCreateInput
-  connect: CourseWhereUniqueInput
-  disconnect: Boolean
-}
-
 input OrderRelateToOneForUpdateInput {
   create: OrderCreateInput
   connect: OrderWhereUniqueInput
@@ -1008,11 +1104,6 @@ input OrderItemCreateInput {
   course: CourseRelateToOneForCreateInput
   price: Int
   order: OrderRelateToOneForCreateInput
-}
-
-input CourseRelateToOneForCreateInput {
-  create: CourseCreateInput
-  connect: CourseWhereUniqueInput
 }
 
 input OrderRelateToOneForCreateInput {
@@ -1086,6 +1177,12 @@ type Mutation {
   updateCartItems(data: [CartItemUpdateArgs!]!): [CartItem]
   deleteCartItem(where: CartItemWhereUniqueInput!): CartItem
   deleteCartItems(where: [CartItemWhereUniqueInput!]!): [CartItem]
+  createCart(data: CartCreateInput!): Cart
+  createCarts(data: [CartCreateInput!]!): [Cart]
+  updateCart(where: CartWhereUniqueInput!, data: CartUpdateInput!): Cart
+  updateCarts(data: [CartUpdateArgs!]!): [Cart]
+  deleteCart(where: CartWhereUniqueInput!): Cart
+  deleteCarts(where: [CartWhereUniqueInput!]!): [Cart]
   createOrder(data: OrderCreateInput!): Order
   createOrders(data: [OrderCreateInput!]!): [Order]
   updateOrder(where: OrderWhereUniqueInput!, data: OrderUpdateInput!): Order
@@ -1165,6 +1262,9 @@ type Query {
   cartItems(where: CartItemWhereInput! = {}, orderBy: [CartItemOrderByInput!]! = [], take: Int, skip: Int! = 0): [CartItem!]
   cartItem(where: CartItemWhereUniqueInput!): CartItem
   cartItemsCount(where: CartItemWhereInput! = {}): Int
+  carts(where: CartWhereInput! = {}, orderBy: [CartOrderByInput!]! = [], take: Int, skip: Int! = 0): [Cart!]
+  cart(where: CartWhereUniqueInput!): Cart
+  cartsCount(where: CartWhereInput! = {}): Int
   orders(where: OrderWhereInput! = {}, orderBy: [OrderOrderByInput!]! = [], take: Int, skip: Int! = 0): [Order!]
   order(where: OrderWhereUniqueInput!): Order
   ordersCount(where: OrderWhereInput! = {}): Int

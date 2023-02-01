@@ -6,6 +6,7 @@
     "dev": "keystone dev",
     "start": "keystone start",
     "build": "keystone build",
+    "prisma": "keystone prisma",
     "postinstall": "keystone postinstall",
     "frontend:dev": "cd frontend && yarn dev --host",
     "frontend:codegen": "cd frontend && yarn codegen --watch",

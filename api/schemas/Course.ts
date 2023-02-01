@@ -1,7 +1,16 @@
-import { integer, select, text, relationship } from '@keystone-6/core/fields';
+import {
+    integer,
+    select,
+    text,
+    relationship,
+    virtual,
+} from '@keystone-6/core/fields';
 import { list } from '@keystone-6/core';
 import { allOperations, allowAll } from '@keystone-6/core/access';
 import { isLoggedIn } from '../data/access';
+import { graphql } from '@graphql-ts/schema';
+import { BaseKeystoneTypeInfo, KeystoneContext } from '@keystone-6/core/types';
+import { formatMoney } from '../data/utils';
 
 export const Course = list({
     access: {
@@ -44,6 +53,15 @@ export const Course = list({
             },
         }),
         price: integer(),
+        priceFa: virtual({
+            field: graphql.field({
+                type: graphql.String,
+                async resolve(item) {
+                    // @ts-ignore
+                    return `${formatMoney(item.price)}`;
+                },
+            }),
+        }),
         users: relationship({
             ref: 'User.courses',
             many: true,
@@ -61,6 +79,33 @@ export const Course = list({
                     return resolvedData.users;
                 },
             },
+        }),
+        isAccessible: virtual({
+            field: graphql.field({
+                type: graphql.Boolean,
+                // @ts-ignore
+                async resolve(
+                    item,
+                    _,
+                    context: KeystoneContext<BaseKeystoneTypeInfo>
+                ) {
+                    if (!context.session) return false;
+
+                    const { users } = await context.query.Course.findOne({
+                        where: { id: item.id.toString() },
+                        query: 'users { id }',
+                    });
+
+                    if (users.length === 0) {
+                        return false;
+                    }
+
+                    if (context.session.itemId === users[0].id) return true;
+
+                    return false;
+                },
+            }),
+            // graphQLReturnType: "String",
         }),
     },
 });

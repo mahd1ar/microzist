@@ -12,6 +12,12 @@ export type GeneralSession =
       }
     | undefined;
 
+export type GeneralApiResponse = {
+    ok: boolean;
+    message: string;
+    paylod?: Record<string, any>;
+};
+
 export type ZibalPaymentResponse = {
     trackId: number;
     result: 100 | 102 | 103 | 104 | 105 | 106;
@@ -27,3 +33,12 @@ export type ZibalConfig = {
     // 1: error
     // 2: error + info (default)
 };
+
+export type WSMsg =
+    | {
+          action: 'logout' | 'request-login';
+      }
+    | {
+          action: 'message';
+          message: string;
+      };

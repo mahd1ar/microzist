@@ -11,7 +11,8 @@ export default (ctx) => {
     }
   })
   const httpLink = new HttpLink({
-    uri: 'https://api.carizanin.com/graphql', //process.env.nuxtApiUrl,
+    // TODO get from .env
+    uri: 'http://localhost:3030/api/graphql', //process.env.nuxtApiUrl,
     credentials: 'omit',
   })
   const link = from([ssrMiddleware, httpLink])
