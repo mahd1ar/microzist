@@ -26,42 +26,44 @@ import { sendResetPasswordEmail } from './email/resetpassword';
 //   especially in production (statelessSessions will throw if SESSION_SECRET is undefined)
 
 // TODO node production text
-let sessionSecret = process.env.SESSION_SECRET;
-if (!sessionSecret && process.env.NODE_ENV !== 'production') {
-  sessionSecret = randomBytes(32).toString('hex');
-}
+let sessionSecret = 'ABCDEFGH1234567887654321HGFEDCBA'; // process.env.SESSION_SECRET;
+// if (!sessionSecret && process.env.NODE_ENV !== 'production') {
+//   sessionSecret = randomBytes(32).toString('hex');
+// }
 
 // withAuth is a function we can use to wrap our base configuration
 const { withAuth } = createAuth({
-  listKey: 'User',
-  identityField: 'email',
+    listKey: 'User',
+    identityField: 'email',
 
-  // this is a GraphQL query fragment for fetching what data will be attached to a context.session
-  //   this can be helpful for when you are writing your access control functions
-  //   you can find out more at https://keystonejs.com/docs/guides/auth-and-access-control
-  sessionData: 'name role createdAt',
-  // sessionData: 'name createdAt role',
-  secretField: 'password',
-  passwordResetLink: {
-    sendToken: async ({ identity, itemId, token }) => {
-      await sendResetPasswordEmail({
-        itemId, identity, token
-      })
+    // this is a GraphQL query fragment for fetching what data will be attached to a context.session
+    //   this can be helpful for when you are writing your access control functions
+    //   you can find out more at https://keystonejs.com/docs/guides/auth-and-access-control
+    sessionData: 'name role createdAt',
+    // sessionData: 'name createdAt role',
+    secretField: 'password',
+    passwordResetLink: {
+        sendToken: async ({ identity, itemId, token }) => {
+            await sendResetPasswordEmail({
+                itemId,
+                identity,
+                token,
+            });
+        },
+        tokensValidForMins: 60,
     },
-    tokensValidForMins: 60
-  },
 
-  // WARNING: remove initFirstItem functionality in production
-  //   see https://keystonejs.com/docs/config/auth#init-first-item for more
-  initFirstItem: {
-    // if there are no items in the database, by configuring this field
-    //   you are asking the Keystone AdminUI to create a new user
-    //   providing inputs for these fields
-    fields: ['name', 'lastName', 'email', 'password'],
+    // WARNING: remove initFirstItem functionality in production
+    //   see https://keystonejs.com/docs/config/auth#init-first-item for more
+    initFirstItem: {
+        // if there are no items in the database, by configuring this field
+        //   you are asking the Keystone AdminUI to create a new user
+        //   providing inputs for these fields
+        fields: ['name', 'lastName', 'email', 'password'],
 
-    // it uses context.sudo() to do this, which bypasses any access control you might have
-    //   you shouldn't use this in production
-  },
+        // it uses context.sudo() to do this, which bypasses any access control you might have
+        //   you shouldn't use this in production
+    },
 });
 
 // statelessSessions uses cookies for session tracking
@@ -71,10 +73,8 @@ const sessionMaxAge = 60 * 60 * 24 * 30;
 
 // you can find out more at https://keystonejs.com/docs/apis/session#session-api
 const session = statelessSessions({
-  maxAge: sessionMaxAge,
-  secret: sessionSecret!,
+    maxAge: sessionMaxAge,
+    secret: sessionSecret!,
 });
-
-
 
 export { withAuth, session };

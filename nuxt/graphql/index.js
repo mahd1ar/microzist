@@ -13,7 +13,8 @@ export default (ctx) => {
   const httpLink = new HttpLink({
     // TODO get from .env
     uri: 'http://localhost:3030/api/graphql', //process.env.nuxtApiUrl,
-    credentials: 'omit',
+    // credentials: 'omit',
+    credentials: "include",
   })
   const link = from([ssrMiddleware, httpLink])
   const cache = new InMemoryCache()
@@ -22,5 +23,11 @@ export default (ctx) => {
     link,
     cache,
     defaultHttpLink: false,
+    cookieAttributes: {
+      expires: 7,
+      path: '/',
+      domain: 'http://localhost:3030',
+      secure: false,
+    },
   }
 }

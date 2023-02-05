@@ -1,6 +1,6 @@
 import { GetterTree, ActionTree, MutationTree } from 'vuex'
-import MAINNAV from '@/apollo/query/top-nav.gql'
-import { MainNavQuery, MainNavQueryVariables } from '@/types/types'
+import AUTHITEM from '@/apollo/q/authitem.gql'
+import { AuthitemQuery } from '@/types/types'
 import { Context, NuxtAppOptions } from '@nuxt/types'
 type NavItem = {
   label: string
@@ -13,6 +13,12 @@ export const state = () => ({
   navItem: [] as NavItem[],
   showNav: true,
   showSearch: false,
+  user: {
+    id: '',
+    name: '',
+    lastName: '',
+    email: '',
+  },
 })
 
 export type RootState = ReturnType<typeof state>
@@ -21,6 +27,8 @@ export const getters: GetterTree<RootState, RootState> = {
   navItems: (state) => state.navItem,
   showNav: (state) => state.showNav,
   showSearch: (state) => state.showSearch,
+  isLoggedIn: (state) => !!state.user.id,
+  user: (state) => state.user,
 }
 
 export const mutations: MutationTree<RootState> = {
@@ -33,47 +41,58 @@ export const mutations: MutationTree<RootState> = {
   TOGGLE_SEARCH: (state, newNav: boolean) => {
     state.showSearch = newNav
   },
+  TOGGLE_LOGGIN: (state, user: RootState['user'] | false) => {
+    if (user) {
+      state.user.id = user.id
+      state.user.name = user.name
+      state.user.lastName = user.lastName
+      state.user.email = user.email
+    } else {
+      state.user.id = ''
+    }
+  },
 }
 
 export const actions: ActionTree<RootState, RootState> = {
   async nuxtServerInit({ commit, dispatch }, ctx: Context) {
-    // i18n bug
-    // const cookie = (ctx.req.headers.cookie) || '1=1';
-    // const parsedCookie = Object.fromEntries(cookie.split(/;\s+/).map(i => i.split("="))) as { [key: string]: string | undefined }
-    // if (parsedCookie.i18n_redirected === undefined) {
-    //     console.log(999)
+    // if (
+    //   ctx.route.path === '/en/pich-gostar/index2' ||
+    //   ctx.route.path === '/pich-gostar/index2'
+    // ) {
+    //   await dispatch('toggleNav', false)
     // }
 
-    console.log(ctx.ssrContext?.req.connection.remoteAddress)
-
-    if (
-      ctx.route.path === '/en/pich-gostar/index2' ||
-      ctx.route.path === '/pich-gostar/index2'
-    ) {
-      await dispatch('toggleNav', false)
+    const { data } = await ctx.app.$axios.post(
+      'http://localhost:3030/auth-item',
+      { withCredentials: true }
+    )
+    console.log(data)
+    if (data) {
+      // user is logged in
+      const user: RootState['user'] = {
+        id: data.id,
+        email: data.email || '',
+        name: data.name || '',
+        lastName: data.lastName || '',
+      }
+      await dispatch('toggleUser', user)
+    } else {
+      await dispatch('toggleUser', false)
     }
 
-    const variable: MainNavQueryVariables = {}
-    // $apolloProvider.defaultClient.query
+    // const data = res.data as MainNavQuery
+    // const navItem: NavItem[] = data
+    //   .menus!.edges!.map((e) =>
+    //     e!.node!.menuItems!.edges!.map((ed) => ({
+    //       label: ed!.node!.label || '',
+    //       id: ed!.node!.id || '',
+    //       lang: e!.node!.name!.search(/-en$/) > -1 ? 'en' : 'fa',
+    //       link: ed!.node!.uri || '',
+    //     }))
+    //   )
+    //   .flat()
 
-    const res = await ctx.app.apolloProvider.defaultClient.query({
-      query: MAINNAV,
-      variable,
-    })
-
-    const data = res.data as MainNavQuery
-    const navItem: NavItem[] = data
-      .menus!.edges!.map((e) =>
-        e!.node!.menuItems!.edges!.map((ed) => ({
-          label: ed!.node!.label || '',
-          id: ed!.node!.id || '',
-          lang: e!.node!.name!.search(/-en$/) > -1 ? 'en' : 'fa',
-          link: ed!.node!.uri || '',
-        }))
-      )
-      .flat()
-
-    commit('ADD_NAV', navItem)
+    // commit('ADD_NAV', navItem)
   },
   async addNav({ commit }, newlang: NavItem[]) {
     commit('ADD_NAV', newlang)
@@ -83,5 +102,8 @@ export const actions: ActionTree<RootState, RootState> = {
   },
   async toggleSearch({ commit }, newval: boolean) {
     commit('TOGGLE_SEARCH', newval)
+  },
+  async toggleUser({ commit }, user: RootState['user'] | false) {
+    commit('TOGGLE_LOGGIN', user)
   },
 }

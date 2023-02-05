@@ -1,6 +1,6 @@
 export default {
-  server : {
-    port : 5173
+  server: {
+    port: 5173
   },
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
@@ -33,7 +33,7 @@ export default {
     { src: '~/plugins/i18n.js' },
     { src: '~/plugins/eventbus.ts' },
     { src: '~/plugins/snip.js' },
-    { src: '~/plugins/general.client.js' , mode : 'client' },
+    { src: '~/plugins/general.client.js', mode: 'client' },
   ],
 
   serverMiddleware: [
@@ -71,15 +71,15 @@ export default {
   },
   i18n: {
     locales: [
-      { code: 'fa', iso: 'fa-IR', dir: 'rtl' , file : 'fa.js' },
-      { code: 'en', iso: 'en-US', dir: 'ltr' , file : 'en.js'},
+      { code: 'fa', iso: 'fa-IR', dir: 'rtl', file: 'fa.js' },
+      { code: 'en', iso: 'en-US', dir: 'ltr', file: 'en.js' },
     ],
     detectBrowserLanguage: false,
     defaultLocale: 'fa',
     // lazy: true,
     langDir: 'lang/',
     vueI18n: {
-    
+
       fallbackLocale: 'fa',
       messages: {
       },
@@ -88,12 +88,32 @@ export default {
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
     // Workaround to avoid enforcing hard-coded localhost:3000: https://github.com/nuxt-community/axios-module/issues/308
-    baseURL: 'http://api.carizanin.com/wp-json',
+    baseURL: 'http://api..com/wp-json',
   },
 
   apollo: {
     clientConfigs: {
-      default: '~/graphql',
+      // default: '~/graphql',
+      default: {
+        httpEndpoint: 'http://localhost:3030/api/graphql', //process.env.nuxtApiUrl,
+
+        // See https://www.apollographql.com/docs/link/links/http.html#options
+        httpLinkOptions: {
+          credentials: "include",
+        },
+        tokenName: 'keystonejs-session',
+
+      },
+    },
+    tokenName: 'keystonejs-session',
+
+
+
+    cookieAttributes: {
+      expires: 7,
+      path: '/',
+      domain: 'localhost:5173',
+      secure: false,
     },
   },
 

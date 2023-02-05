@@ -3,11 +3,16 @@
     <section class="body-font text-gray-600">
       <div class="container mx-auto flex flex-wrap px-5 py-24">
         <div class="flex w-full flex-wrap px-2">
-          <h1 class="title-font mb-4 text-2xl font-medium capitalize text-gray-900 sm:text-4xl lg:mb-0 lg:w-1/3">
+          <h1
+            class="title-font mb-4 text-2xl font-medium capitalize text-gray-900 sm:text-4xl lg:mb-0 lg:w-1/3"
+          >
             {{ $t('image_gallery') }}
           </h1>
-          <p v-if="result?.category?.description" class="mx-auto text-base leading-relaxed lg:w-2/3 lg:pl-6">
-            {{result.category.description}}
+          <p
+            v-if="result?.category?.description"
+            class="mx-auto text-base leading-relaxed lg:w-2/3 lg:pl-6"
+          >
+            {{ result.category.description }}
           </p>
         </div>
 
@@ -15,11 +20,17 @@
           <div class="container mx-auto px-2 py-2 lg:pt-12">
             <client-only>
               <div class="flex gap-2 pb-8">
-                <div v-for="cat in categories" :key="cat.id" @click="selectSubCategory(cat.id)" :class="
-                  cat.id === subcategoryID
-                    ? 'border-primary-light bg-primary font-bold text-black'
-                    : 'cursor-pointer border-tm-black bg-white text-tm-black hover:bg-slate-200'
-                " class="flex h-10 items-center justify-center rounded border py-1 px-3 text-sm">
+                <div
+                  v-for="cat in categories"
+                  :key="cat.id"
+                  @click="selectSubCategory(cat.id)"
+                  :class="
+                    cat.id === subcategoryID
+                      ? 'border-primary-light bg-primary font-bold text-black'
+                      : 'cursor-pointer border-tm-black bg-white text-tm-black hover:bg-slate-200'
+                  "
+                  class="flex h-10 items-center justify-center rounded border py-1 px-3 text-sm"
+                >
                   {{ cat.label }}
                 </div>
               </div>
@@ -50,10 +61,18 @@
           </div> -->
 
               <div class="-m-1 flex flex-wrap md:-m-2">
-                <div v-for="(img, index) in images" :key="index" class="flex w-1/3 flex-wrap">
+                <div
+                  v-for="(img, index) in images"
+                  :key="index"
+                  class="flex w-1/3 flex-wrap"
+                >
                   <div class="w-full p-1 md:p-2">
-                    <img @click="openImage(index)" alt="gallery"
-                      class="block h-full w-full rounded-lg object-cover object-center" :src="img.src" />
+                    <img
+                      @click="openImage(index)"
+                      alt="gallery"
+                      class="block h-full w-full rounded-lg object-cover object-center"
+                      :src="img.src"
+                    />
                   </div>
                 </div>
               </div>
@@ -63,7 +82,11 @@
       </div>
     </section>
 
-    <Splide v-if="selectedItem > -1" :selected-item.sync="selectedItem" :images="images" />
+    <Splide
+      v-if="selectedItem > -1"
+      :selected-item.sync="selectedItem"
+      :images="images"
+    />
   </div>
 </template>
 
@@ -71,14 +94,12 @@
 import { computed, ref, useContext } from '@nuxtjs/composition-api'
 import { chunk } from '~/data/utils'
 
-import GALLERYQL from '@/apollo/query/gallery.gql'
 import { useQuery } from '@vue/apollo-composable/dist'
-import { GalleryQuery, GalleryQueryVariables } from '~/types/types'
 const { i18n } = useContext()
 const categories = ref<{ label: string; id: string }[]>([])
 
 const variable: GalleryQueryVariables = {
-  id: i18n.locale === 'fa' ? 'dGVybToxNTE=' : 'dGVybToxNTM=',
+  id: i18n.locale === 'fa' ? 'dGVybToxNTE=' : 'dGVybToxNTM='
 }
 
 const { result, loading, refetch, onResult } = useQuery<GalleryQuery>(
@@ -88,22 +109,22 @@ const { result, loading, refetch, onResult } = useQuery<GalleryQuery>(
 const selectedItem = ref(-1)
 const subcategoryID = ref(variable.id)
 
-onResult((result) => {
+onResult(result => {
   if (categories.value.length > 0) return
 
   const cats = result.data?.category?.children?.edges
-    ? result.data.category.children.edges.map((i) => ({
-      label: i!.node!.name || '',
-      id: i!.node!.id,
-    }))
+    ? result.data.category.children.edges.map(i => ({
+        label: i!.node!.name || '',
+        id: i!.node!.id
+      }))
     : []
 
   cats.unshift({
     label: String(i18n.t('all_categories')),
-    id: variable.id,
+    id: variable.id
   })
 
-  cats.forEach((i) => {
+  cats.forEach(i => {
     categories.value.push(i)
   })
 })
@@ -120,9 +141,9 @@ const selectSubCategory = (id: string) => {
 // })
 const images = computed(() => {
   return (
-    result.value?.category?.mediaItems?.edges?.map((i) => ({
+    result.value?.category?.mediaItems?.edges?.map(i => ({
       src: i?.node?.sourceUrl || '',
-      alt: 'gallery',
+      alt: 'gallery'
     })) || []
   )
 })
@@ -167,14 +188,14 @@ const openImage = (index: number) => {
 .list-leave-to
 
 /* .list-leave-active below version 2.1.8 */
-  {
+ {
   opacity: 0;
 }
 
 .list-move
 
 /* .list-leave-active below version 2.1.8 */
-  {
+ {
   opacity: 0;
   width: 0%;
   /* transform: translateY(30px); */

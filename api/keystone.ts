@@ -12,6 +12,8 @@ import { storage } from './storage';
 import WebSocket from 'ws';
 import { BaseKeystoneTypeInfo, KeystoneContext } from '@keystone-6/core/types';
 import { Request } from 'express';
+import Iron from '@hapi/iron';
+
 // TODO load .env
 // import dotenv from 'dotenv';
 // import path from 'path';
@@ -101,34 +103,26 @@ export default withAuth(
             cors: { origin: ['http://localhost:5173'], credentials: true },
             port: 3030,
             extendExpressApp: (app, ctx) => {
-                app.get('/test2', async (req, res) => {
-                    try {
-                        const cartItemId = 'clcoo3fd65168ishbph5ij0pe';
-                        const cartItem: CartItemDatabase =
-                            await ctx.prisma.CartItem.findUnique({
-                                where: { id: cartItemId },
-                                include: { user: true, course: true },
-                            });
-
-                        await ctx.prisma.Course.update({
-                            where: {
-                                id: 'cldctigfn0168t8lov6xwqau0',
-                            },
-                            data: {
-                                users: {
-                                    connect: {
-                                        id: cartItem.userId,
+            
+                app.post('/auth-item', async (req, res) => {
+                    
+                    if (ctx.session) {
+                        const session: GeneralSession = ctx.session;
+                        try {
+                            const user: User = await ctx.prisma.User.findUnique(
+                                {
+                                    where: {
+                                        id: session?.itemId,
                                     },
-                                },
-                            },
-                        });
+                                }
+                            );
 
-                        res.send('hi😒');
-                    } catch (error) {
-                        console.log('WHAT THE FUCK?');
-                        console.log(error);
-                        res.send(String(error));
-                    }
+                            res.json(user);
+                        } catch (error) {
+                            res.send(undefined);
+                            console.error(error);
+                        }
+                    } else res.send(undefined);
                 });
 
                 app.get('/test', async (req, res) => {

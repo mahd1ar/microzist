@@ -756,7 +756,6 @@ var lists = {
 };
 
 // auth.ts
-var import_crypto = require("crypto");
 var import_auth = require("@keystone-6/auth");
 var import_session = require("@keystone-6/core/session");
 
@@ -798,10 +797,7 @@ async function sendResetPasswordEmail(ctx) {
 }
 
 // auth.ts
-var sessionSecret = process.env.SESSION_SECRET;
-if (!sessionSecret && process.env.NODE_ENV !== "production") {
-  sessionSecret = (0, import_crypto.randomBytes)(32).toString("hex");
-}
+var sessionSecret = "ABCDEFGH1234567887654321HGFEDCBA";
 var { withAuth } = (0, import_auth.createAuth)({
   listKey: "User",
   identityField: "email",
@@ -861,31 +857,24 @@ var keystone_default = withAuth(
       cors: { origin: ["http://localhost:5173"], credentials: true },
       port: 3030,
       extendExpressApp: (app, ctx) => {
-        app.get("/test2", async (req, res) => {
-          try {
-            const cartItemId = "clcoo3fd65168ishbph5ij0pe";
-            const cartItem = await ctx.prisma.CartItem.findUnique({
-              where: { id: cartItemId },
-              include: { user: true, course: true }
-            });
-            await ctx.prisma.Course.update({
-              where: {
-                id: "cldctigfn0168t8lov6xwqau0"
-              },
-              data: {
-                users: {
-                  connect: {
-                    id: cartItem.userId
+        app.post("/auth-item", async (req, res) => {
+          if (ctx.session) {
+            const session2 = ctx.session;
+            try {
+              const user = await ctx.prisma.User.findUnique(
+                {
+                  where: {
+                    id: session2?.itemId
                   }
                 }
-              }
-            });
-            res.send("hi\u{1F612}");
-          } catch (error) {
-            console.log("WHAT THE FUCK?");
-            console.log(error);
-            res.send(String(error));
-          }
+              );
+              res.json(user);
+            } catch (error) {
+              res.send(void 0);
+              console.error(error);
+            }
+          } else
+            res.send(void 0);
         });
         app.get("/test", async (req, res) => {
           try {
