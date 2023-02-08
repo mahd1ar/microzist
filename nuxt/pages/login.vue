@@ -16,7 +16,7 @@ import {
   useRouter,
   ref,
   useStore,
-  useRoute
+  useRoute,
 } from '@nuxtjs/composition-api'
 import LOGIN from '@/apollo/m/signin.gql'
 import { SigninMutation, SigninMutationVariables } from '@/types/types'
@@ -25,10 +25,10 @@ import { defineComponent } from 'vue'
 let prvPage: string
 
 export default defineComponent({
-  beforeRouteEnter (to, from, next) {
+  beforeRouteEnter(to, from, next) {
     prvPage = from.fullPath
 
-    next(vm => {
+    next((vm) => {
       console.log(vm.$store.getters.isLoggedIn)
       if (vm.$store.getters.isLoggedIn) {
         // TODO defualt determain defualt route
@@ -42,17 +42,19 @@ export default defineComponent({
       }
     })
   },
-  setup () {
+  setup() {
     const ctx = useContext()
     const route = useRoute()
     const router = useRouter()
     const store = useStore()
 
-    const { mutate: loginMutation, onDone, onError } = useMutation<
-      SigninMutation
-    >(LOGIN)
+    const {
+      mutate: loginMutation,
+      onDone,
+      onError,
+    } = useMutation<SigninMutation>(LOGIN)
 
-    onDone(async r => {
+    onDone(async (r) => {
       if (
         r.data?.authenticateUserWithPassword?.__typename ===
         'UserAuthenticationWithPasswordFailure'
@@ -64,7 +66,7 @@ export default defineComponent({
       ) {
         alert('welcome ' + r.data.authenticateUserWithPassword.item.lastName)
         await store.dispatch(
-          'toggleLogin',
+          'toggleUser',
           r.data.authenticateUserWithPassword.item
         )
         // @ts-ignore
@@ -79,14 +81,13 @@ export default defineComponent({
       }
     })
 
-    const prv_page = ref('')
     const email = ref('a.mahdiyar7@yahoo.com')
     const password = ref('Aa1234578')
 
-    function login () {
+    function login() {
       const variables: SigninMutationVariables = {
         email: email.value,
-        password: password.value
+        password: password.value,
       }
 
       loginMutation(variables)
@@ -96,8 +97,8 @@ export default defineComponent({
     return {
       email,
       password,
-      login
+      login,
     }
-  }
+  },
 })
 </script>

@@ -16,3 +16,21 @@ declare module '*/authitem.gql' {
   export default defaultDocument;
 }
     
+
+declare module '*/cart-by-user.gql' {
+  import { DocumentNode } from 'graphql';
+  const defaultDocument: DocumentNode;
+  export const CartByUser: DocumentNode;
+
+  export default defaultDocument;
+}
+    
+
+declare module '*/courses.gql' {
+  import { DocumentNode } from 'graphql';
+  const defaultDocument: DocumentNode;
+  export const courses: DocumentNode;
+
+  export default defaultDocument;
+}
+    

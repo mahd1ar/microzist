@@ -34,12 +34,14 @@ export const CartItem = list({
         },
     },
     ui: {
+
         listView: {
             initialColumns: ['course', 'cart', 'coupon'],
         },
     },
     hooks: {
         async validateInput(args) {
+
             if (args.operation === 'create') {
                 if (args.inputData.course === null)
                     args.addValidationError('course is required');
@@ -49,9 +51,13 @@ export const CartItem = list({
                 args.item?.couponId || args.resolvedData?.coupon?.connect?.id;
 
             const courseId =
-                args.item?.course || args.resolvedData?.course?.connect?.id;
-
+                args.item?.courseId || args.resolvedData?.course?.connect?.id;
+            if (typeof courseId !== 'string') {
+                args.addValidationError('[dev] courseid isundefied');
+                return
+            }
             if (coponId) {
+
                 const { remaining, belongsTo } =
                     await args.context.query.Coupon.findOne({
                         where: {
@@ -60,17 +66,40 @@ export const CartItem = list({
                         query: ' remaining , belongsTo { id , name } ',
                     });
 
+
                 if (
                     !!courseId &&
                     !belongsTo.some((i: any) => i.id === courseId)
-                )
+                ) {
+
                     args.addValidationError(
                         'fa:: the course dosent belong to this coupon'
                     );
+                    return
+                }
 
                 if (remaining === 0) {
-                    args.addValidationError('fa:: there is no coupon left');
+                    // remaining dosent matter if u want to delete
+                    if (args.resolvedData.coupon && args.resolvedData.coupon.disconnect === false)
+                        args.addValidationError('fa:: there is no coupon left');
                 }
+
+                // throw an error if user already use siad coupon
+                if (args.resolvedData.coupon && args.resolvedData.coupon.disconnect === false) {
+
+                    const { cart: [firstcart]
+                    } = await args.context.query.User.findOne({
+                        where: { id: (args.context.session as GeneralSession)?.itemId },
+                        query: 'cart { id items { id coupon { id } } }',
+                    });
+
+                    if (firstcart && firstcart.items.map((i: any) => i.coupon ? i.coupon.id : false).filter(Boolean).includes(coponId))
+                        args.addValidationError('fa:: you already use this coupon');
+                }
+
+
+
+
             }
         },
     },
@@ -82,7 +111,7 @@ export const CartItem = list({
         //     },
         // }),
         course: relationship({ ref: 'Course' }),
-        coupon: relationship({ ref: 'Coupon', ui: { labelField: 'code' } }),
+        coupon: relationship({ ref: 'Coupon', ui: { labelField: 'code', } }),
         priceWithDiscount: virtual({
             field: graphql.field({
                 type: graphql.Float,
@@ -112,7 +141,7 @@ export const CartItem = list({
         }),
         cart: relationship({
             ref: 'Cart.items',
-            // ui: { labelField: 'summery' },
+            ui: { hideCreate: true },
         }),
     },
 });

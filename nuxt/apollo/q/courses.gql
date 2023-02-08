@@ -1,0 +1,8 @@
+query courses {
+  courses {
+    id
+    name
+    description
+    isAccessible
+  }
+}

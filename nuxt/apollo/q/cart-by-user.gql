@@ -1,0 +1,25 @@
+query CartByUser($user: ID!) {
+  carts(
+    where: {
+      isCompleted: { equals: false }
+      AND: [{ user: { id: { equals: $user } } }]
+    }
+  ) {
+    id
+    totalPrice
+    items {
+      id
+      priceWithDiscount
+      coupon {
+        id
+        code
+        discount
+      }
+      course {
+        id
+        name
+        price
+      }
+    }
+  }
+}

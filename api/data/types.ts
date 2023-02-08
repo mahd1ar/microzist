@@ -2,20 +2,21 @@ import { Roles } from './enums';
 
 export type GeneralSession =
     | {
-          listKey: string;
-          itemId: string;
-          data: {
-              name: string;
-              role: Roles;
-              createdAt: string;
-          };
-      }
+        listKey: string;
+        itemId: string;
+        data: {
+            name: string;
+            role: Roles;
+            createdAt: string;
+        };
+    }
     | undefined;
 
 export type GeneralApiResponse = {
     ok: boolean;
     message: string;
     paylod?: Record<string, any>;
+    type?: 'success' | 'error' | 'warning' | 'info'
 };
 
 export type ZibalPaymentResponse = {
@@ -36,9 +37,9 @@ export type ZibalConfig = {
 
 export type WSMsg =
     | {
-          action: 'logout' | 'request-login';
-      }
+        action: 'logout' | 'request-login';
+    }
     | {
-          action: 'message';
-          message: string;
-      };
+        action: 'message';
+        message: string;
+    };

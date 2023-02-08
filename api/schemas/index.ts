@@ -9,6 +9,6 @@ export { Course } from './Course';
 export { User } from './User';
 export { Category } from './Categoryy';
 export { Settings } from './Settings';
-export { Image } from './Image';
+export { Storage } from './Storage';
 export { Tag } from './Tag';
 export { Coupon } from './Coupon';

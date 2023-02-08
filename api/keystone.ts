@@ -12,7 +12,9 @@ import { storage } from './storage';
 import WebSocket from 'ws';
 import { BaseKeystoneTypeInfo, KeystoneContext } from '@keystone-6/core/types';
 import { Request } from 'express';
-import Iron from '@hapi/iron';
+import bodyParser from 'body-parser';
+
+import { sendCommand } from './data/utils';
 
 // TODO load .env
 // import dotenv from 'dotenv';
@@ -103,9 +105,12 @@ export default withAuth(
             cors: { origin: ['http://localhost:5173'], credentials: true },
             port: 3030,
             extendExpressApp: (app, ctx) => {
-            
+
+                app.use(bodyParser.json())
+
+                // auth item
                 app.post('/auth-item', async (req, res) => {
-                    
+                    console.log(!!ctx.session ? 'loggedin' : 'not loggedin')
                     if (ctx.session) {
                         const session: GeneralSession = ctx.session;
                         try {
@@ -156,29 +161,34 @@ export default withAuth(
                 });
 
                 // delete from cart
-                app.get<{ cartid: string }, GeneralApiResponse>(
-                    '/delete-from-cart',
+                app.delete<{ cartid: string }, GeneralApiResponse>(
+                    '/cart-item',
                     async (req, res) => {
                         if (
-                            !req.query.cartid ||
-                            typeof req.query.cartid !== 'string'
+                            !req.body.cartid ||
+                            typeof req.body.cartid !== 'string'
                         ) {
-                            res.status(403).json({
+                            res.status(400).json({
                                 ok: false,
                                 message: 'bad request',
                             });
                             return;
                         }
 
-                        const cartid = req.query.cartid;
-
                         if (!ctx.session) {
-                            res.status(403).send({
+                            res.status(400).send({
                                 ok: false,
                                 message: 'you dont have proper access',
                             });
+                            sendCommand({
+                                action: 'logout',
+                                message: 'session expoire'
+                            })
                             return;
                         }
+
+                        const cartid = req.body.cartid;
+
                         try {
                             const deletedCart =
                                 await ctx.prisma.CartItem.delete({
@@ -190,37 +200,49 @@ export default withAuth(
                             res.json({
                                 ok: true,
                                 message:
-                                    'deleted successfuly ' + deletedCart.id,
+                                    'fa :: deleted successfuly ' + deletedCart.id,
                             });
+
                         } catch (error) {
                             console.log(error);
-                            res.json({
+                            res.status(500).json({
                                 ok: false,
                                 message: 'something went wrong',
                             });
+                            sendCommand({
+                                action: 'show_message',
+                                message: 'something went wrong',
+                                type: 'error'
+                            })
                         }
+
                     }
                 );
 
                 // add course to cart
-                app.get<{ cid: string }, GeneralApiResponse>(
-                    '/add-to-cart',
+                app.post<{ cid: string }, GeneralApiResponse>(
+                    '/cart-item',
                     async (req, res) => {
+
                         if (
-                            !req.query.cid ||
-                            typeof req.query.cid !== 'string'
+                            !req.body.cid ||
+                            typeof req.body.cid !== 'string'
                         ) {
-                            res.status(403).json({
+                            res.status(400).json({
                                 ok: false,
                                 message: 'bad request',
                             });
                             return;
                         }
                         if (!ctx.session) {
-                            res.status(403).send({
+                            res.status(400).send({
                                 ok: false,
                                 message: 'you dont have proper access',
                             });
+                            sendCommand({
+                                action: 'logout',
+                                message: 'session expoire'
+                            })
                             return;
                         }
 
@@ -231,7 +253,7 @@ export default withAuth(
                             isCompleted: boolean;
                         };
 
-                        const courseId = req.query.cid;
+                        const courseId = req.body.cid;
                         const session: GeneralSession = ctx.session;
                         // try {
 
@@ -246,7 +268,7 @@ export default withAuth(
                                 where: {
                                     user: {
                                         id: {
-                                            equals: 'cldbbw0rl0711z8hbnfbetvkl', // session?.itemId
+                                            equals: session?.itemId
                                         },
                                     },
                                     AND: {
@@ -263,20 +285,22 @@ export default withAuth(
                                         }`,
                             });
 
-                            if (
-                                cart.items
-                                    .map((i: any) => i.course.id)
-                                    .includes(courseId)
-                            ) {
-                                res.json({
-                                    ok: false,
-                                    message: 'course already added',
-                                });
-                                return;
-                            }
+                            console.log(cart)
 
                             if (cart) {
                                 cartId = cart.id;
+
+                                if (
+                                    cart.items
+                                        .map((i: any) => i.course.id)
+                                        .includes(courseId)
+                                ) {
+                                    res.json({
+                                        ok: false,
+                                        message: 'course already added',
+                                    });
+                                    return;
+                                }
 
                                 const newCartItem: Cart =
                                     await ctx.prisma.CartItem.create({
@@ -294,6 +318,7 @@ export default withAuth(
                                         },
                                     });
                             } else {
+
                                 const newCart: Cart =
                                     await ctx.prisma.Cart.create({
                                         data: {
@@ -319,7 +344,7 @@ export default withAuth(
                             }
                         } catch (error) {
                             console.error(error);
-                            res.json({
+                            res.status(400).json({
                                 ok: false,
                                 message: 'someting went wrong',
                             });
@@ -330,7 +355,8 @@ export default withAuth(
                     }
                 );
 
-                app.get<{ id: string }, GeneralApiResponse>(
+                // add coupon
+                app.get<{ id: string, cartitem: string }, GeneralApiResponse>(
                     '/coupon',
                     async (req, res) => {
                         type Coupon = {
@@ -360,10 +386,11 @@ export default withAuth(
                             return;
                         }
                         const cartitem = req.query.cartitem;
+                        // TODO shuld not be numbers only
                         const couponCode = Number(req.query.id);
 
                         if (!couponCode) {
-                            res.json({
+                            res.status(403).json({
                                 ok: false,
                                 message: 'coupon is not valid',
                             });
@@ -378,8 +405,8 @@ export default withAuth(
                                 query: 'id code remaining',
                             });
 
-                            if (!coupon.id) {
-                                res.json({
+                            if (!coupon || !coupon.id) {
+                                res.status(403).json({
                                     ok: false,
                                     message: 'coupon dosent exists',
                                 });
@@ -401,8 +428,9 @@ export default withAuth(
 
                             res.json({ ok: true, message: 'success full' });
                         } catch (error) {
-                            // console.error(error?.extensions?.code);
+                            // console.error(String('======'));
                             // console.error(String(error));
+                            // console.error(error);
                             res.json({
                                 ok: false,
                                 message: 'operation not successfull',
@@ -411,255 +439,131 @@ export default withAuth(
                     }
                 );
 
-                // checkout
 
-                app.get<ZibalCBQuery, GeneralApiResponse>(
-                    '/ipg/cb2',
+                app.get<ZibalCBQuery, any>(
+                    '/ipg/cb',
                     async (req, res) => {
-                        // test
-                        // console.log('what thw fuck');
+
                         try {
-                            const cartInfo: {
-                                user: User;
-                                items: { id: string; course: Course }[];
-                            } = await ctx.prisma.Cart.findUnique({
+                            const sudoContext = ctx.sudo()
+                            const cartId = req.query.orderId;
+                            if (typeof cartId === 'string') {
+                                throw new Error("error in params")
+                            }
+
+                            const { totalPrice, user: { id: userId }, items, isCompleted } = await sudoContext.query.Cart.findOne({
                                 where: {
-                                    id: 'cldiz4yin0632n0lok698fe3d',
+                                    id: cartId
                                 },
-                                include: {
-                                    user: true,
-                                    items: {
-                                        select: { course: true, id: true },
+                                query: " totalPrice user { id } items { id priceWithDiscount course {id} } isCompleted"
+                            })
+
+                            if (isCompleted) {
+                                res.status(400).send("fa:: purtes already compeleted")
+                                return
+                            }
+
+                            const cartItem = items.map((i: { id: string, priceWithDiscount: number, course: { id: string } }) => {
+                                return {
+                                    name: 'hi there',
+                                    course: { connect: { id: i.course.id } },
+                                    price: i.priceWithDiscount
+                                }
+                            })
+
+
+                            const newOrder = await sudoContext.query.Order.createOne({
+                                data: {
+                                    totalCost: totalPrice,
+                                    paymentStatus: 1,
+                                    user: {
+                                        connect: {
+                                            id: userId
+                                        }
                                     },
-                                },
-                            });
+                                    items: {
+                                        create: cartItem
+                                    }
 
-                            const purchasedCourses = cartInfo.items.map(
-                                (i) => i.course.id
-                            );
+                                }
+                            })
 
-                            console.log(purchasedCourses);
-                            console.log(cartInfo);
-                        } catch (error) {
-                            // write somwwhere for god sakes
-                            console.log(error);
-                            res.json({
-                                ok: false,
-                                message: 'operation NOT successfull',
-                            });
-                        }
-
-                        return;
-                        // get cartid from query
-                        const CARTID = 'cldiz4yin0632n0lok698fe3d';
-
-                        // get courses from cart
-                        try {
-                            const cartInfo: {
-                                user: User;
-                                items: { id: string; course: Course }[];
-                            } = await ctx.prisma.Cart.findUnique({
+                            await sudoContext.query.Cart.updateOne({
                                 where: {
-                                    id: CARTID,
+                                    id: cartId
                                 },
-                                include: {
-                                    user: true,
-                                    items: {
-                                        select: { course: true, id: true },
-                                    },
-                                },
-                            });
+                                data: {
+                                    isCompleted: true
+                                }
+                            })
 
-                            const purchasedCourses = cartInfo.items.map(
-                                (i) => i.course.id
-                            );
+                            res.send("orderid is => " + newOrder.id)
+                            // await ctx.prisma.Order.create({
 
-                            res.json({ ok: true, message: 'successFull' });
+                            // })
+                            sudoContext.exitSudo()
+
                         } catch (error) {
-                            // write somwwhere for god sakes
-                            console.log(error);
-                            res.json({ ok: false, message: 'NOTsuccessfull' });
+                            console.log(error)
+                            res.send(error)
                         }
-                        // create order and orderItem base of courses
-                        // add user to course owner
-                        // check isCompelete attribute in cart
                     }
                 );
 
-                app.get<ZibalCBQuery>('/ipg/cb', async (req, res) => {
-                    // if (req.query.success === "1") {
+                // checkout
+                app.get<{}, GeneralApiResponse>('/checkout', async (req, res) => {
 
-                    // }
-                    // else {
+                    if (!ctx.session) {
+                        res.status(400).json({
+                            ok: false,
+                            message: 'fa:: session expires login agin'
+                        })
+                        return
+                    }
 
-                    // }
+
+                    const zibal = new Zibal({
+                        merchant: 'zibal', // Your IPG's Merchant Id (You Can Get it From Zibal's Dashboard)
+                        callbackUrl: 'http://localhost:3030/ipg/cb', // The URL Where User will be Redirected to After Payment
+                    });
+
 
                     try {
-                        // get cart item
-                        const cartItemId = 'clcoo3fd65168ishbph5ij0pe';
-                        const cartItem: CartItemDatabase =
-                            await ctx.prisma.CartItem.findUnique({
-                                where: { id: cartItemId },
-                                include: { user: true, course: true },
-                            });
 
-                        if (cartItem.isCompleted) {
-                            res.status(200).send(
-                                'purchase is already completed'
-                            );
-                            return;
-                        }
 
-                        const orderItemPromises: Promise<any>[] =
-                            cartItem.course.map(({ price, id }) => {
-                                return ctx.prisma.OrderItem.create({
-                                    data: {
-                                        name: 'kooft',
-                                        description: 'bemiri',
-                                        price,
-                                        course: {
-                                            connect: {
-                                                id,
-                                            },
-                                        },
-                                    },
-                                });
-                            });
-
-                        const cartItemResolvedDB = await Promise.allSettled<{
-                            id: string;
-                            name: string;
-                            description: string;
-                            courseId: string;
-                            price: number;
-                            orderId: null;
-                        }>(orderItemPromises);
-
-                        const order: {
-                            id: string;
-                            total: number;
-                            userId: string;
-                            paymentStatus: number;
-                            orderDate: Date;
-                        } = await ctx.prisma.Order.create({
-                            data: {
-                                total: cartItemResolvedDB.length,
-                                totalCost: cartItem.course.reduce(
-                                    (accumulator, currentValue) =>
-                                        (accumulator += currentValue.price),
-                                    0
-                                ),
-                                items: {
-                                    connect: cartItemResolvedDB
-                                        .map((i) =>
-                                            i.status === 'fulfilled'
-                                                ? i.value.id
-                                                : null
-                                        )
-                                        .filter((i) => !!i)
-                                        .map((i) => ({ id: i })),
-                                },
-                                user: {
-                                    connect: { id: cartItem.userId },
-                                },
-                                paymentStatus: cartItemResolvedDB.some(
-                                    (i) => i.status === 'rejected'
-                                )
-                                    ? -1
-                                    : 1,
-                            },
-                        });
-
-                        const orderItemPromisesDB = cartItemResolvedDB.map(
-                            (i) => {
-                                if (i.status === 'fulfilled')
-                                    return ctx.prisma.OrderItem.update({
-                                        where: {
-                                            id: i.value.id,
-                                        },
-                                        data: {
-                                            order: {
-                                                connect: { id: order.id },
-                                            },
-                                        },
-                                    });
-                                else return null;
-                            }
-                        );
-
-                        await Promise.allSettled(orderItemPromisesDB);
-
-                        await ctx.prisma.CartItem.update({
+                        const [{ totalPrice, id: cartid }] = await ctx.query.Cart.findMany({
                             where: {
-                                id: cartItemId,
+                                user: {
+                                    id: { equals: (ctx.session as GeneralSession)?.itemId }
+                                }
                             },
-                            data: {
-                                isCompleted: true,
-                            },
+                            query: ' totalPrice id'
+                        })
+
+                        // Payment Request
+                        const response = await zibal.request({
+                            amount: 200000, // Required - In Rials
+                            orderId: cartid, // Optional
+                            merchant: 'zibal', // As Said Above, You can Specify merchant for Each Transaction too.
+                            callbackUrl: 'http://localhost:3030/ipg/cb', // As Said Above, You can Specify merchant for Each Transaction too.
+                            mobile: '09102124368', // Optional - User's Card Numbers will Show inf Dropdown in Shaparak Page if you Send User's Mobile
+                            description: 'THIS IS MY DESCRIPTION', // Optional
+                            allowedCards: ['5022291092719457'], // Optional - Any Transaction with a Card Number which is not Present in this Array will be Unsuccessful
+                            linkToPay: false, // Optional - If true, we will generate a Short Link for this transaction.
+                            sms: false, // Optional - If true, we will Send the Short Link to User's Mobile
                         });
 
-                        cartItem.course.forEach(async (course) => {
-                            await ctx.prisma.Course.update({
-                                where: {
-                                    id: course.id,
-                                },
-                                data: {
-                                    users: {
-                                        connect: {
-                                            id: cartItem.userId,
-                                        },
-                                    },
-                                },
-                            });
-                        });
+                        res.redirect(response.paymentUrl);
 
-                        res.send('successful');
                     } catch (error) {
-                        console.log(error);
-                        res.send(error);
+                        console.error(error); // { result: 103, message: 'authentication error', statusMessage: '{merchant} غیرفعال' }
+                        // TODO write somewhere for godsakes
+                        res.status(500).send(error);
                     }
 
-                    // res.send(req.query);
+
                 });
-
-                app.get('/payment', async (req, res) => {
-                    try {
-                        if (!ctx.session) {
-                            throw new Error('session has expired');
-                        }
-                        const zibal = new Zibal({
-                            merchant: 'zibal', // Your IPG's Merchant Id (You Can Get it From Zibal's Dashboard)
-                            callbackUrl: 'http://localhost:3030/ipg/cb', // The URL Where User will be Redirected to After Payment
-                        });
-
-                        try {
-                            // Payment Request
-                            const response = await zibal.request({
-                                amount: 200000, // Required - In Rials
-                                orderId: 'ZBL-aaaa', // Optional
-                                merchant: 'zibal', // As Said Above, You can Specify merchant for Each Transaction too.
-                                callbackUrl: 'http://localhost:3030/ipg/cb', // As Said Above, You can Specify merchant for Each Transaction too.
-                                mobile: '09102124368', // Optional - User's Card Numbers will Show inf Dropdown in Shaparak Page if you Send User's Mobile
-                                description: 'THIS IS MY DESCRIPTION', // Optional
-                                allowedCards: ['5022291092719457'], // Optional - Any Transaction with a Card Number which is not Present in this Array will be Unsuccessful
-                                linkToPay: false, // Optional - If true, we will generate a Short Link for this transaction.
-                                sms: false, // Optional - If true, we will Send the Short Link to User's Mobile
-                            });
-
-                            res.redirect(response.paymentUrl);
-                        } catch (error) {
-                            console.error(error); // { result: 103, message: 'authentication error', statusMessage: '{merchant} غیرفعال' }
-                            // TODO write somewhere for godsakes
-                            res.status(500).send(error);
-                        }
-
-                        // res.send(keyStoneCtx.session);
-                    } catch (error) {
-                        console.log(error);
-                        res.status(500).send(String(error));
-                    }
-                });
-
+                // kick
                 app.get<{ userid: string | undefined }>('/kick', (req, res) => {
                     if (
                         wss &&

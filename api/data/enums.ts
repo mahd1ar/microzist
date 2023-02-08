@@ -3,3 +3,9 @@ export enum Roles {
     member = '50',
     subscriber = '100',
 }
+
+export enum FileTypes {
+    image = 'image',
+    video = "video",
+    file = "file"
+}

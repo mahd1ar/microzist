@@ -36,7 +36,7 @@ import {
     Category,
     Settings,
     User,
-    Image,
+    Storage,
     Tag,
     CartItem,
     Cart,
@@ -287,52 +287,7 @@ export const lists: Lists = {
     // this last list is our Tag list, it only has a name field for now
     Tag,
 
-    Image: list({
-        access: allowAll,
-        ui: {
-            label: 'media',
-            listView: {
-                initialColumns: ['image', 'altText'],
-            },
-            // listView : {
-            //   defaultFieldMode : 'hidden'
-            // }
-        },
-
-        fields: {
-            altText: text({ validation: { isRequired: false } }),
-
-            image: image({
-                storage: 'local',
-
-                hooks: {
-                    // afterOperation: (a) => {
-                    // if (a.operation === 'create') {
-                    // TODO reduse image size ( probebly with squoosh )
-                    //   console.log(a)
-                    // }
-                    // }
-                },
-            }),
-            uploadedBy: relationship({
-                ref: 'User.images',
-                many: false,
-            }),
-
-            createdAt: timestamp({
-                defaultValue: { kind: 'now' },
-            }),
-        },
-        // hooks: {
-
-        //   validateInput: ({ resolvedData, addValidationError }) => {
-
-        //     if (resolvedData.uploadedBy === undefined) {
-        //       addValidationError('Uploaded By is not defined')
-        //     }
-        //   }
-        // }
-    }),
+    Storage,
     Settings,
     CartItem,
     Cart,

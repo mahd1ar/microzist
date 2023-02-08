@@ -1,4 +1,4 @@
-import { SessionContext, SessionImplementation, SessionStore, type KeystoneContextFromListTypeInfo, type BaseListTypeInfo } from "@keystone-6/core/types";
+import { SessionStore, type KeystoneContextFromListTypeInfo, type BaseListTypeInfo } from "@keystone-6/core/types";
 // import {} from "express"
 import { Roles } from "./enums";
 import { GeneralSession } from "./types";
@@ -18,4 +18,9 @@ export async function kickout(req?: KeystoneContextFromListTypeInfo<BaseListType
         await axios.get("localhost:3030/kick?userid=" + userid)
     }
 
+}
+
+export function sendCommand(cmd: { action: 'show_message', type: 'success' | 'error' | 'alert', message: string } | { action: 'logout', message?: string }) {
+    // TODO impel
+    console.log(cmd)
 }

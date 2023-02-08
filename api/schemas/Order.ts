@@ -2,6 +2,7 @@ import { graphql } from '@graphql-ts/schema';
 import { list } from '@keystone-6/core';
 import { allowAll } from '@keystone-6/core/access';
 import {
+    float,
     integer,
     relationship,
     select,
@@ -9,8 +10,6 @@ import {
     timestamp,
     virtual,
 } from '@keystone-6/core/fields';
-// import { isSignedIn, rules } from "../access";
-import { formatMoney } from '../data/utils';
 
 export const Order = list({
     access: allowAll,
@@ -22,8 +21,7 @@ export const Order = list({
     // delete: () => false,
     // },
     fields: {
-        total: integer(),
-        totalCost: integer(),
+        totalCost: float(),
         items: relationship({ ref: 'OrderItem.order', many: true }),
         user: relationship({ ref: 'User.orders' }),
         paymentStatus: select({

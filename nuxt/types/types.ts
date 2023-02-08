@@ -40,8 +40,8 @@ export type Cart = {
   isCompleted?: Maybe<Scalars['Boolean']>;
   items?: Maybe<Array<CartItem>>;
   itemsCount?: Maybe<Scalars['Int']>;
-  priceFa?: Maybe<Scalars['String']>;
   summery?: Maybe<Scalars['String']>;
+  totalPrice?: Maybe<Scalars['Float']>;
   user?: Maybe<User>;
 };
 
@@ -539,6 +539,17 @@ export type DateTimeNullableFilter = {
   lte?: InputMaybe<Scalars['DateTime']>;
   not?: InputMaybe<DateTimeNullableFilter>;
   notIn?: InputMaybe<Array<Scalars['DateTime']>>;
+};
+
+export type FloatNullableFilter = {
+  equals?: InputMaybe<Scalars['Float']>;
+  gt?: InputMaybe<Scalars['Float']>;
+  gte?: InputMaybe<Scalars['Float']>;
+  in?: InputMaybe<Array<Scalars['Float']>>;
+  lt?: InputMaybe<Scalars['Float']>;
+  lte?: InputMaybe<Scalars['Float']>;
+  not?: InputMaybe<FloatNullableFilter>;
+  notIn?: InputMaybe<Array<Scalars['Float']>>;
 };
 
 export type IdFilter = {
@@ -1323,8 +1334,7 @@ export type Order = {
   itemsCount?: Maybe<Scalars['Int']>;
   orderDate?: Maybe<Scalars['DateTime']>;
   paymentStatus?: Maybe<Scalars['Int']>;
-  total?: Maybe<Scalars['Int']>;
-  totalCost?: Maybe<Scalars['Int']>;
+  totalCost?: Maybe<Scalars['Float']>;
   user?: Maybe<User>;
 };
 
@@ -1345,8 +1355,7 @@ export type OrderCreateInput = {
   items?: InputMaybe<OrderItemRelateToManyForCreateInput>;
   orderDate?: InputMaybe<Scalars['DateTime']>;
   paymentStatus?: InputMaybe<Scalars['Int']>;
-  total?: InputMaybe<Scalars['Int']>;
-  totalCost?: InputMaybe<Scalars['Int']>;
+  totalCost?: InputMaybe<Scalars['Float']>;
   user?: InputMaybe<UserRelateToOneForCreateInput>;
 };
 
@@ -1437,7 +1446,6 @@ export type OrderOrderByInput = {
   id?: InputMaybe<OrderDirection>;
   orderDate?: InputMaybe<OrderDirection>;
   paymentStatus?: InputMaybe<OrderDirection>;
-  total?: InputMaybe<OrderDirection>;
   totalCost?: InputMaybe<OrderDirection>;
 };
 
@@ -1473,8 +1481,7 @@ export type OrderUpdateInput = {
   items?: InputMaybe<OrderItemRelateToManyForUpdateInput>;
   orderDate?: InputMaybe<Scalars['DateTime']>;
   paymentStatus?: InputMaybe<Scalars['Int']>;
-  total?: InputMaybe<Scalars['Int']>;
-  totalCost?: InputMaybe<Scalars['Int']>;
+  totalCost?: InputMaybe<Scalars['Float']>;
   user?: InputMaybe<UserRelateToOneForUpdateInput>;
 };
 
@@ -1486,8 +1493,7 @@ export type OrderWhereInput = {
   items?: InputMaybe<OrderItemManyRelationFilter>;
   orderDate?: InputMaybe<DateTimeNullableFilter>;
   paymentStatus?: InputMaybe<IntNullableFilter>;
-  total?: InputMaybe<IntNullableFilter>;
-  totalCost?: InputMaybe<IntNullableFilter>;
+  totalCost?: InputMaybe<FloatNullableFilter>;
   user?: InputMaybe<UserWhereInput>;
 };
 
@@ -2292,3 +2298,15 @@ export type AuthitemQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type AuthitemQuery = { __typename?: 'Query', authenticatedItem?: { __typename?: 'User', id: string, email?: string | null, name?: string | null, lastName?: string | null } | null };
+
+export type CartByUserQueryVariables = Exact<{
+  user: Scalars['ID'];
+}>;
+
+
+export type CartByUserQuery = { __typename?: 'Query', carts?: Array<{ __typename?: 'Cart', id: string, totalPrice?: number | null, items?: Array<{ __typename?: 'CartItem', id: string, priceWithDiscount?: number | null, coupon?: { __typename?: 'Coupon', id: string, code?: number | null, discount?: number | null } | null, course?: { __typename?: 'Course', id: string, name?: string | null, price?: number | null } | null }> | null }> | null };
+
+export type CoursesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type CoursesQuery = { __typename?: 'Query', courses?: Array<{ __typename?: 'Course', id: string, name?: string | null, description?: string | null, isAccessible?: boolean | null }> | null };

@@ -58,7 +58,7 @@ export const User = list({
         // }),
 
         posts: relationship({ ref: 'Post.author', many: true }),
-        images: relationship({ ref: 'Image.uploadedBy', many: true }),
+        // images: relationship({ ref: 'Storage.uploadedBy', many: true }),
 
         createdAt: timestamp({
             // this sets the timestamp to Date.now() when the user is first created

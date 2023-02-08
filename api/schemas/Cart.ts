@@ -14,6 +14,7 @@ import { BaseKeystoneTypeInfo, KeystoneContext } from '@keystone-6/core/types';
 import { isLoggedIn } from '../data/access';
 
 export const Cart = list({
+    // TODO [security concern] filter by session id 
     access: {
         operation: {
             query: isLoggedIn,
@@ -50,7 +51,7 @@ export const Cart = list({
 
                     return items.map((i: any) => i.course.name).join(' & ');
                 },
-            }),
+            },),
         }),
         items: relationship({
             ref: 'CartItem.cart',
@@ -58,23 +59,21 @@ export const Cart = list({
             label: 'cart items',
         }),
         user: relationship({ ref: 'User.cart', many: false }),
-        priceFa: virtual({
+        totalPrice: virtual({
             field: graphql.field({
-                type: graphql.String,
+                type: graphql.Float,
                 // @ts-ignore
                 async resolve(
                     item,
                     _,
-                    ctx: KeystoneContext<BaseKeystoneTypeInfo>
+                    context: KeystoneContext<BaseKeystoneTypeInfo>
                 ) {
-                    // const x = await ctx.query.Cart.findMany({
-                    //     where: {
-                    //         id : []
-                    //     }
-                    // });
-
-                    // console.log(x)
-                    return 'badan'; //`${formatMoney(item.total)}`;
+                    const { items } = await context.query.Cart.findOne({
+                        where: { id: item.id.toString() },
+                        query: 'items { priceWithDiscount }',
+                    });
+                    console.log(items)
+                    return items.reduce((total: number, { priceWithDiscount }: { priceWithDiscount: number }) => total += priceWithDiscount, 0)
                 },
             }),
         }),

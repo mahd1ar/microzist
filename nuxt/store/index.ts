@@ -66,7 +66,7 @@ export const actions: ActionTree<RootState, RootState> = {
       'http://localhost:3030/auth-item',
       { withCredentials: true }
     )
-    console.log(data)
+    console.log({ data })
     if (data) {
       // user is logged in
       const user: RootState['user'] = {

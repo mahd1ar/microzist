@@ -16,8 +16,6 @@ type User {
   coursesCount(where: CourseWhereInput! = {}): Int
   posts(where: PostWhereInput! = {}, orderBy: [PostOrderByInput!]! = [], take: Int, skip: Int! = 0): [Post!]
   postsCount(where: PostWhereInput! = {}): Int
-  images(where: ImageWhereInput! = {}, orderBy: [ImageOrderByInput!]! = [], take: Int, skip: Int! = 0): [Image!]
-  imagesCount(where: ImageWhereInput! = {}): Int
   createdAt: DateTime
   passwordResetToken: PasswordState
   passwordResetIssuedAt: DateTime
@@ -48,7 +46,6 @@ input UserWhereInput {
   role: StringNullableFilter
   courses: CourseManyRelationFilter
   posts: PostManyRelationFilter
-  images: ImageManyRelationFilter
   createdAt: DateTimeNullableFilter
   passwordResetToken: PasswordFilter
   passwordResetIssuedAt: DateTimeNullableFilter
@@ -146,12 +143,6 @@ input PostManyRelationFilter {
   none: PostWhereInput
 }
 
-input ImageManyRelationFilter {
-  every: ImageWhereInput
-  some: ImageWhereInput
-  none: ImageWhereInput
-}
-
 input DateTimeNullableFilter {
   equals: DateTime
   in: [DateTime!]
@@ -193,7 +184,6 @@ input UserUpdateInput {
   role: String
   courses: CourseRelateToManyForUpdateInput
   posts: PostRelateToManyForUpdateInput
-  images: ImageRelateToManyForUpdateInput
   createdAt: DateTime
   passwordResetToken: String
   passwordResetIssuedAt: DateTime
@@ -228,13 +218,6 @@ input PostRelateToManyForUpdateInput {
   connect: [PostWhereUniqueInput!]
 }
 
-input ImageRelateToManyForUpdateInput {
-  disconnect: [ImageWhereUniqueInput!]
-  set: [ImageWhereUniqueInput!]
-  create: [ImageCreateInput!]
-  connect: [ImageWhereUniqueInput!]
-}
-
 input UserUpdateArgs {
   where: UserWhereUniqueInput!
   data: UserUpdateInput!
@@ -250,7 +233,6 @@ input UserCreateInput {
   role: String
   courses: CourseRelateToManyForCreateInput
   posts: PostRelateToManyForCreateInput
-  images: ImageRelateToManyForCreateInput
   createdAt: DateTime
   passwordResetToken: String
   passwordResetIssuedAt: DateTime
@@ -275,11 +257,6 @@ input CourseRelateToManyForCreateInput {
 input PostRelateToManyForCreateInput {
   create: [PostCreateInput!]
   connect: [PostWhereUniqueInput!]
-}
-
-input ImageRelateToManyForCreateInput {
-  create: [ImageCreateInput!]
-  connect: [ImageWhereUniqueInput!]
 }
 
 type Coupon {
@@ -718,73 +695,64 @@ input TagCreateInput {
   posts: PostRelateToManyForCreateInput
 }
 
-type Image {
+type Storage {
   id: ID!
   altText: String
-  image: ImageFieldOutput
-  uploadedBy: User
+  video: FileFieldOutput
+  type: String
   createdAt: DateTime
 }
 
-type ImageFieldOutput {
-  id: ID!
+type FileFieldOutput {
+  filename: String!
   filesize: Int!
-  width: Int!
-  height: Int!
-  extension: ImageExtension!
   url: String!
 }
 
-enum ImageExtension {
-  jpg
-  png
-  webp
-  gif
-}
-
-input ImageWhereUniqueInput {
+input StorageWhereUniqueInput {
   id: ID
 }
 
-input ImageWhereInput {
-  AND: [ImageWhereInput!]
-  OR: [ImageWhereInput!]
-  NOT: [ImageWhereInput!]
+input StorageWhereInput {
+  AND: [StorageWhereInput!]
+  OR: [StorageWhereInput!]
+  NOT: [StorageWhereInput!]
   id: IDFilter
   altText: StringFilter
-  uploadedBy: UserWhereInput
+  type: StringNullableFilter
   createdAt: DateTimeNullableFilter
 }
 
-input ImageOrderByInput {
+input StorageOrderByInput {
   id: OrderDirection
   altText: OrderDirection
+  type: OrderDirection
   createdAt: OrderDirection
 }
 
-input ImageUpdateInput {
+input StorageUpdateInput {
   altText: String
-  image: ImageFieldInput
-  uploadedBy: UserRelateToOneForUpdateInput
+  video: FileFieldInput
+  type: String
   createdAt: DateTime
 }
 
-input ImageFieldInput {
+input FileFieldInput {
   upload: Upload!
 }
 
 """The `Upload` scalar type represents a file upload."""
 scalar Upload
 
-input ImageUpdateArgs {
-  where: ImageWhereUniqueInput!
-  data: ImageUpdateInput!
+input StorageUpdateArgs {
+  where: StorageWhereUniqueInput!
+  data: StorageUpdateInput!
 }
 
-input ImageCreateInput {
+input StorageCreateInput {
   altText: String
-  image: ImageFieldInput
-  uploadedBy: UserRelateToOneForCreateInput
+  video: FileFieldInput
+  type: String
   createdAt: DateTime
 }
 
@@ -907,7 +875,7 @@ type Cart {
   items(where: CartItemWhereInput! = {}, orderBy: [CartItemOrderByInput!]! = [], take: Int, skip: Int! = 0): [CartItem!]
   itemsCount(where: CartItemWhereInput! = {}): Int
   user: User
-  priceFa: String
+  totalPrice: Float
   isCompleted: Boolean
 }
 
@@ -972,8 +940,7 @@ input CartItemRelateToManyForCreateInput {
 
 type Order {
   id: ID!
-  total: Int
-  totalCost: Int
+  totalCost: Float
   items(where: OrderItemWhereInput! = {}, orderBy: [OrderItemOrderByInput!]! = [], take: Int, skip: Int! = 0): [OrderItem!]
   itemsCount(where: OrderItemWhereInput! = {}): Int
   user: User
@@ -990,12 +957,22 @@ input OrderWhereInput {
   OR: [OrderWhereInput!]
   NOT: [OrderWhereInput!]
   id: IDFilter
-  total: IntNullableFilter
-  totalCost: IntNullableFilter
+  totalCost: FloatNullableFilter
   items: OrderItemManyRelationFilter
   user: UserWhereInput
   paymentStatus: IntNullableFilter
   orderDate: DateTimeNullableFilter
+}
+
+input FloatNullableFilter {
+  equals: Float
+  in: [Float!]
+  notIn: [Float!]
+  lt: Float
+  lte: Float
+  gt: Float
+  gte: Float
+  not: FloatNullableFilter
 }
 
 input OrderItemManyRelationFilter {
@@ -1006,15 +983,13 @@ input OrderItemManyRelationFilter {
 
 input OrderOrderByInput {
   id: OrderDirection
-  total: OrderDirection
   totalCost: OrderDirection
   paymentStatus: OrderDirection
   orderDate: OrderDirection
 }
 
 input OrderUpdateInput {
-  total: Int
-  totalCost: Int
+  totalCost: Float
   items: OrderItemRelateToManyForUpdateInput
   user: UserRelateToOneForUpdateInput
   paymentStatus: Int
@@ -1034,8 +1009,7 @@ input OrderUpdateArgs {
 }
 
 input OrderCreateInput {
-  total: Int
-  totalCost: Int
+  totalCost: Float
   items: OrderItemRelateToManyForCreateInput
   user: UserRelateToOneForCreateInput
   paymentStatus: Int
@@ -1159,12 +1133,12 @@ type Mutation {
   updateTags(data: [TagUpdateArgs!]!): [Tag]
   deleteTag(where: TagWhereUniqueInput!): Tag
   deleteTags(where: [TagWhereUniqueInput!]!): [Tag]
-  createImage(data: ImageCreateInput!): Image
-  createImages(data: [ImageCreateInput!]!): [Image]
-  updateImage(where: ImageWhereUniqueInput!, data: ImageUpdateInput!): Image
-  updateImages(data: [ImageUpdateArgs!]!): [Image]
-  deleteImage(where: ImageWhereUniqueInput!): Image
-  deleteImages(where: [ImageWhereUniqueInput!]!): [Image]
+  createStorage(data: StorageCreateInput!): Storage
+  createStorages(data: [StorageCreateInput!]!): [Storage]
+  updateStorage(where: StorageWhereUniqueInput!, data: StorageUpdateInput!): Storage
+  updateStorages(data: [StorageUpdateArgs!]!): [Storage]
+  deleteStorage(where: StorageWhereUniqueInput!): Storage
+  deleteStorages(where: [StorageWhereUniqueInput!]!): [Storage]
   createSettings(data: SettingsCreateInput!): Settings
   createManySettings(data: [SettingsCreateInput!]!): [Settings]
   updateSettings(where: SettingsWhereUniqueInput! = {id: 1}, data: SettingsUpdateInput!): Settings
@@ -1253,9 +1227,9 @@ type Query {
   tags(where: TagWhereInput! = {}, orderBy: [TagOrderByInput!]! = [], take: Int, skip: Int! = 0): [Tag!]
   tag(where: TagWhereUniqueInput!): Tag
   tagsCount(where: TagWhereInput! = {}): Int
-  images(where: ImageWhereInput! = {}, orderBy: [ImageOrderByInput!]! = [], take: Int, skip: Int! = 0): [Image!]
-  image(where: ImageWhereUniqueInput!): Image
-  imagesCount(where: ImageWhereInput! = {}): Int
+  storages(where: StorageWhereInput! = {}, orderBy: [StorageOrderByInput!]! = [], take: Int, skip: Int! = 0): [Storage!]
+  storage(where: StorageWhereUniqueInput!): Storage
+  storagesCount(where: StorageWhereInput! = {}): Int
   manySettings(where: SettingsWhereInput! = {id: {equals: 1}}, orderBy: [SettingsOrderByInput!]! = [], take: Int, skip: Int! = 0): [Settings!]
   settings(where: SettingsWhereUniqueInput! = {id: 1}): Settings
   manySettingsCount(where: SettingsWhereInput! = {id: {equals: 1}}): Int

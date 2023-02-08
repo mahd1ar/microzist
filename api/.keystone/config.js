@@ -53,6 +53,9 @@ async function kickout(req) {
     await import_axios.default.get("localhost:3030/kick?userid=" + userid);
   }
 }
+function sendCommand(cmd) {
+  console.log(cmd);
+}
 
 // schemas/CartItem.ts
 var import_schema = require("@graphql-ts/schema");
@@ -82,7 +85,11 @@ var CartItem = (0, import_core.list)({
           args.addValidationError("course is required");
       }
       const coponId = args.item?.couponId || args.resolvedData?.coupon?.connect?.id;
-      const courseId = args.item?.course || args.resolvedData?.course?.connect?.id;
+      const courseId = args.item?.courseId || args.resolvedData?.course?.connect?.id;
+      if (typeof courseId !== "string") {
+        args.addValidationError("[dev] courseid isundefied");
+        return;
+      }
       if (coponId) {
         const { remaining, belongsTo } = await args.context.query.Coupon.findOne({
           where: {
@@ -90,12 +97,25 @@ var CartItem = (0, import_core.list)({
           },
           query: " remaining , belongsTo { id , name } "
         });
-        if (!!courseId && !belongsTo.some((i) => i.id === courseId))
+        if (!!courseId && !belongsTo.some((i) => i.id === courseId)) {
           args.addValidationError(
             "fa:: the course dosent belong to this coupon"
           );
+          return;
+        }
         if (remaining === 0) {
-          args.addValidationError("fa:: there is no coupon left");
+          if (args.resolvedData.coupon && args.resolvedData.coupon.disconnect === false)
+            args.addValidationError("fa:: there is no coupon left");
+        }
+        if (args.resolvedData.coupon && args.resolvedData.coupon.disconnect === false) {
+          const {
+            cart: [firstcart]
+          } = await args.context.query.User.findOne({
+            where: { id: args.context.session?.itemId },
+            query: "cart { id items { id coupon { id } } }"
+          });
+          if (firstcart && firstcart.items.map((i) => i.coupon ? i.coupon.id : false).filter(Boolean).includes(coponId))
+            args.addValidationError("fa:: you already use this coupon");
         }
       }
     }
@@ -123,7 +143,8 @@ var CartItem = (0, import_core.list)({
       })
     }),
     cart: (0, import_fields.relationship)({
-      ref: "Cart.items"
+      ref: "Cart.items",
+      ui: { hideCreate: true }
     })
   }
 });
@@ -140,6 +161,12 @@ var Roles = /* @__PURE__ */ ((Roles2) => {
   Roles2["subscriber"] = "100";
   return Roles2;
 })(Roles || {});
+var FileTypes = /* @__PURE__ */ ((FileTypes2) => {
+  FileTypes2["image"] = "image";
+  FileTypes2["video"] = "video";
+  FileTypes2["file"] = "file";
+  return FileTypes2;
+})(FileTypes || {});
 
 // data/access.ts
 function isLoggedIn(args) {
@@ -182,11 +209,16 @@ var Cart = (0, import_core2.list)({
       label: "cart items"
     }),
     user: (0, import_fields2.relationship)({ ref: "User.cart", many: false }),
-    priceFa: (0, import_fields2.virtual)({
+    totalPrice: (0, import_fields2.virtual)({
       field: import_schema2.graphql.field({
-        type: import_schema2.graphql.String,
-        async resolve(item, _, ctx) {
-          return "badan";
+        type: import_schema2.graphql.Float,
+        async resolve(item, _, context) {
+          const { items } = await context.query.Cart.findOne({
+            where: { id: item.id.toString() },
+            query: "items { priceWithDiscount }"
+          });
+          console.log(items);
+          return items.reduce((total, { priceWithDiscount }) => total += priceWithDiscount, 0);
         }
       })
     }),
@@ -201,8 +233,7 @@ var import_fields3 = require("@keystone-6/core/fields");
 var Order = (0, import_core3.list)({
   access: import_access2.allowAll,
   fields: {
-    total: (0, import_fields3.integer)(),
-    totalCost: (0, import_fields3.integer)(),
+    totalCost: (0, import_fields3.float)(),
     items: (0, import_fields3.relationship)({ ref: "OrderItem.order", many: true }),
     user: (0, import_fields3.relationship)({ ref: "User.orders" }),
     paymentStatus: (0, import_fields3.select)({
@@ -364,7 +395,6 @@ var User = (0, import_core6.list)({
       many: true
     }),
     posts: (0, import_fields6.relationship)({ ref: "Post.author", many: true }),
-    images: (0, import_fields6.relationship)({ ref: "Image.uploadedBy", many: true }),
     createdAt: (0, import_fields6.timestamp)({
       defaultValue: { kind: "now" }
     })
@@ -409,27 +439,38 @@ var Settings = (0, import_core8.list)({
   }
 });
 
-// schemas/Image.ts
+// schemas/Storage.ts
 var import_core9 = require("@keystone-6/core");
 var import_access9 = require("@keystone-6/core/access");
 var import_fields9 = require("@keystone-6/core/fields");
-var Image = (0, import_core9.list)({
+var Storage = (0, import_core9.list)({
   access: import_access9.allowAll,
   ui: {
     label: "media"
   },
+  hooks: {
+    async resolveInput({ resolvedData, operation }) {
+      if (resolvedData.video && resolvedData.video.filename) {
+        if (!resolvedData.type) {
+          if (["mp4", "mpa", "mov", "avi", "wmv"].includes(resolvedData.video.filename.split(".").at(-1).toLowerCase())) {
+            resolvedData.type = "video";
+          }
+        }
+      }
+      return resolvedData;
+    }
+  },
   fields: {
     altText: (0, import_fields9.text)({ validation: { isRequired: false } }),
-    image: (0, import_fields9.image)({
-      storage: "local",
-      hooks: {}
+    video: (0, import_fields9.file)({
+      storage: "local"
     }),
-    uploadedBy: (0, import_fields9.relationship)({
-      ref: "User.images",
-      many: false
+    type: (0, import_fields9.select)({
+      options: Object.keys(FileTypes)
     }),
     createdAt: (0, import_fields9.timestamp)({
-      defaultValue: { kind: "now" }
+      defaultValue: { kind: "now" },
+      ui: {}
     })
   }
 });
@@ -725,29 +766,7 @@ var lists = {
   Course,
   Category,
   Tag,
-  Image: (0, import_core13.list)({
-    access: import_access12.allowAll,
-    ui: {
-      label: "media",
-      listView: {
-        initialColumns: ["image", "altText"]
-      }
-    },
-    fields: {
-      altText: (0, import_fields12.text)({ validation: { isRequired: false } }),
-      image: (0, import_fields12.image)({
-        storage: "local",
-        hooks: {}
-      }),
-      uploadedBy: (0, import_fields12.relationship)({
-        ref: "User.images",
-        many: false
-      }),
-      createdAt: (0, import_fields12.timestamp)({
-        defaultValue: { kind: "now" }
-      })
-    }
-  }),
+  Storage,
   Settings,
   CartItem,
   Cart,
@@ -824,21 +843,22 @@ var session = (0, import_session.statelessSessions)({
 });
 
 // storage.ts
-var baseUrl = "http://localhost:3000";
+var baseUrl = "http://localhost:3030";
 var storage = {
   "local": {
     kind: "local",
-    type: "image",
-    generateUrl: (path2) => `${baseUrl}/images${path2}`,
+    type: "file",
+    generateUrl: (path2) => `${baseUrl}/file${path2}`,
     serverRoute: {
-      path: "/images"
+      path: "/files"
     },
-    storagePath: "public/images"
+    storagePath: "public/files"
   }
 };
 
 // keystone.ts
 var import_ws = __toESM(require("ws"));
+var import_body_parser = __toESM(require("body-parser"));
 var Zibal = require("zibal");
 var wss;
 var keystone_default = withAuth(
@@ -857,7 +877,9 @@ var keystone_default = withAuth(
       cors: { origin: ["http://localhost:5173"], credentials: true },
       port: 3030,
       extendExpressApp: (app, ctx) => {
+        app.use(import_body_parser.default.json());
         app.post("/auth-item", async (req, res) => {
+          console.log(!!ctx.session ? "loggedin" : "not loggedin");
           if (ctx.session) {
             const session2 = ctx.session;
             try {
@@ -897,24 +919,28 @@ var keystone_default = withAuth(
             res.send(String(error));
           }
         });
-        app.get(
-          "/delete-from-cart",
+        app.delete(
+          "/cart-item",
           async (req, res) => {
-            if (!req.query.cartid || typeof req.query.cartid !== "string") {
-              res.status(403).json({
+            if (!req.body.cartid || typeof req.body.cartid !== "string") {
+              res.status(400).json({
                 ok: false,
                 message: "bad request"
               });
               return;
             }
-            const cartid = req.query.cartid;
             if (!ctx.session) {
-              res.status(403).send({
+              res.status(400).send({
                 ok: false,
                 message: "you dont have proper access"
               });
+              sendCommand({
+                action: "logout",
+                message: "session expoire"
+              });
               return;
             }
+            const cartid = req.body.cartid;
             try {
               const deletedCart = await ctx.prisma.CartItem.delete({
                 where: {
@@ -923,35 +949,44 @@ var keystone_default = withAuth(
               });
               res.json({
                 ok: true,
-                message: "deleted successfuly " + deletedCart.id
+                message: "fa :: deleted successfuly " + deletedCart.id
               });
             } catch (error) {
               console.log(error);
-              res.json({
+              res.status(500).json({
                 ok: false,
                 message: "something went wrong"
+              });
+              sendCommand({
+                action: "show_message",
+                message: "something went wrong",
+                type: "error"
               });
             }
           }
         );
-        app.get(
-          "/add-to-cart",
+        app.post(
+          "/cart-item",
           async (req, res) => {
-            if (!req.query.cid || typeof req.query.cid !== "string") {
-              res.status(403).json({
+            if (!req.body.cid || typeof req.body.cid !== "string") {
+              res.status(400).json({
                 ok: false,
                 message: "bad request"
               });
               return;
             }
             if (!ctx.session) {
-              res.status(403).send({
+              res.status(400).send({
                 ok: false,
                 message: "you dont have proper access"
               });
+              sendCommand({
+                action: "logout",
+                message: "session expoire"
+              });
               return;
             }
-            const courseId = req.query.cid;
+            const courseId = req.body.cid;
             const session2 = ctx.session;
             try {
               let cartId;
@@ -959,7 +994,7 @@ var keystone_default = withAuth(
                 where: {
                   user: {
                     id: {
-                      equals: "cldbbw0rl0711z8hbnfbetvkl"
+                      equals: session2?.itemId
                     }
                   },
                   AND: {
@@ -975,15 +1010,16 @@ var keystone_default = withAuth(
                                             }
                                         }`
               });
-              if (cart.items.map((i) => i.course.id).includes(courseId)) {
-                res.json({
-                  ok: false,
-                  message: "course already added"
-                });
-                return;
-              }
+              console.log(cart);
               if (cart) {
                 cartId = cart.id;
+                if (cart.items.map((i) => i.course.id).includes(courseId)) {
+                  res.json({
+                    ok: false,
+                    message: "course already added"
+                  });
+                  return;
+                }
                 const newCartItem = await ctx.prisma.CartItem.create({
                   data: {
                     course: {
@@ -1021,7 +1057,7 @@ var keystone_default = withAuth(
               }
             } catch (error) {
               console.error(error);
-              res.json({
+              res.status(400).json({
                 ok: false,
                 message: "someting went wrong"
               });
@@ -1050,7 +1086,7 @@ var keystone_default = withAuth(
             const cartitem = req.query.cartitem;
             const couponCode = Number(req.query.id);
             if (!couponCode) {
-              res.json({
+              res.status(403).json({
                 ok: false,
                 message: "coupon is not valid"
               });
@@ -1063,8 +1099,8 @@ var keystone_default = withAuth(
                 },
                 query: "id code remaining"
               });
-              if (!coupon.id) {
-                res.json({
+              if (!coupon || !coupon.id) {
+                res.status(403).json({
                   ok: false,
                   message: "coupon dosent exists"
                 });
@@ -1092,179 +1128,97 @@ var keystone_default = withAuth(
           }
         );
         app.get(
-          "/ipg/cb2",
+          "/ipg/cb",
           async (req, res) => {
             try {
-              const cartInfo = await ctx.prisma.Cart.findUnique({
+              const sudoContext = ctx.sudo();
+              const cartId = req.query.orderId;
+              if (typeof cartId === "string") {
+                throw new Error("error in params");
+              }
+              const { totalPrice, user: { id: userId }, items, isCompleted } = await sudoContext.query.Cart.findOne({
                 where: {
-                  id: "cldiz4yin0632n0lok698fe3d"
+                  id: cartId
                 },
-                include: {
-                  user: true,
+                query: " totalPrice user { id } items { id priceWithDiscount course {id} } isCompleted"
+              });
+              if (isCompleted) {
+                res.status(400).send("fa:: purtes already compeleted");
+                return;
+              }
+              const cartItem = items.map((i) => {
+                return {
+                  name: "hi there",
+                  course: { connect: { id: i.course.id } },
+                  price: i.priceWithDiscount
+                };
+              });
+              const newOrder = await sudoContext.query.Order.createOne({
+                data: {
+                  totalCost: totalPrice,
+                  paymentStatus: 1,
+                  user: {
+                    connect: {
+                      id: userId
+                    }
+                  },
                   items: {
-                    select: { course: true, id: true }
+                    create: cartItem
                   }
                 }
               });
-              const purchasedCourses = cartInfo.items.map(
-                (i) => i.course.id
-              );
-              console.log(purchasedCourses);
-              console.log(cartInfo);
-            } catch (error) {
-              console.log(error);
-              res.json({
-                ok: false,
-                message: "operation NOT successfull"
-              });
-            }
-            return;
-            const CARTID = "cldiz4yin0632n0lok698fe3d";
-            try {
-              const cartInfo = await ctx.prisma.Cart.findUnique({
+              await sudoContext.query.Cart.updateOne({
                 where: {
-                  id: CARTID
+                  id: cartId
                 },
-                include: {
-                  user: true,
-                  items: {
-                    select: { course: true, id: true }
-                  }
+                data: {
+                  isCompleted: true
                 }
               });
-              const purchasedCourses = cartInfo.items.map(
-                (i) => i.course.id
-              );
-              res.json({ ok: true, message: "successFull" });
+              res.send("orderid is => " + newOrder.id);
+              sudoContext.exitSudo();
             } catch (error) {
               console.log(error);
-              res.json({ ok: false, message: "NOTsuccessfull" });
+              res.send(error);
             }
           }
         );
-        app.get("/ipg/cb", async (req, res) => {
-          try {
-            const cartItemId = "clcoo3fd65168ishbph5ij0pe";
-            const cartItem = await ctx.prisma.CartItem.findUnique({
-              where: { id: cartItemId },
-              include: { user: true, course: true }
+        app.get("/checkout", async (req, res) => {
+          if (!ctx.session) {
+            res.status(400).json({
+              ok: false,
+              message: "fa:: session expires login agin"
             });
-            if (cartItem.isCompleted) {
-              res.status(200).send(
-                "purchase is already completed"
-              );
-              return;
-            }
-            const orderItemPromises = cartItem.course.map(({ price, id }) => {
-              return ctx.prisma.OrderItem.create({
-                data: {
-                  name: "kooft",
-                  description: "bemiri",
-                  price,
-                  course: {
-                    connect: {
-                      id
-                    }
-                  }
-                }
-              });
-            });
-            const cartItemResolvedDB = await Promise.allSettled(orderItemPromises);
-            const order = await ctx.prisma.Order.create({
-              data: {
-                total: cartItemResolvedDB.length,
-                totalCost: cartItem.course.reduce(
-                  (accumulator, currentValue) => accumulator += currentValue.price,
-                  0
-                ),
-                items: {
-                  connect: cartItemResolvedDB.map(
-                    (i) => i.status === "fulfilled" ? i.value.id : null
-                  ).filter((i) => !!i).map((i) => ({ id: i }))
-                },
-                user: {
-                  connect: { id: cartItem.userId }
-                },
-                paymentStatus: cartItemResolvedDB.some(
-                  (i) => i.status === "rejected"
-                ) ? -1 : 1
-              }
-            });
-            const orderItemPromisesDB = cartItemResolvedDB.map(
-              (i) => {
-                if (i.status === "fulfilled")
-                  return ctx.prisma.OrderItem.update({
-                    where: {
-                      id: i.value.id
-                    },
-                    data: {
-                      order: {
-                        connect: { id: order.id }
-                      }
-                    }
-                  });
-                else
-                  return null;
-              }
-            );
-            await Promise.allSettled(orderItemPromisesDB);
-            await ctx.prisma.CartItem.update({
-              where: {
-                id: cartItemId
-              },
-              data: {
-                isCompleted: true
-              }
-            });
-            cartItem.course.forEach(async (course) => {
-              await ctx.prisma.Course.update({
-                where: {
-                  id: course.id
-                },
-                data: {
-                  users: {
-                    connect: {
-                      id: cartItem.userId
-                    }
-                  }
-                }
-              });
-            });
-            res.send("successful");
-          } catch (error) {
-            console.log(error);
-            res.send(error);
+            return;
           }
-        });
-        app.get("/payment", async (req, res) => {
+          const zibal = new Zibal({
+            merchant: "zibal",
+            callbackUrl: "http://localhost:3030/ipg/cb"
+          });
           try {
-            if (!ctx.session) {
-              throw new Error("session has expired");
-            }
-            const zibal = new Zibal({
-              merchant: "zibal",
-              callbackUrl: "http://localhost:3030/ipg/cb"
+            const [{ totalPrice, id: cartid }] = await ctx.query.Cart.findMany({
+              where: {
+                user: {
+                  id: { equals: ctx.session?.itemId }
+                }
+              },
+              query: " totalPrice id"
             });
-            try {
-              const response = await zibal.request({
-                amount: 2e5,
-                orderId: "ZBL-aaaa",
-                merchant: "zibal",
-                callbackUrl: "http://localhost:3030/ipg/cb",
-                mobile: "09102124368",
-                description: "THIS IS MY DESCRIPTION",
-                allowedCards: ["5022291092719457"],
-                linkToPay: false,
-                sms: false
-              });
-              res.redirect(response.paymentUrl);
-            } catch (error) {
-              console.error(error);
-              res.status(500).send(error);
-            }
+            const response = await zibal.request({
+              amount: 2e5,
+              orderId: cartid,
+              merchant: "zibal",
+              callbackUrl: "http://localhost:3030/ipg/cb",
+              mobile: "09102124368",
+              description: "THIS IS MY DESCRIPTION",
+              allowedCards: ["5022291092719457"],
+              linkToPay: false,
+              sms: false
+            });
+            res.redirect(response.paymentUrl);
           } catch (error) {
-            console.log(error);
-            res.status(500).send(String(error));
+            console.error(error);
+            res.status(500).send(error);
           }
         });
         app.get("/kick", (req, res) => {
