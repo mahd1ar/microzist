@@ -1,46 +1,33 @@
-import {
-    integer,
-    select,
-    text,
-    relationship,
-    virtual,
-} from '@keystone-6/core/fields';
-import { list } from '@keystone-6/core';
-import { allOperations, allowAll } from '@keystone-6/core/access';
-import { isLoggedIn } from '../data/access';
 import { graphql } from '@graphql-ts/schema';
+import { list } from '@keystone-6/core';
+import { allowAll } from '@keystone-6/core/access';
+import {
+    text,
+    integer,
+    virtual,
+    select,
+    relationship,
+} from '@keystone-6/core/fields';
 import { BaseKeystoneTypeInfo, KeystoneContext } from '@keystone-6/core/types';
 import { formatMoney } from '../data/utils';
-import { GeneralSession } from '../data/types';
+import { persianCalendar } from '../src/custom-fields/persian-calander';
 
-export const Course = list({
-    access: {
-        operation: {
-            ...allOperations(allowAll),
-            create: isLoggedIn,
-        },
-        filter: {
-            query: (args) => {
-                if (
-                    args.session &&
-                    (args.session as GeneralSession)?.data.role === '0'
-                )
-                    return true;
-                else
-                    return {
-                        status: {
-                            equals: 'DRAFT',
-                        },
-                    };
-            },
-        },
-    },
+export const Event = list({
+    access: allowAll,
     fields: {
-        name: text({ validation: { isRequired: true } }),
-        description: text({
-            ui: {
-                displayMode: 'textarea',
-            },
+        name: text({
+            validation: { isRequired: true },
+        }),
+        description: text({ ui: { displayMode: 'textarea' } }),
+        price: integer(),
+        priceFa: virtual({
+            field: graphql.field({
+                type: graphql.String,
+                async resolve(item) {
+                    // @ts-ignore
+                    return `${formatMoney(item.price)}`;
+                },
+            }),
         }),
         status: select({
             options: [
@@ -54,18 +41,11 @@ export const Course = list({
                 createView: { fieldMode: 'hidden' },
             },
         }),
-        price: integer(),
-        priceFa: virtual({
-            field: graphql.field({
-                type: graphql.String,
-                async resolve(item) {
-                    // @ts-ignore
-                    return `${formatMoney(item.price)}`;
-                },
-            }),
-        }),
+        maxAmount: integer(),
+        from: persianCalendar(),
+        to: persianCalendar(),
         users: relationship({
-            ref: 'User.courses',
+            ref: 'User.events',
             many: true,
             hooks: {
                 resolveInput({ operation, resolvedData, context }) {
@@ -85,23 +65,12 @@ export const Course = list({
                 hideCreate: true,
             },
         }),
-        courseItem: relationship({
-            ref: 'CourseItem.course',
-            many: true,
-            ui: {
-                labelField: 'name',
-
-                inlineCreate: {
-                    fields: ['CourseItem.name', 'CourseItem.description'],
-                },
-            },
-        }),
         isAccessible: virtual({
-            ui: {
-                createView: {
-                    fieldMode: 'hidden',
-                },
-            },
+            // ui: {
+            //     createView: {
+            //         fieldMode: 'hidden',
+            //     },
+            // },
             field: graphql.field({
                 type: graphql.Boolean,
                 // @ts-ignore
@@ -112,7 +81,7 @@ export const Course = list({
                 ) {
                     if (!context.session) return false;
 
-                    const { users } = await context.query.Course.findOne({
+                    const { users } = await context.query.Event.findOne({
                         where: { id: item.id.toString() },
                         query: 'users { id }',
                     });

@@ -17,6 +17,7 @@
     "@keystone-6/core": "^4.0.1",
     "@keystone-6/fields-document": "^6.0.0",
     "dotenv": "^16.0.3",
+    "lodash": "^4.17.21",
     "nodemailer": "^6.8.0",
     "nodemailer-express-handlebars": "^6.0.0",
     "reactjs-persian-calendar": "^1.1.7",

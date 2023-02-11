@@ -1,14 +1,14 @@
 export { CartItem } from './CartItem';
 export { Cart } from './Cart';
-// export { permissionsList } from "./fields";
 export { Order } from './Order';
 export { OrderItem } from './OrderItem';
 export { Course } from './Course';
-// export { ProductImage } from "./ProductImage";
-// export { Role } from "./Role";
+export { CourseItem } from './CourseItems';
 export { User } from './User';
 export { Category } from './Categoryy';
 export { Settings } from './Settings';
-export { Storage } from './Storage';
+export { File } from './File';
 export { Tag } from './Tag';
 export { Coupon } from './Coupon';
+export { Event } from './Event';
+export { Comment } from './social/Comment';

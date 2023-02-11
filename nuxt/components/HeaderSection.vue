@@ -11,12 +11,15 @@
         <li>
           <nuxt-link to="/courses">courses</nuxt-link>
         </li>
+        <li>
+          <nuxt-link to="/events">events</nuxt-link>
+        </li>
       </ul>
       <div class="flex flex-row-reverse gap-2" v-if="$store.getters.isLoggedIn">
         hello {{ $store.getters.user.name }}
 
         <nuxt-link to="/dashboard">dashboards</nuxt-link>
-        <nuxt-link to="'/'">logout</nuxt-link>
+        <nuxt-link to="/logout">logout</nuxt-link>
         <div class="relative">
           <button @click="cart = !cart">V</button>
           <cart-box v-if="cart" class="absolute left-0 w-44 bg-lime-600" />

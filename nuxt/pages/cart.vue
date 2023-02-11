@@ -10,7 +10,12 @@
           :key="cartitem.id"
         >
           <div class="flex justify-between border p-10" dir="ltr">
-            <div>
+            <div v-if="cartitem.type === 'event'">
+              name: {{ cartitem.event?.name }} <br />
+              price:
+              {{ cartitem.event?.price }}
+            </div>
+            <div v-else>
               name:
               {{ cartitem.course?.name }}
               <br />
@@ -23,7 +28,7 @@
                   {{
                     ((cartitem.course?.price || 0) *
                       (cartitem.coupon?.discount || 100)) /
-                    100
+                      100
                   }}
                 </strong>
                 <s>
@@ -39,6 +44,7 @@
               coupon:
               {{ cartitem.coupon?.id }}
             </div>
+
             <div>
               <div v-if="!cartitem.coupon?.id">
                 add coupon
@@ -83,10 +89,8 @@ import { CartByUserQuery, CartByUserQueryVariables } from '@/types/types'
 import {
   useStore,
   onMounted,
-  defineComponent,
-  ref,
   reactive,
-  useContext,
+  useContext
 } from '@nuxtjs/composition-api'
 import { useLazyQuery } from '@vue/apollo-composable/dist'
 import { showGeneralError, showGeneralApiMessage } from '~/data/utils'
@@ -99,7 +103,7 @@ const cart = useLazyQuery<CartByUserQuery, CartByUserQueryVariables>(CARTBYUSER)
 
 const couponsInput = reactive<Record<string, string>>({})
 
-async function addCoupon(code: string = '', cartitem: string = '') {
+async function addCoupon (code: string = '', cartitem: string = '') {
   if (code.trim() === '') {
     showGeneralApiMessage(
       { ok: false, message: 'fa:; code must not be empty' },
@@ -112,8 +116,8 @@ async function addCoupon(code: string = '', cartitem: string = '') {
     const { data } = await ctx.$axios.get<GeneralApiResponse>('/coupon', {
       params: {
         id: code,
-        cartitem,
-      },
+        cartitem
+      }
     })
 
     showGeneralApiMessage(data, ctx)
@@ -124,10 +128,10 @@ async function addCoupon(code: string = '', cartitem: string = '') {
   console.log(code)
 }
 
-async function deleteFromCart(cartid: string) {
+async function deleteFromCart (cartid: string) {
   try {
     const { data } = await ctx.$axios.delete<GeneralApiResponse>('/cart-item', {
-      data: { cartid },
+      data: { cartid }
     })
     cart.refetch()
     showGeneralApiMessage(data, ctx)

@@ -1,0 +1,8 @@
+query myCourses($id: ID!) {
+  user(where: { id: $id }) {
+    courses {
+      id
+      name
+    }
+  }
+}

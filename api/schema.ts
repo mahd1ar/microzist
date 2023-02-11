@@ -36,14 +36,17 @@ import {
     Category,
     Settings,
     User,
-    Storage,
+    File,
     Tag,
     CartItem,
     Cart,
     Order,
     OrderItem,
     Course,
+    CourseItem,
     Coupon,
+    Comment,
+    Event,
 } from './schemas';
 
 import { persianCalendar } from './src/custom-fields/persian-calander';
@@ -51,114 +54,7 @@ import { persianCalendar } from './src/custom-fields/persian-calander';
 export const lists: Lists = {
     User,
     Coupon,
-    CouponPivot: list({
-        ui: {
-            listView: {
-                initialColumns: ['couponCode', 'customer', 'status'],
-            },
-        },
-        hooks: {
-            validateInput: async (args) => {
-                if (args.operation === 'create') {
-                    if (!args.resolvedData.customer) {
-                        args.addValidationError(
-                            'fa:: customer cannot be empty'
-                        );
-                        return;
-                    }
-
-                    if (!args.resolvedData.couponCode) {
-                        args.addValidationError(
-                            'fa:: coupon Code cannot be empty'
-                        );
-                    } else {
-                        // every pesion sould have 1 coupon per code
-                        const id = args.resolvedData.couponCode.connect!.id;
-
-                        const { code, maxAmount } =
-                            await args.context.query.Coupon.findOne({
-                                where: { id },
-                                query: 'code maxAmount',
-                            });
-
-                        const numberOfCouponsPerProduct =
-                            await args.context.query.CouponPivot.count({
-                                where: {
-                                    customer: {
-                                        id: {
-                                            equals: args.inputData.customer
-                                                ?.connect?.id,
-                                        },
-                                    },
-                                    couponCode: {
-                                        code: {
-                                            equals: code,
-                                        },
-                                    },
-                                },
-                            });
-
-                        if (numberOfCouponsPerProduct > 0) {
-                            args.addValidationError(
-                                'fa:: you already have one'
-                            );
-                            return;
-                        }
-
-                        const couponsWeAlreadyHaveCount =
-                            await args.context.query.CouponPivot.count({
-                                where: {
-                                    couponCode: {
-                                        code: {
-                                            equals: code,
-                                        },
-                                    },
-                                },
-                            });
-
-                        if (maxAmount === couponsWeAlreadyHaveCount) {
-                            args.addValidationError('fa:: we maxed out');
-                        }
-                    }
-                }
-
-                // await ctx.context.prisma.CouponPivot.count({
-                //     where: {
-                //         customer: { is: { name: 'moein' } },
-                //     },
-                // })
-            },
-        },
-        access: allowAll,
-        fields: {
-            couponCode: relationship({
-                ref: 'Coupon',
-                many: false,
-                label: 'C.C',
-                ui: {
-                    labelField: 'code',
-                },
-            }),
-            customer: relationship({
-                ref: 'User',
-                many: false,
-            }),
-
-            status: select({
-                type: 'integer',
-                options: [
-                    {
-                        label: 'applied',
-                        value: 1,
-                    },
-                    {
-                        label: 'pending',
-                        value: 0,
-                    },
-                ],
-            }),
-        },
-    }),
+    Event,
 
     Post: list({
         // WARNING
@@ -282,15 +178,16 @@ export const lists: Lists = {
         },
     }),
     Course,
-
+    CourseItem,
     Category,
     // this last list is our Tag list, it only has a name field for now
     Tag,
 
-    Storage,
+    File,
     Settings,
     CartItem,
     Cart,
     Order,
     OrderItem,
+    Comment,
 };

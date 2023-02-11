@@ -13,46 +13,45 @@ generator client {
 }
 
 model User {
-  id                        String        @id @default(cuid())
-  name                      String        @default("")
-  lastName                  String        @default("")
-  email                     String        @unique @default("")
-  password                  String
-  cart                      Cart[]        @relation("Cart_user")
-  orders                    Order[]       @relation("Order_user")
-  role                      String?
-  courses                   Course[]      @relation("Course_users")
-  posts                     Post[]        @relation("Post_author")
-  createdAt                 DateTime?     @default(now())
-  passwordResetToken        String?
-  passwordResetIssuedAt     DateTime?
-  passwordResetRedeemedAt   DateTime?
-  from_CouponPivot_customer CouponPivot[] @relation("CouponPivot_customer")
+  id                      String    @id @default(cuid())
+  name                    String    @default("")
+  lastName                String    @default("")
+  email                   String    @unique @default("")
+  password                String
+  cart                    Cart[]    @relation("Cart_user")
+  orders                  Order[]   @relation("Order_user")
+  role                    String?
+  courses                 Course[]  @relation("Course_users")
+  events                  Event[]   @relation("Event_users")
+  posts                   Post[]    @relation("Post_author")
+  comments                Comment[] @relation("Comment_user")
+  createdAt               DateTime? @default(now())
+  passwordResetToken      String?
+  passwordResetIssuedAt   DateTime?
+  passwordResetRedeemedAt DateTime?
 }
 
 model Coupon {
-  id                          String        @id @default(cuid())
-  code                        Int
-  description                 String        @default("")
-  maxAmount                   Int
-  belongsTo                   Course[]      @relation("Coupon_belongsTo")
-  discount                    Int?
-  couponItem                  CouponPivot[] @relation("Coupon_couponItem")
-  from_CouponPivot_couponCode CouponPivot[] @relation("CouponPivot_couponCode")
-  from_CartItem_coupon        CartItem[]    @relation("CartItem_coupon")
+  id                   String     @id @default(cuid())
+  code                 Int
+  description          String     @default("")
+  maxAmount            Int
+  belongsTo            Course[]   @relation("Coupon_belongsTo")
+  discount             Int?
+  from_CartItem_coupon CartItem[] @relation("CartItem_coupon")
 }
 
-model CouponPivot {
-  id                     String   @id @default(cuid())
-  couponCode             Coupon?  @relation("CouponPivot_couponCode", fields: [couponCodeId], references: [id])
-  couponCodeId           String?  @map("couponCode")
-  customer               User?    @relation("CouponPivot_customer", fields: [customerId], references: [id])
-  customerId             String?  @map("customer")
-  status                 Int?
-  from_Coupon_couponItem Coupon[] @relation("Coupon_couponItem")
-
-  @@index([couponCodeId])
-  @@index([customerId])
+model Event {
+  id                  String     @id @default(cuid())
+  name                String     @default("")
+  description         String     @default("")
+  price               Int?
+  status              String?    @default("DRAFT")
+  maxAmount           Int?
+  from                String?
+  to                  String?
+  users               User[]     @relation("Event_users")
+  from_CartItem_event CartItem[] @relation("CartItem_event")
 }
 
 model Post {
@@ -70,15 +69,31 @@ model Post {
 }
 
 model Course {
-  id                    String      @id @default(cuid())
-  name                  String      @default("")
-  description           String      @default("")
-  status                String?     @default("DRAFT")
+  id                    String       @id @default(cuid())
+  name                  String       @default("")
+  description           String       @default("")
+  status                String?      @default("DRAFT")
   price                 Int?
-  users                 User[]      @relation("Course_users")
-  from_Coupon_belongsTo Coupon[]    @relation("Coupon_belongsTo")
-  from_CartItem_course  CartItem[]  @relation("CartItem_course")
-  from_OrderItem_course OrderItem[] @relation("OrderItem_course")
+  users                 User[]       @relation("Course_users")
+  courseItem            CourseItem[] @relation("CourseItem_course")
+  from_Coupon_belongsTo Coupon[]     @relation("Coupon_belongsTo")
+  from_CartItem_course  CartItem[]   @relation("CartItem_course")
+  from_OrderItem_course OrderItem[]  @relation("OrderItem_course")
+}
+
+model CourseItem {
+  id          String    @id @default(cuid())
+  no          Int?
+  name        String    @default("")
+  description String    @default("")
+  video       File?     @relation("CourseItem_video", fields: [videoId], references: [id])
+  videoId     String?   @map("video")
+  course      Course?   @relation("CourseItem_course", fields: [courseId], references: [id])
+  courseId    String?   @map("course")
+  comments    Comment[] @relation("Comment_courseItem")
+
+  @@index([videoId])
+  @@index([courseId])
 }
 
 model Category {
@@ -95,13 +110,14 @@ model Tag {
   posts Post[] @relation("Post_tags")
 }
 
-model Storage {
-  id             String    @id @default(cuid())
-  altText        String    @default("")
-  video_filesize Int?
-  video_filename String?
-  type           String?
-  createdAt      DateTime? @default(now())
+model File {
+  id                    String       @id @default(cuid())
+  altText               String       @default("")
+  video_filesize        Int?
+  video_filename        String?
+  type                  String?
+  createdAt             DateTime?    @default(now())
+  from_CourseItem_video CourseItem[] @relation("CourseItem_video")
 }
 
 model Settings {
@@ -116,12 +132,16 @@ model CartItem {
   id       String  @id @default(cuid())
   course   Course? @relation("CartItem_course", fields: [courseId], references: [id])
   courseId String? @map("course")
+  event    Event?  @relation("CartItem_event", fields: [eventId], references: [id])
+  eventId  String? @map("event")
+  quantity Int?    @default(1)
   coupon   Coupon? @relation("CartItem_coupon", fields: [couponId], references: [id])
   couponId String? @map("coupon")
   cart     Cart?   @relation("CartItem_cart", fields: [cartId], references: [id])
   cartId   String? @map("cart")
 
   @@index([courseId])
+  @@index([eventId])
   @@index([couponId])
   @@index([cartId])
 }
@@ -160,4 +180,18 @@ model OrderItem {
 
   @@index([courseId])
   @@index([orderId])
+}
+
+model Comment {
+  id           String      @id @default(cuid())
+  comment      String      @default("")
+  user         User?       @relation("Comment_user", fields: [userId], references: [id])
+  userId       String?     @map("user")
+  courseItem   CourseItem? @relation("Comment_courseItem", fields: [courseItemId], references: [id])
+  courseItemId String?     @map("courseItem")
+  isValidated  Boolean     @default(true)
+  createdAt    DateTime?   @default(now())
+
+  @@index([userId])
+  @@index([courseItemId])
 }

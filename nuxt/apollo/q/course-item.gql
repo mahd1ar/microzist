@@ -1,0 +1,23 @@
+query courseItem($id: ID!) {
+  courseItem(where: { id: $id }) {
+    id
+    no
+    name
+    description
+    commentsCount
+    comments {
+      id
+      comment
+      user {
+        name
+      }
+    }
+    video {
+      id
+      video {
+        filename
+        url
+      }
+    }
+  }
+}

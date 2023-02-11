@@ -12,7 +12,7 @@ import { graphql } from '@graphql-ts/schema';
 import { BaseKeystoneTypeInfo, KeystoneContext } from '@keystone-6/core/types';
 import { formatMoney } from '../data/utils';
 
-export const CourseItems = list({
+export const CourseItem = list({
     access: {
         operation: {
             ...allOperations(allowAll),
@@ -32,6 +32,23 @@ export const CourseItems = list({
                 displayMode: 'textarea',
             },
         }),
+        video: relationship({
+            ref: 'File',
+        }),
+        course: relationship({
+            label: 'belongs to',
+            ref: 'Course.courseItem',
+            ui: {
+                labelField: 'name',
+            },
+        }),
+        comments: relationship({
+            ref: 'Comment.courseItem',
+            many: true,
+            ui: {
+                // displayMode: 'count',
+            },
+        }),
         // photo: relationship({
         //   ref: 'ProductImage.product',
         //   ui: {
@@ -41,6 +58,5 @@ export const CourseItems = list({
         //     inlineEdit: { fields: ['image', 'altText'] },
         //   },
         // }),
-
     },
 });

@@ -69,14 +69,19 @@ export type CartItem = {
   cart?: Maybe<Cart>;
   coupon?: Maybe<Coupon>;
   course?: Maybe<Course>;
+  event?: Maybe<Event>;
   id: Scalars['ID'];
   priceWithDiscount?: Maybe<Scalars['Float']>;
+  quantity?: Maybe<Scalars['Int']>;
+  type?: Maybe<Scalars['String']>;
 };
 
 export type CartItemCreateInput = {
   cart?: InputMaybe<CartRelateToOneForCreateInput>;
   coupon?: InputMaybe<CouponRelateToOneForCreateInput>;
   course?: InputMaybe<CourseRelateToOneForCreateInput>;
+  event?: InputMaybe<EventRelateToOneForCreateInput>;
+  quantity?: InputMaybe<Scalars['Int']>;
 };
 
 export type CartItemManyRelationFilter = {
@@ -87,6 +92,7 @@ export type CartItemManyRelationFilter = {
 
 export type CartItemOrderByInput = {
   id?: InputMaybe<OrderDirection>;
+  quantity?: InputMaybe<OrderDirection>;
 };
 
 export type CartItemRelateToManyForCreateInput = {
@@ -110,6 +116,8 @@ export type CartItemUpdateInput = {
   cart?: InputMaybe<CartRelateToOneForUpdateInput>;
   coupon?: InputMaybe<CouponRelateToOneForUpdateInput>;
   course?: InputMaybe<CourseRelateToOneForUpdateInput>;
+  event?: InputMaybe<EventRelateToOneForUpdateInput>;
+  quantity?: InputMaybe<Scalars['Int']>;
 };
 
 export type CartItemWhereInput = {
@@ -119,7 +127,9 @@ export type CartItemWhereInput = {
   cart?: InputMaybe<CartWhereInput>;
   coupon?: InputMaybe<CouponWhereInput>;
   course?: InputMaybe<CourseWhereInput>;
+  event?: InputMaybe<EventWhereInput>;
   id?: InputMaybe<IdFilter>;
+  quantity?: InputMaybe<IntNullableFilter>;
 };
 
 export type CartItemWhereUniqueInput = {
@@ -262,13 +272,83 @@ export type CategoryWhereUniqueInput = {
   id?: InputMaybe<Scalars['ID']>;
 };
 
+export type Comment = {
+  __typename?: 'Comment';
+  comment?: Maybe<Scalars['String']>;
+  courseItem?: Maybe<CourseItem>;
+  createdAt?: Maybe<Scalars['DateTime']>;
+  id: Scalars['ID'];
+  isValidated?: Maybe<Scalars['Boolean']>;
+  user?: Maybe<User>;
+};
+
+export type CommentCreateInput = {
+  comment?: InputMaybe<Scalars['String']>;
+  courseItem?: InputMaybe<CourseItemRelateToOneForCreateInput>;
+  createdAt?: InputMaybe<Scalars['DateTime']>;
+  isValidated?: InputMaybe<Scalars['Boolean']>;
+  user?: InputMaybe<UserRelateToOneForCreateInput>;
+};
+
+export type CommentManyRelationFilter = {
+  every?: InputMaybe<CommentWhereInput>;
+  none?: InputMaybe<CommentWhereInput>;
+  some?: InputMaybe<CommentWhereInput>;
+};
+
+export type CommentOrderByInput = {
+  comment?: InputMaybe<OrderDirection>;
+  createdAt?: InputMaybe<OrderDirection>;
+  id?: InputMaybe<OrderDirection>;
+  isValidated?: InputMaybe<OrderDirection>;
+};
+
+export type CommentRelateToManyForCreateInput = {
+  connect?: InputMaybe<Array<CommentWhereUniqueInput>>;
+  create?: InputMaybe<Array<CommentCreateInput>>;
+};
+
+export type CommentRelateToManyForUpdateInput = {
+  connect?: InputMaybe<Array<CommentWhereUniqueInput>>;
+  create?: InputMaybe<Array<CommentCreateInput>>;
+  disconnect?: InputMaybe<Array<CommentWhereUniqueInput>>;
+  set?: InputMaybe<Array<CommentWhereUniqueInput>>;
+};
+
+export type CommentUpdateArgs = {
+  data: CommentUpdateInput;
+  where: CommentWhereUniqueInput;
+};
+
+export type CommentUpdateInput = {
+  comment?: InputMaybe<Scalars['String']>;
+  courseItem?: InputMaybe<CourseItemRelateToOneForUpdateInput>;
+  createdAt?: InputMaybe<Scalars['DateTime']>;
+  isValidated?: InputMaybe<Scalars['Boolean']>;
+  user?: InputMaybe<UserRelateToOneForUpdateInput>;
+};
+
+export type CommentWhereInput = {
+  AND?: InputMaybe<Array<CommentWhereInput>>;
+  NOT?: InputMaybe<Array<CommentWhereInput>>;
+  OR?: InputMaybe<Array<CommentWhereInput>>;
+  comment?: InputMaybe<StringFilter>;
+  courseItem?: InputMaybe<CourseItemWhereInput>;
+  createdAt?: InputMaybe<DateTimeNullableFilter>;
+  id?: InputMaybe<IdFilter>;
+  isValidated?: InputMaybe<BooleanFilter>;
+  user?: InputMaybe<UserWhereInput>;
+};
+
+export type CommentWhereUniqueInput = {
+  id?: InputMaybe<Scalars['ID']>;
+};
+
 export type Coupon = {
   __typename?: 'Coupon';
   belongsTo?: Maybe<Array<Course>>;
   belongsToCount?: Maybe<Scalars['Int']>;
   code?: Maybe<Scalars['Int']>;
-  couponItem?: Maybe<Array<CouponPivot>>;
-  couponItemCount?: Maybe<Scalars['Int']>;
   description?: Maybe<Scalars['String']>;
   discount?: Maybe<Scalars['Int']>;
   id: Scalars['ID'];
@@ -289,23 +369,9 @@ export type CouponBelongsToCountArgs = {
   where?: CourseWhereInput;
 };
 
-
-export type CouponCouponItemArgs = {
-  orderBy?: Array<CouponPivotOrderByInput>;
-  skip?: Scalars['Int'];
-  take?: InputMaybe<Scalars['Int']>;
-  where?: CouponPivotWhereInput;
-};
-
-
-export type CouponCouponItemCountArgs = {
-  where?: CouponPivotWhereInput;
-};
-
 export type CouponCreateInput = {
   belongsTo?: InputMaybe<CourseRelateToManyForCreateInput>;
   code?: InputMaybe<Scalars['Int']>;
-  couponItem?: InputMaybe<CouponPivotRelateToManyForCreateInput>;
   description?: InputMaybe<Scalars['String']>;
   discount?: InputMaybe<Scalars['Int']>;
   maxAmount?: InputMaybe<Scalars['Int']>;
@@ -317,68 +383,6 @@ export type CouponOrderByInput = {
   discount?: InputMaybe<OrderDirection>;
   id?: InputMaybe<OrderDirection>;
   maxAmount?: InputMaybe<OrderDirection>;
-};
-
-export type CouponPivot = {
-  __typename?: 'CouponPivot';
-  couponCode?: Maybe<Coupon>;
-  customer?: Maybe<User>;
-  id: Scalars['ID'];
-  status?: Maybe<Scalars['Int']>;
-};
-
-export type CouponPivotCreateInput = {
-  couponCode?: InputMaybe<CouponRelateToOneForCreateInput>;
-  customer?: InputMaybe<UserRelateToOneForCreateInput>;
-  status?: InputMaybe<Scalars['Int']>;
-};
-
-export type CouponPivotManyRelationFilter = {
-  every?: InputMaybe<CouponPivotWhereInput>;
-  none?: InputMaybe<CouponPivotWhereInput>;
-  some?: InputMaybe<CouponPivotWhereInput>;
-};
-
-export type CouponPivotOrderByInput = {
-  id?: InputMaybe<OrderDirection>;
-  status?: InputMaybe<OrderDirection>;
-};
-
-export type CouponPivotRelateToManyForCreateInput = {
-  connect?: InputMaybe<Array<CouponPivotWhereUniqueInput>>;
-  create?: InputMaybe<Array<CouponPivotCreateInput>>;
-};
-
-export type CouponPivotRelateToManyForUpdateInput = {
-  connect?: InputMaybe<Array<CouponPivotWhereUniqueInput>>;
-  create?: InputMaybe<Array<CouponPivotCreateInput>>;
-  disconnect?: InputMaybe<Array<CouponPivotWhereUniqueInput>>;
-  set?: InputMaybe<Array<CouponPivotWhereUniqueInput>>;
-};
-
-export type CouponPivotUpdateArgs = {
-  data: CouponPivotUpdateInput;
-  where: CouponPivotWhereUniqueInput;
-};
-
-export type CouponPivotUpdateInput = {
-  couponCode?: InputMaybe<CouponRelateToOneForUpdateInput>;
-  customer?: InputMaybe<UserRelateToOneForUpdateInput>;
-  status?: InputMaybe<Scalars['Int']>;
-};
-
-export type CouponPivotWhereInput = {
-  AND?: InputMaybe<Array<CouponPivotWhereInput>>;
-  NOT?: InputMaybe<Array<CouponPivotWhereInput>>;
-  OR?: InputMaybe<Array<CouponPivotWhereInput>>;
-  couponCode?: InputMaybe<CouponWhereInput>;
-  customer?: InputMaybe<UserWhereInput>;
-  id?: InputMaybe<IdFilter>;
-  status?: InputMaybe<IntNullableFilter>;
-};
-
-export type CouponPivotWhereUniqueInput = {
-  id?: InputMaybe<Scalars['ID']>;
 };
 
 export type CouponRelateToOneForCreateInput = {
@@ -400,7 +404,6 @@ export type CouponUpdateArgs = {
 export type CouponUpdateInput = {
   belongsTo?: InputMaybe<CourseRelateToManyForUpdateInput>;
   code?: InputMaybe<Scalars['Int']>;
-  couponItem?: InputMaybe<CouponPivotRelateToManyForUpdateInput>;
   description?: InputMaybe<Scalars['String']>;
   discount?: InputMaybe<Scalars['Int']>;
   maxAmount?: InputMaybe<Scalars['Int']>;
@@ -412,7 +415,6 @@ export type CouponWhereInput = {
   OR?: InputMaybe<Array<CouponWhereInput>>;
   belongsTo?: InputMaybe<CourseManyRelationFilter>;
   code?: InputMaybe<IntFilter>;
-  couponItem?: InputMaybe<CouponPivotManyRelationFilter>;
   description?: InputMaybe<StringFilter>;
   discount?: InputMaybe<IntNullableFilter>;
   id?: InputMaybe<IdFilter>;
@@ -425,6 +427,8 @@ export type CouponWhereUniqueInput = {
 
 export type Course = {
   __typename?: 'Course';
+  courseItem?: Maybe<Array<CourseItem>>;
+  courseItemCount?: Maybe<Scalars['Int']>;
   description?: Maybe<Scalars['String']>;
   id: Scalars['ID'];
   isAccessible?: Maybe<Scalars['Boolean']>;
@@ -434,6 +438,19 @@ export type Course = {
   status?: Maybe<Scalars['String']>;
   users?: Maybe<Array<User>>;
   usersCount?: Maybe<Scalars['Int']>;
+};
+
+
+export type CourseCourseItemArgs = {
+  orderBy?: Array<CourseItemOrderByInput>;
+  skip?: Scalars['Int'];
+  take?: InputMaybe<Scalars['Int']>;
+  where?: CourseItemWhereInput;
+};
+
+
+export type CourseCourseItemCountArgs = {
+  where?: CourseItemWhereInput;
 };
 
 
@@ -450,11 +467,113 @@ export type CourseUsersCountArgs = {
 };
 
 export type CourseCreateInput = {
+  courseItem?: InputMaybe<CourseItemRelateToManyForCreateInput>;
   description?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
   price?: InputMaybe<Scalars['Int']>;
   status?: InputMaybe<Scalars['String']>;
   users?: InputMaybe<UserRelateToManyForCreateInput>;
+};
+
+export type CourseItem = {
+  __typename?: 'CourseItem';
+  comments?: Maybe<Array<Comment>>;
+  commentsCount?: Maybe<Scalars['Int']>;
+  course?: Maybe<Course>;
+  description?: Maybe<Scalars['String']>;
+  id: Scalars['ID'];
+  name?: Maybe<Scalars['String']>;
+  no?: Maybe<Scalars['Int']>;
+  video?: Maybe<File>;
+};
+
+
+export type CourseItemCommentsArgs = {
+  orderBy?: Array<CommentOrderByInput>;
+  skip?: Scalars['Int'];
+  take?: InputMaybe<Scalars['Int']>;
+  where?: CommentWhereInput;
+};
+
+
+export type CourseItemCommentsCountArgs = {
+  where?: CommentWhereInput;
+};
+
+export type CourseItemCreateInput = {
+  comments?: InputMaybe<CommentRelateToManyForCreateInput>;
+  course?: InputMaybe<CourseRelateToOneForCreateInput>;
+  description?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
+  no?: InputMaybe<Scalars['Int']>;
+  video?: InputMaybe<FileRelateToOneForCreateInput>;
+};
+
+export type CourseItemManyRelationFilter = {
+  every?: InputMaybe<CourseItemWhereInput>;
+  none?: InputMaybe<CourseItemWhereInput>;
+  some?: InputMaybe<CourseItemWhereInput>;
+};
+
+export type CourseItemOrderByInput = {
+  description?: InputMaybe<OrderDirection>;
+  id?: InputMaybe<OrderDirection>;
+  name?: InputMaybe<OrderDirection>;
+  no?: InputMaybe<OrderDirection>;
+};
+
+export type CourseItemRelateToManyForCreateInput = {
+  connect?: InputMaybe<Array<CourseItemWhereUniqueInput>>;
+  create?: InputMaybe<Array<CourseItemCreateInput>>;
+};
+
+export type CourseItemRelateToManyForUpdateInput = {
+  connect?: InputMaybe<Array<CourseItemWhereUniqueInput>>;
+  create?: InputMaybe<Array<CourseItemCreateInput>>;
+  disconnect?: InputMaybe<Array<CourseItemWhereUniqueInput>>;
+  set?: InputMaybe<Array<CourseItemWhereUniqueInput>>;
+};
+
+export type CourseItemRelateToOneForCreateInput = {
+  connect?: InputMaybe<CourseItemWhereUniqueInput>;
+  create?: InputMaybe<CourseItemCreateInput>;
+};
+
+export type CourseItemRelateToOneForUpdateInput = {
+  connect?: InputMaybe<CourseItemWhereUniqueInput>;
+  create?: InputMaybe<CourseItemCreateInput>;
+  disconnect?: InputMaybe<Scalars['Boolean']>;
+};
+
+export type CourseItemUpdateArgs = {
+  data: CourseItemUpdateInput;
+  where: CourseItemWhereUniqueInput;
+};
+
+export type CourseItemUpdateInput = {
+  comments?: InputMaybe<CommentRelateToManyForUpdateInput>;
+  course?: InputMaybe<CourseRelateToOneForUpdateInput>;
+  description?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
+  no?: InputMaybe<Scalars['Int']>;
+  video?: InputMaybe<FileRelateToOneForUpdateInput>;
+};
+
+export type CourseItemWhereInput = {
+  AND?: InputMaybe<Array<CourseItemWhereInput>>;
+  NOT?: InputMaybe<Array<CourseItemWhereInput>>;
+  OR?: InputMaybe<Array<CourseItemWhereInput>>;
+  comments?: InputMaybe<CommentManyRelationFilter>;
+  course?: InputMaybe<CourseWhereInput>;
+  description?: InputMaybe<StringFilter>;
+  id?: InputMaybe<IdFilter>;
+  name?: InputMaybe<StringFilter>;
+  no?: InputMaybe<IntNullableFilter>;
+  video?: InputMaybe<FileWhereInput>;
+};
+
+export type CourseItemWhereUniqueInput = {
+  id?: InputMaybe<Scalars['ID']>;
 };
 
 export type CourseManyRelationFilter = {
@@ -500,6 +619,7 @@ export type CourseUpdateArgs = {
 };
 
 export type CourseUpdateInput = {
+  courseItem?: InputMaybe<CourseItemRelateToManyForUpdateInput>;
   description?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
   price?: InputMaybe<Scalars['Int']>;
@@ -511,6 +631,7 @@ export type CourseWhereInput = {
   AND?: InputMaybe<Array<CourseWhereInput>>;
   NOT?: InputMaybe<Array<CourseWhereInput>>;
   OR?: InputMaybe<Array<CourseWhereInput>>;
+  courseItem?: InputMaybe<CourseItemManyRelationFilter>;
   description?: InputMaybe<StringFilter>;
   id?: InputMaybe<IdFilter>;
   name?: InputMaybe<StringFilter>;
@@ -541,6 +662,190 @@ export type DateTimeNullableFilter = {
   notIn?: InputMaybe<Array<Scalars['DateTime']>>;
 };
 
+export type Event = {
+  __typename?: 'Event';
+  description?: Maybe<Scalars['String']>;
+  from?: Maybe<Scalars['String']>;
+  id: Scalars['ID'];
+  isAccessible?: Maybe<Scalars['Boolean']>;
+  maxAmount?: Maybe<Scalars['Int']>;
+  name?: Maybe<Scalars['String']>;
+  price?: Maybe<Scalars['Int']>;
+  priceFa?: Maybe<Scalars['String']>;
+  status?: Maybe<Scalars['String']>;
+  to?: Maybe<Scalars['String']>;
+  users?: Maybe<Array<User>>;
+  usersCount?: Maybe<Scalars['Int']>;
+};
+
+
+export type EventUsersArgs = {
+  orderBy?: Array<UserOrderByInput>;
+  skip?: Scalars['Int'];
+  take?: InputMaybe<Scalars['Int']>;
+  where?: UserWhereInput;
+};
+
+
+export type EventUsersCountArgs = {
+  where?: UserWhereInput;
+};
+
+export type EventCreateInput = {
+  description?: InputMaybe<Scalars['String']>;
+  from?: InputMaybe<Scalars['String']>;
+  maxAmount?: InputMaybe<Scalars['Int']>;
+  name?: InputMaybe<Scalars['String']>;
+  price?: InputMaybe<Scalars['Int']>;
+  status?: InputMaybe<Scalars['String']>;
+  to?: InputMaybe<Scalars['String']>;
+  users?: InputMaybe<UserRelateToManyForCreateInput>;
+};
+
+export type EventManyRelationFilter = {
+  every?: InputMaybe<EventWhereInput>;
+  none?: InputMaybe<EventWhereInput>;
+  some?: InputMaybe<EventWhereInput>;
+};
+
+export type EventOrderByInput = {
+  description?: InputMaybe<OrderDirection>;
+  from?: InputMaybe<OrderDirection>;
+  id?: InputMaybe<OrderDirection>;
+  maxAmount?: InputMaybe<OrderDirection>;
+  name?: InputMaybe<OrderDirection>;
+  price?: InputMaybe<OrderDirection>;
+  status?: InputMaybe<OrderDirection>;
+  to?: InputMaybe<OrderDirection>;
+};
+
+export type EventRelateToManyForCreateInput = {
+  connect?: InputMaybe<Array<EventWhereUniqueInput>>;
+  create?: InputMaybe<Array<EventCreateInput>>;
+};
+
+export type EventRelateToManyForUpdateInput = {
+  connect?: InputMaybe<Array<EventWhereUniqueInput>>;
+  create?: InputMaybe<Array<EventCreateInput>>;
+  disconnect?: InputMaybe<Array<EventWhereUniqueInput>>;
+  set?: InputMaybe<Array<EventWhereUniqueInput>>;
+};
+
+export type EventRelateToOneForCreateInput = {
+  connect?: InputMaybe<EventWhereUniqueInput>;
+  create?: InputMaybe<EventCreateInput>;
+};
+
+export type EventRelateToOneForUpdateInput = {
+  connect?: InputMaybe<EventWhereUniqueInput>;
+  create?: InputMaybe<EventCreateInput>;
+  disconnect?: InputMaybe<Scalars['Boolean']>;
+};
+
+export type EventUpdateArgs = {
+  data: EventUpdateInput;
+  where: EventWhereUniqueInput;
+};
+
+export type EventUpdateInput = {
+  description?: InputMaybe<Scalars['String']>;
+  from?: InputMaybe<Scalars['String']>;
+  maxAmount?: InputMaybe<Scalars['Int']>;
+  name?: InputMaybe<Scalars['String']>;
+  price?: InputMaybe<Scalars['Int']>;
+  status?: InputMaybe<Scalars['String']>;
+  to?: InputMaybe<Scalars['String']>;
+  users?: InputMaybe<UserRelateToManyForUpdateInput>;
+};
+
+export type EventWhereInput = {
+  AND?: InputMaybe<Array<EventWhereInput>>;
+  NOT?: InputMaybe<Array<EventWhereInput>>;
+  OR?: InputMaybe<Array<EventWhereInput>>;
+  description?: InputMaybe<StringFilter>;
+  id?: InputMaybe<IdFilter>;
+  maxAmount?: InputMaybe<IntNullableFilter>;
+  name?: InputMaybe<StringFilter>;
+  price?: InputMaybe<IntNullableFilter>;
+  status?: InputMaybe<StringNullableFilter>;
+  users?: InputMaybe<UserManyRelationFilter>;
+};
+
+export type EventWhereUniqueInput = {
+  id?: InputMaybe<Scalars['ID']>;
+};
+
+export type File = {
+  __typename?: 'File';
+  altText?: Maybe<Scalars['String']>;
+  createdAt?: Maybe<Scalars['DateTime']>;
+  id: Scalars['ID'];
+  type?: Maybe<Scalars['String']>;
+  video?: Maybe<FileFieldOutput>;
+};
+
+export type FileCreateInput = {
+  altText?: InputMaybe<Scalars['String']>;
+  createdAt?: InputMaybe<Scalars['DateTime']>;
+  type?: InputMaybe<Scalars['String']>;
+  video?: InputMaybe<FileFieldInput>;
+};
+
+export type FileFieldInput = {
+  upload: Scalars['Upload'];
+};
+
+export type FileFieldOutput = {
+  __typename?: 'FileFieldOutput';
+  filename: Scalars['String'];
+  filesize: Scalars['Int'];
+  url: Scalars['String'];
+};
+
+export type FileOrderByInput = {
+  altText?: InputMaybe<OrderDirection>;
+  createdAt?: InputMaybe<OrderDirection>;
+  id?: InputMaybe<OrderDirection>;
+  type?: InputMaybe<OrderDirection>;
+};
+
+export type FileRelateToOneForCreateInput = {
+  connect?: InputMaybe<FileWhereUniqueInput>;
+  create?: InputMaybe<FileCreateInput>;
+};
+
+export type FileRelateToOneForUpdateInput = {
+  connect?: InputMaybe<FileWhereUniqueInput>;
+  create?: InputMaybe<FileCreateInput>;
+  disconnect?: InputMaybe<Scalars['Boolean']>;
+};
+
+export type FileUpdateArgs = {
+  data: FileUpdateInput;
+  where: FileWhereUniqueInput;
+};
+
+export type FileUpdateInput = {
+  altText?: InputMaybe<Scalars['String']>;
+  createdAt?: InputMaybe<Scalars['DateTime']>;
+  type?: InputMaybe<Scalars['String']>;
+  video?: InputMaybe<FileFieldInput>;
+};
+
+export type FileWhereInput = {
+  AND?: InputMaybe<Array<FileWhereInput>>;
+  NOT?: InputMaybe<Array<FileWhereInput>>;
+  OR?: InputMaybe<Array<FileWhereInput>>;
+  altText?: InputMaybe<StringFilter>;
+  createdAt?: InputMaybe<DateTimeNullableFilter>;
+  id?: InputMaybe<IdFilter>;
+  type?: InputMaybe<StringNullableFilter>;
+};
+
+export type FileWhereUniqueInput = {
+  id?: InputMaybe<Scalars['ID']>;
+};
+
 export type FloatNullableFilter = {
   equals?: InputMaybe<Scalars['Float']>;
   gt?: InputMaybe<Scalars['Float']>;
@@ -561,93 +866,6 @@ export type IdFilter = {
   lte?: InputMaybe<Scalars['ID']>;
   not?: InputMaybe<IdFilter>;
   notIn?: InputMaybe<Array<Scalars['ID']>>;
-};
-
-export type Image = {
-  __typename?: 'Image';
-  altText?: Maybe<Scalars['String']>;
-  createdAt?: Maybe<Scalars['DateTime']>;
-  id: Scalars['ID'];
-  image?: Maybe<ImageFieldOutput>;
-  uploadedBy?: Maybe<User>;
-};
-
-export type ImageCreateInput = {
-  altText?: InputMaybe<Scalars['String']>;
-  createdAt?: InputMaybe<Scalars['DateTime']>;
-  image?: InputMaybe<ImageFieldInput>;
-  uploadedBy?: InputMaybe<UserRelateToOneForCreateInput>;
-};
-
-export enum ImageExtension {
-  Gif = 'gif',
-  Jpg = 'jpg',
-  Png = 'png',
-  Webp = 'webp'
-}
-
-export type ImageFieldInput = {
-  upload: Scalars['Upload'];
-};
-
-export type ImageFieldOutput = {
-  __typename?: 'ImageFieldOutput';
-  extension: ImageExtension;
-  filesize: Scalars['Int'];
-  height: Scalars['Int'];
-  id: Scalars['ID'];
-  url: Scalars['String'];
-  width: Scalars['Int'];
-};
-
-export type ImageManyRelationFilter = {
-  every?: InputMaybe<ImageWhereInput>;
-  none?: InputMaybe<ImageWhereInput>;
-  some?: InputMaybe<ImageWhereInput>;
-};
-
-export type ImageOrderByInput = {
-  altText?: InputMaybe<OrderDirection>;
-  createdAt?: InputMaybe<OrderDirection>;
-  id?: InputMaybe<OrderDirection>;
-};
-
-export type ImageRelateToManyForCreateInput = {
-  connect?: InputMaybe<Array<ImageWhereUniqueInput>>;
-  create?: InputMaybe<Array<ImageCreateInput>>;
-};
-
-export type ImageRelateToManyForUpdateInput = {
-  connect?: InputMaybe<Array<ImageWhereUniqueInput>>;
-  create?: InputMaybe<Array<ImageCreateInput>>;
-  disconnect?: InputMaybe<Array<ImageWhereUniqueInput>>;
-  set?: InputMaybe<Array<ImageWhereUniqueInput>>;
-};
-
-export type ImageUpdateArgs = {
-  data: ImageUpdateInput;
-  where: ImageWhereUniqueInput;
-};
-
-export type ImageUpdateInput = {
-  altText?: InputMaybe<Scalars['String']>;
-  createdAt?: InputMaybe<Scalars['DateTime']>;
-  image?: InputMaybe<ImageFieldInput>;
-  uploadedBy?: InputMaybe<UserRelateToOneForUpdateInput>;
-};
-
-export type ImageWhereInput = {
-  AND?: InputMaybe<Array<ImageWhereInput>>;
-  NOT?: InputMaybe<Array<ImageWhereInput>>;
-  OR?: InputMaybe<Array<ImageWhereInput>>;
-  altText?: InputMaybe<StringFilter>;
-  createdAt?: InputMaybe<DateTimeNullableFilter>;
-  id?: InputMaybe<IdFilter>;
-  uploadedBy?: InputMaybe<UserWhereInput>;
-};
-
-export type ImageWhereUniqueInput = {
-  id?: InputMaybe<Scalars['ID']>;
 };
 
 export type IntFilter = {
@@ -795,14 +1013,18 @@ export type Mutation = {
   createCarts?: Maybe<Array<Maybe<Cart>>>;
   createCategories?: Maybe<Array<Maybe<Category>>>;
   createCategory?: Maybe<Category>;
+  createComment?: Maybe<Comment>;
+  createComments?: Maybe<Array<Maybe<Comment>>>;
   createCoupon?: Maybe<Coupon>;
-  createCouponPivot?: Maybe<CouponPivot>;
-  createCouponPivots?: Maybe<Array<Maybe<CouponPivot>>>;
   createCoupons?: Maybe<Array<Maybe<Coupon>>>;
   createCourse?: Maybe<Course>;
+  createCourseItem?: Maybe<CourseItem>;
+  createCourseItems?: Maybe<Array<Maybe<CourseItem>>>;
   createCourses?: Maybe<Array<Maybe<Course>>>;
-  createImage?: Maybe<Image>;
-  createImages?: Maybe<Array<Maybe<Image>>>;
+  createEvent?: Maybe<Event>;
+  createEvents?: Maybe<Array<Maybe<Event>>>;
+  createFile?: Maybe<File>;
+  createFiles?: Maybe<Array<Maybe<File>>>;
   createInitialUser: UserAuthenticationWithPasswordSuccess;
   createManySettings?: Maybe<Array<Maybe<Settings>>>;
   createOrder?: Maybe<Order>;
@@ -822,14 +1044,18 @@ export type Mutation = {
   deleteCarts?: Maybe<Array<Maybe<Cart>>>;
   deleteCategories?: Maybe<Array<Maybe<Category>>>;
   deleteCategory?: Maybe<Category>;
+  deleteComment?: Maybe<Comment>;
+  deleteComments?: Maybe<Array<Maybe<Comment>>>;
   deleteCoupon?: Maybe<Coupon>;
-  deleteCouponPivot?: Maybe<CouponPivot>;
-  deleteCouponPivots?: Maybe<Array<Maybe<CouponPivot>>>;
   deleteCoupons?: Maybe<Array<Maybe<Coupon>>>;
   deleteCourse?: Maybe<Course>;
+  deleteCourseItem?: Maybe<CourseItem>;
+  deleteCourseItems?: Maybe<Array<Maybe<CourseItem>>>;
   deleteCourses?: Maybe<Array<Maybe<Course>>>;
-  deleteImage?: Maybe<Image>;
-  deleteImages?: Maybe<Array<Maybe<Image>>>;
+  deleteEvent?: Maybe<Event>;
+  deleteEvents?: Maybe<Array<Maybe<Event>>>;
+  deleteFile?: Maybe<File>;
+  deleteFiles?: Maybe<Array<Maybe<File>>>;
   deleteManySettings?: Maybe<Array<Maybe<Settings>>>;
   deleteOrder?: Maybe<Order>;
   deleteOrderItem?: Maybe<OrderItem>;
@@ -851,14 +1077,18 @@ export type Mutation = {
   updateCarts?: Maybe<Array<Maybe<Cart>>>;
   updateCategories?: Maybe<Array<Maybe<Category>>>;
   updateCategory?: Maybe<Category>;
+  updateComment?: Maybe<Comment>;
+  updateComments?: Maybe<Array<Maybe<Comment>>>;
   updateCoupon?: Maybe<Coupon>;
-  updateCouponPivot?: Maybe<CouponPivot>;
-  updateCouponPivots?: Maybe<Array<Maybe<CouponPivot>>>;
   updateCoupons?: Maybe<Array<Maybe<Coupon>>>;
   updateCourse?: Maybe<Course>;
+  updateCourseItem?: Maybe<CourseItem>;
+  updateCourseItems?: Maybe<Array<Maybe<CourseItem>>>;
   updateCourses?: Maybe<Array<Maybe<Course>>>;
-  updateImage?: Maybe<Image>;
-  updateImages?: Maybe<Array<Maybe<Image>>>;
+  updateEvent?: Maybe<Event>;
+  updateEvents?: Maybe<Array<Maybe<Event>>>;
+  updateFile?: Maybe<File>;
+  updateFiles?: Maybe<Array<Maybe<File>>>;
   updateManySettings?: Maybe<Array<Maybe<Settings>>>;
   updateOrder?: Maybe<Order>;
   updateOrderItem?: Maybe<OrderItem>;
@@ -910,18 +1140,18 @@ export type MutationCreateCategoryArgs = {
 };
 
 
+export type MutationCreateCommentArgs = {
+  data: CommentCreateInput;
+};
+
+
+export type MutationCreateCommentsArgs = {
+  data: Array<CommentCreateInput>;
+};
+
+
 export type MutationCreateCouponArgs = {
   data: CouponCreateInput;
-};
-
-
-export type MutationCreateCouponPivotArgs = {
-  data: CouponPivotCreateInput;
-};
-
-
-export type MutationCreateCouponPivotsArgs = {
-  data: Array<CouponPivotCreateInput>;
 };
 
 
@@ -935,18 +1165,38 @@ export type MutationCreateCourseArgs = {
 };
 
 
+export type MutationCreateCourseItemArgs = {
+  data: CourseItemCreateInput;
+};
+
+
+export type MutationCreateCourseItemsArgs = {
+  data: Array<CourseItemCreateInput>;
+};
+
+
 export type MutationCreateCoursesArgs = {
   data: Array<CourseCreateInput>;
 };
 
 
-export type MutationCreateImageArgs = {
-  data: ImageCreateInput;
+export type MutationCreateEventArgs = {
+  data: EventCreateInput;
 };
 
 
-export type MutationCreateImagesArgs = {
-  data: Array<ImageCreateInput>;
+export type MutationCreateEventsArgs = {
+  data: Array<EventCreateInput>;
+};
+
+
+export type MutationCreateFileArgs = {
+  data: FileCreateInput;
+};
+
+
+export type MutationCreateFilesArgs = {
+  data: Array<FileCreateInput>;
 };
 
 
@@ -1045,18 +1295,18 @@ export type MutationDeleteCategoryArgs = {
 };
 
 
+export type MutationDeleteCommentArgs = {
+  where: CommentWhereUniqueInput;
+};
+
+
+export type MutationDeleteCommentsArgs = {
+  where: Array<CommentWhereUniqueInput>;
+};
+
+
 export type MutationDeleteCouponArgs = {
   where: CouponWhereUniqueInput;
-};
-
-
-export type MutationDeleteCouponPivotArgs = {
-  where: CouponPivotWhereUniqueInput;
-};
-
-
-export type MutationDeleteCouponPivotsArgs = {
-  where: Array<CouponPivotWhereUniqueInput>;
 };
 
 
@@ -1070,18 +1320,38 @@ export type MutationDeleteCourseArgs = {
 };
 
 
+export type MutationDeleteCourseItemArgs = {
+  where: CourseItemWhereUniqueInput;
+};
+
+
+export type MutationDeleteCourseItemsArgs = {
+  where: Array<CourseItemWhereUniqueInput>;
+};
+
+
 export type MutationDeleteCoursesArgs = {
   where: Array<CourseWhereUniqueInput>;
 };
 
 
-export type MutationDeleteImageArgs = {
-  where: ImageWhereUniqueInput;
+export type MutationDeleteEventArgs = {
+  where: EventWhereUniqueInput;
 };
 
 
-export type MutationDeleteImagesArgs = {
-  where: Array<ImageWhereUniqueInput>;
+export type MutationDeleteEventsArgs = {
+  where: Array<EventWhereUniqueInput>;
+};
+
+
+export type MutationDeleteFileArgs = {
+  where: FileWhereUniqueInput;
+};
+
+
+export type MutationDeleteFilesArgs = {
+  where: Array<FileWhereUniqueInput>;
 };
 
 
@@ -1190,20 +1460,20 @@ export type MutationUpdateCategoryArgs = {
 };
 
 
+export type MutationUpdateCommentArgs = {
+  data: CommentUpdateInput;
+  where: CommentWhereUniqueInput;
+};
+
+
+export type MutationUpdateCommentsArgs = {
+  data: Array<CommentUpdateArgs>;
+};
+
+
 export type MutationUpdateCouponArgs = {
   data: CouponUpdateInput;
   where: CouponWhereUniqueInput;
-};
-
-
-export type MutationUpdateCouponPivotArgs = {
-  data: CouponPivotUpdateInput;
-  where: CouponPivotWhereUniqueInput;
-};
-
-
-export type MutationUpdateCouponPivotsArgs = {
-  data: Array<CouponPivotUpdateArgs>;
 };
 
 
@@ -1218,19 +1488,41 @@ export type MutationUpdateCourseArgs = {
 };
 
 
+export type MutationUpdateCourseItemArgs = {
+  data: CourseItemUpdateInput;
+  where: CourseItemWhereUniqueInput;
+};
+
+
+export type MutationUpdateCourseItemsArgs = {
+  data: Array<CourseItemUpdateArgs>;
+};
+
+
 export type MutationUpdateCoursesArgs = {
   data: Array<CourseUpdateArgs>;
 };
 
 
-export type MutationUpdateImageArgs = {
-  data: ImageUpdateInput;
-  where: ImageWhereUniqueInput;
+export type MutationUpdateEventArgs = {
+  data: EventUpdateInput;
+  where: EventWhereUniqueInput;
 };
 
 
-export type MutationUpdateImagesArgs = {
-  data: Array<ImageUpdateArgs>;
+export type MutationUpdateEventsArgs = {
+  data: Array<EventUpdateArgs>;
+};
+
+
+export type MutationUpdateFileArgs = {
+  data: FileUpdateInput;
+  where: FileWhereUniqueInput;
+};
+
+
+export type MutationUpdateFilesArgs = {
+  data: Array<FileUpdateArgs>;
 };
 
 
@@ -1627,18 +1919,24 @@ export type Query = {
   categories?: Maybe<Array<Category>>;
   categoriesCount?: Maybe<Scalars['Int']>;
   category?: Maybe<Category>;
+  comment?: Maybe<Comment>;
+  comments?: Maybe<Array<Comment>>;
+  commentsCount?: Maybe<Scalars['Int']>;
   coupon?: Maybe<Coupon>;
-  couponPivot?: Maybe<CouponPivot>;
-  couponPivots?: Maybe<Array<CouponPivot>>;
-  couponPivotsCount?: Maybe<Scalars['Int']>;
   coupons?: Maybe<Array<Coupon>>;
   couponsCount?: Maybe<Scalars['Int']>;
   course?: Maybe<Course>;
+  courseItem?: Maybe<CourseItem>;
+  courseItems?: Maybe<Array<CourseItem>>;
+  courseItemsCount?: Maybe<Scalars['Int']>;
   courses?: Maybe<Array<Course>>;
   coursesCount?: Maybe<Scalars['Int']>;
-  image?: Maybe<Image>;
-  images?: Maybe<Array<Image>>;
-  imagesCount?: Maybe<Scalars['Int']>;
+  event?: Maybe<Event>;
+  events?: Maybe<Array<Event>>;
+  eventsCount?: Maybe<Scalars['Int']>;
+  file?: Maybe<File>;
+  files?: Maybe<Array<File>>;
+  filesCount?: Maybe<Scalars['Int']>;
   keystone: KeystoneMeta;
   manySettings?: Maybe<Array<Settings>>;
   manySettingsCount?: Maybe<Scalars['Int']>;
@@ -1716,26 +2014,26 @@ export type QueryCategoryArgs = {
 };
 
 
-export type QueryCouponArgs = {
-  where: CouponWhereUniqueInput;
+export type QueryCommentArgs = {
+  where: CommentWhereUniqueInput;
 };
 
 
-export type QueryCouponPivotArgs = {
-  where: CouponPivotWhereUniqueInput;
-};
-
-
-export type QueryCouponPivotsArgs = {
-  orderBy?: Array<CouponPivotOrderByInput>;
+export type QueryCommentsArgs = {
+  orderBy?: Array<CommentOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
-  where?: CouponPivotWhereInput;
+  where?: CommentWhereInput;
 };
 
 
-export type QueryCouponPivotsCountArgs = {
-  where?: CouponPivotWhereInput;
+export type QueryCommentsCountArgs = {
+  where?: CommentWhereInput;
+};
+
+
+export type QueryCouponArgs = {
+  where: CouponWhereUniqueInput;
 };
 
 
@@ -1757,6 +2055,24 @@ export type QueryCourseArgs = {
 };
 
 
+export type QueryCourseItemArgs = {
+  where: CourseItemWhereUniqueInput;
+};
+
+
+export type QueryCourseItemsArgs = {
+  orderBy?: Array<CourseItemOrderByInput>;
+  skip?: Scalars['Int'];
+  take?: InputMaybe<Scalars['Int']>;
+  where?: CourseItemWhereInput;
+};
+
+
+export type QueryCourseItemsCountArgs = {
+  where?: CourseItemWhereInput;
+};
+
+
 export type QueryCoursesArgs = {
   orderBy?: Array<CourseOrderByInput>;
   skip?: Scalars['Int'];
@@ -1770,21 +2086,39 @@ export type QueryCoursesCountArgs = {
 };
 
 
-export type QueryImageArgs = {
-  where: ImageWhereUniqueInput;
+export type QueryEventArgs = {
+  where: EventWhereUniqueInput;
 };
 
 
-export type QueryImagesArgs = {
-  orderBy?: Array<ImageOrderByInput>;
+export type QueryEventsArgs = {
+  orderBy?: Array<EventOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
-  where?: ImageWhereInput;
+  where?: EventWhereInput;
 };
 
 
-export type QueryImagesCountArgs = {
-  where?: ImageWhereInput;
+export type QueryEventsCountArgs = {
+  where?: EventWhereInput;
+};
+
+
+export type QueryFileArgs = {
+  where: FileWhereUniqueInput;
+};
+
+
+export type QueryFilesArgs = {
+  orderBy?: Array<FileOrderByInput>;
+  skip?: Scalars['Int'];
+  take?: InputMaybe<Scalars['Int']>;
+  where?: FileWhereInput;
+};
+
+
+export type QueryFilesCountArgs = {
+  where?: FileWhereInput;
 };
 
 
@@ -2078,13 +2412,15 @@ export type User = {
   __typename?: 'User';
   cart?: Maybe<Array<Cart>>;
   cartCount?: Maybe<Scalars['Int']>;
+  comments?: Maybe<Array<Comment>>;
+  commentsCount?: Maybe<Scalars['Int']>;
   courses?: Maybe<Array<Course>>;
   coursesCount?: Maybe<Scalars['Int']>;
   createdAt?: Maybe<Scalars['DateTime']>;
   email?: Maybe<Scalars['String']>;
+  events?: Maybe<Array<Event>>;
+  eventsCount?: Maybe<Scalars['Int']>;
   id: Scalars['ID'];
-  images?: Maybe<Array<Image>>;
-  imagesCount?: Maybe<Scalars['Int']>;
   lastName?: Maybe<Scalars['String']>;
   name?: Maybe<Scalars['String']>;
   orders?: Maybe<Array<Order>>;
@@ -2112,6 +2448,19 @@ export type UserCartCountArgs = {
 };
 
 
+export type UserCommentsArgs = {
+  orderBy?: Array<CommentOrderByInput>;
+  skip?: Scalars['Int'];
+  take?: InputMaybe<Scalars['Int']>;
+  where?: CommentWhereInput;
+};
+
+
+export type UserCommentsCountArgs = {
+  where?: CommentWhereInput;
+};
+
+
 export type UserCoursesArgs = {
   orderBy?: Array<CourseOrderByInput>;
   skip?: Scalars['Int'];
@@ -2125,16 +2474,16 @@ export type UserCoursesCountArgs = {
 };
 
 
-export type UserImagesArgs = {
-  orderBy?: Array<ImageOrderByInput>;
+export type UserEventsArgs = {
+  orderBy?: Array<EventOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
-  where?: ImageWhereInput;
+  where?: EventWhereInput;
 };
 
 
-export type UserImagesCountArgs = {
-  where?: ImageWhereInput;
+export type UserEventsCountArgs = {
+  where?: EventWhereInput;
 };
 
 
@@ -2178,10 +2527,11 @@ export type UserAuthenticationWithPasswordSuccess = {
 
 export type UserCreateInput = {
   cart?: InputMaybe<CartRelateToManyForCreateInput>;
+  comments?: InputMaybe<CommentRelateToManyForCreateInput>;
   courses?: InputMaybe<CourseRelateToManyForCreateInput>;
   createdAt?: InputMaybe<Scalars['DateTime']>;
   email?: InputMaybe<Scalars['String']>;
-  images?: InputMaybe<ImageRelateToManyForCreateInput>;
+  events?: InputMaybe<EventRelateToManyForCreateInput>;
   lastName?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
   orders?: InputMaybe<OrderRelateToManyForCreateInput>;
@@ -2240,10 +2590,11 @@ export type UserUpdateArgs = {
 
 export type UserUpdateInput = {
   cart?: InputMaybe<CartRelateToManyForUpdateInput>;
+  comments?: InputMaybe<CommentRelateToManyForUpdateInput>;
   courses?: InputMaybe<CourseRelateToManyForUpdateInput>;
   createdAt?: InputMaybe<Scalars['DateTime']>;
   email?: InputMaybe<Scalars['String']>;
-  images?: InputMaybe<ImageRelateToManyForUpdateInput>;
+  events?: InputMaybe<EventRelateToManyForUpdateInput>;
   lastName?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
   orders?: InputMaybe<OrderRelateToManyForUpdateInput>;
@@ -2260,11 +2611,12 @@ export type UserWhereInput = {
   NOT?: InputMaybe<Array<UserWhereInput>>;
   OR?: InputMaybe<Array<UserWhereInput>>;
   cart?: InputMaybe<CartManyRelationFilter>;
+  comments?: InputMaybe<CommentManyRelationFilter>;
   courses?: InputMaybe<CourseManyRelationFilter>;
   createdAt?: InputMaybe<DateTimeNullableFilter>;
   email?: InputMaybe<StringFilter>;
+  events?: InputMaybe<EventManyRelationFilter>;
   id?: InputMaybe<IdFilter>;
-  images?: InputMaybe<ImageManyRelationFilter>;
   lastName?: InputMaybe<StringFilter>;
   name?: InputMaybe<StringFilter>;
   orders?: InputMaybe<OrderManyRelationFilter>;
@@ -2286,6 +2638,19 @@ export type ValidateUserPasswordResetTokenResult = {
   message: Scalars['String'];
 };
 
+export type CreateCommentMutationVariables = Exact<{
+  comment: Scalars['String'];
+  courseItem: Scalars['ID'];
+}>;
+
+
+export type CreateCommentMutation = { __typename?: 'Mutation', createComment?: { __typename?: 'Comment', id: string } | null };
+
+export type LogoutMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type LogoutMutation = { __typename?: 'Mutation', endSession: boolean };
+
 export type SigninMutationVariables = Exact<{
   email: Scalars['String'];
   password: Scalars['String'];
@@ -2304,9 +2669,37 @@ export type CartByUserQueryVariables = Exact<{
 }>;
 
 
-export type CartByUserQuery = { __typename?: 'Query', carts?: Array<{ __typename?: 'Cart', id: string, totalPrice?: number | null, items?: Array<{ __typename?: 'CartItem', id: string, priceWithDiscount?: number | null, coupon?: { __typename?: 'Coupon', id: string, code?: number | null, discount?: number | null } | null, course?: { __typename?: 'Course', id: string, name?: string | null, price?: number | null } | null }> | null }> | null };
+export type CartByUserQuery = { __typename?: 'Query', carts?: Array<{ __typename?: 'Cart', id: string, totalPrice?: number | null, items?: Array<{ __typename?: 'CartItem', id: string, priceWithDiscount?: number | null, type?: string | null, coupon?: { __typename?: 'Coupon', id: string, code?: number | null, discount?: number | null } | null, course?: { __typename?: 'Course', id: string, name?: string | null, price?: number | null } | null, event?: { __typename?: 'Event', id: string, name?: string | null, price?: number | null } | null }> | null }> | null };
+
+export type CourseItemQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type CourseItemQuery = { __typename?: 'Query', courseItem?: { __typename?: 'CourseItem', id: string, no?: number | null, name?: string | null, description?: string | null, commentsCount?: number | null, comments?: Array<{ __typename?: 'Comment', id: string, comment?: string | null, user?: { __typename?: 'User', name?: string | null } | null }> | null, video?: { __typename?: 'File', id: string, video?: { __typename?: 'FileFieldOutput', filename: string, url: string } | null } | null } | null };
+
+export type CourseQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type CourseQuery = { __typename?: 'Query', course?: { __typename?: 'Course', id: string, name?: string | null, description?: string | null, courseItem?: Array<{ __typename?: 'CourseItem', id: string, no?: number | null, name?: string | null, description?: string | null }> | null } | null };
 
 export type CoursesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type CoursesQuery = { __typename?: 'Query', courses?: Array<{ __typename?: 'Course', id: string, name?: string | null, description?: string | null, isAccessible?: boolean | null }> | null };
+
+export type EventQueryVariables = Exact<{
+  status?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type EventQuery = { __typename?: 'Query', events?: Array<{ __typename?: 'Event', id: string, name?: string | null, from?: string | null, to?: string | null, price?: number | null, status?: string | null, isAccessible?: boolean | null }> | null };
+
+export type MyCoursesQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type MyCoursesQuery = { __typename?: 'Query', user?: { __typename?: 'User', courses?: Array<{ __typename?: 'Course', id: string, name?: string | null }> | null } | null };

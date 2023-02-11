@@ -29,12 +29,12 @@ __export(keystone_exports, {
   default: () => keystone_default
 });
 module.exports = __toCommonJS(keystone_exports);
-var import_core14 = require("@keystone-6/core");
+var import_core17 = require("@keystone-6/core");
 
 // schema.ts
-var import_core13 = require("@keystone-6/core");
-var import_access12 = require("@keystone-6/core/access");
-var import_fields12 = require("@keystone-6/core/fields");
+var import_core16 = require("@keystone-6/core");
+var import_access17 = require("@keystone-6/core/access");
+var import_fields15 = require("@keystone-6/core/fields");
 var import_fields_document = require("@keystone-6/fields-document");
 
 // schemas/CartItem.ts
@@ -75,19 +75,24 @@ var CartItem = (0, import_core.list)({
   },
   ui: {
     listView: {
-      initialColumns: ["course", "cart", "coupon"]
+      initialColumns: ["type", "cart", "coupon"]
     }
   },
   hooks: {
     async validateInput(args) {
-      if (args.operation === "create") {
-        if (args.inputData.course === null)
-          args.addValidationError("course is required");
+      console.log(args.resolvedData);
+      if (args.operation === "update") {
+        return;
       }
-      const coponId = args.item?.couponId || args.resolvedData?.coupon?.connect?.id;
-      const courseId = args.item?.courseId || args.resolvedData?.course?.connect?.id;
-      if (typeof courseId !== "string") {
-        args.addValidationError("[dev] courseid isundefied");
+      if (args.inputData.course === null && args.inputData.event === null)
+        args.addValidationError("select course or event");
+      if (args.inputData.course && args.inputData.event)
+        args.addValidationError('pick one ! "one"');
+      const coponId = args.resolvedData?.coupon?.connect?.id;
+      const courseId = args.resolvedData?.course?.connect?.id;
+      const eventId = args.resolvedData?.event?.connect?.id;
+      if (typeof courseId !== "string" && typeof eventId !== "string") {
+        args.addValidationError("enter either courseid or itemid");
         return;
       }
       if (coponId) {
@@ -111,27 +116,41 @@ var CartItem = (0, import_core.list)({
           const {
             cart: [firstcart]
           } = await args.context.query.User.findOne({
-            where: { id: args.context.session?.itemId },
+            where: {
+              id: args.context.session?.itemId
+            },
             query: "cart { id items { id coupon { id } } }"
           });
           if (firstcart && firstcart.items.map((i) => i.coupon ? i.coupon.id : false).filter(Boolean).includes(coponId))
-            args.addValidationError("fa:: you already use this coupon");
+            args.addValidationError(
+              "fa:: you already use this coupon"
+            );
         }
       }
     }
   },
   fields: {
+    type: (0, import_fields.virtual)({
+      field: import_schema.graphql.field({
+        type: import_schema.graphql.String,
+        resolve: (item) => item.eventId ? "event" : "course"
+      })
+    }),
     course: (0, import_fields.relationship)({ ref: "Course" }),
+    event: (0, import_fields.relationship)({ ref: "Event" }),
+    quantity: (0, import_fields.integer)({ defaultValue: 1 }),
     coupon: (0, import_fields.relationship)({ ref: "Coupon", ui: { labelField: "code" } }),
     priceWithDiscount: (0, import_fields.virtual)({
       field: import_schema.graphql.field({
         type: import_schema.graphql.Float,
         async resolve(item, _args, context) {
           try {
-            const { course, coupon } = await context.query.CartItem.findOne({
+            const { course, coupon, event, quantity } = await context.query.CartItem.findOne({
               where: { id: item.id.toString() },
-              query: "course {  price , name }, coupon { discount }"
+              query: "course {  price , name }, coupon { discount } event {  price , name }, quantity "
             });
+            if (event)
+              return event.price * quantity;
             if (coupon) {
               return (100 - coupon.discount) * course.price / 100;
             } else
@@ -174,6 +193,9 @@ function isLoggedIn(args) {
     kickout(args.context.req);
   return !!args.session;
 }
+function isAdmin(args) {
+  return isLoggedIn(args) && args.context.session.data.role === "0" /* admin */;
+}
 
 // schemas/Cart.ts
 var Cart = (0, import_core2.list)({
@@ -197,9 +219,9 @@ var Cart = (0, import_core2.list)({
         async resolve(item, _args, context) {
           const { items } = await context.query.Cart.findOne({
             where: { id: item.id.toString() },
-            query: "items { course { name } }"
+            query: "items { course { name } event { name } }"
           });
-          return items.map((i) => i.course.name).join(" & ");
+          return items.map((i) => i.event?.name || "").filter(Boolean).join(" . ") + items.map((i) => i.course?.name || "").filter(Boolean).join(" . ");
         }
       })
     }),
@@ -218,7 +240,10 @@ var Cart = (0, import_core2.list)({
             query: "items { priceWithDiscount }"
           });
           console.log(items);
-          return items.reduce((total, { priceWithDiscount }) => total += priceWithDiscount, 0);
+          return items.reduce(
+            (total, { priceWithDiscount }) => total += priceWithDiscount,
+            0
+          );
         }
       })
     }),
@@ -295,6 +320,18 @@ var Course = (0, import_core5.list)({
     operation: {
       ...(0, import_access4.allOperations)(import_access4.allowAll),
       create: isLoggedIn
+    },
+    filter: {
+      query: (args) => {
+        if (args.session && args.session?.data.role === "0")
+          return true;
+        else
+          return {
+            status: {
+              equals: "DRAFT"
+            }
+          };
+      }
     }
   },
   fields: {
@@ -335,9 +372,27 @@ var Course = (0, import_core5.list)({
           }
           return resolvedData.users;
         }
+      },
+      ui: {
+        hideCreate: true
+      }
+    }),
+    courseItem: (0, import_fields5.relationship)({
+      ref: "CourseItem.course",
+      many: true,
+      ui: {
+        labelField: "name",
+        inlineCreate: {
+          fields: ["CourseItem.name", "CourseItem.description"]
+        }
       }
     }),
     isAccessible: (0, import_fields5.virtual)({
+      ui: {
+        createView: {
+          fieldMode: "hidden"
+        }
+      },
       field: import_schema3.graphql.field({
         type: import_schema3.graphql.Boolean,
         async resolve(item, _, context) {
@@ -359,26 +414,67 @@ var Course = (0, import_core5.list)({
   }
 });
 
-// schemas/User.ts
+// schemas/CourseItems.ts
+var import_fields6 = require("@keystone-6/core/fields");
 var import_core6 = require("@keystone-6/core");
 var import_access6 = require("@keystone-6/core/access");
-var import_fields6 = require("@keystone-6/core/fields");
+var CourseItem = (0, import_core6.list)({
+  access: {
+    operation: {
+      ...(0, import_access6.allOperations)(import_access6.allowAll),
+      create: isLoggedIn
+    }
+  },
+  fields: {
+    no: (0, import_fields6.integer)({ validation: { min: 1 } }),
+    name: (0, import_fields6.text)({ validation: { isRequired: true } }),
+    description: (0, import_fields6.text)({
+      ui: {
+        displayMode: "textarea"
+      }
+    }),
+    video: (0, import_fields6.relationship)({
+      ref: "File"
+    }),
+    course: (0, import_fields6.relationship)({
+      label: "belongs to",
+      ref: "Course.courseItem",
+      ui: {
+        labelField: "name"
+      }
+    }),
+    comments: (0, import_fields6.relationship)({
+      ref: "Comment.courseItem",
+      many: true,
+      ui: {}
+    })
+  }
+});
+
+// schemas/User.ts
+var import_core7 = require("@keystone-6/core");
+var import_access8 = require("@keystone-6/core/access");
+var import_fields7 = require("@keystone-6/core/fields");
 var keys = Object.keys(Roles).filter((i) => Number(i) > -1);
 var values = Object.keys(Roles).filter((i) => Number(i) > -1 === false);
 var RolesItem = keys.map((key, inx) => ({ value: key, label: values[inx] }));
-console.log(RolesItem);
-var User = (0, import_core6.list)({
-  access: import_access6.allowAll,
+var User = (0, import_core7.list)({
+  access: {
+    operation: {
+      ...(0, import_access8.allOperations)(isAdmin),
+      query: () => true
+    }
+  },
   ui: {},
   fields: {
-    name: (0, import_fields6.text)({ validation: { isRequired: true } }),
-    lastName: (0, import_fields6.text)({ validation: { isRequired: true } }),
-    email: (0, import_fields6.text)({
+    name: (0, import_fields7.text)({ validation: { isRequired: true } }),
+    lastName: (0, import_fields7.text)({ validation: { isRequired: true } }),
+    email: (0, import_fields7.text)({
       validation: { isRequired: true },
       isIndexed: "unique"
     }),
-    password: (0, import_fields6.password)({ validation: { isRequired: true } }),
-    cart: (0, import_fields6.relationship)({
+    password: (0, import_fields7.password)({ validation: { isRequired: true } }),
+    cart: (0, import_fields7.relationship)({
       ref: "Cart.user",
       many: true,
       ui: {
@@ -386,33 +482,38 @@ var User = (0, import_core6.list)({
         itemView: { fieldMode: "read" }
       }
     }),
-    orders: (0, import_fields6.relationship)({ ref: "Order.user", many: true }),
-    role: (0, import_fields6.select)({
+    orders: (0, import_fields7.relationship)({ ref: "Order.user", many: true }),
+    role: (0, import_fields7.select)({
       options: RolesItem
     }),
-    courses: (0, import_fields6.relationship)({
+    courses: (0, import_fields7.relationship)({
       ref: "Course.users",
       many: true
     }),
-    posts: (0, import_fields6.relationship)({ ref: "Post.author", many: true }),
-    createdAt: (0, import_fields6.timestamp)({
+    events: (0, import_fields7.relationship)({
+      ref: "Event.users",
+      many: true
+    }),
+    posts: (0, import_fields7.relationship)({ ref: "Post.author", many: true }),
+    comments: (0, import_fields7.relationship)({ ref: "Comment.user", many: true }),
+    createdAt: (0, import_fields7.timestamp)({
       defaultValue: { kind: "now" }
     })
   }
 });
 
 // schemas/Categoryy.ts
-var import_core7 = require("@keystone-6/core");
-var import_access7 = require("@keystone-6/core/access");
-var import_fields7 = require("@keystone-6/core/fields");
-var Category = (0, import_core7.list)({
-  access: import_access7.allowAll,
+var import_core8 = require("@keystone-6/core");
+var import_access10 = require("@keystone-6/core/access");
+var import_fields8 = require("@keystone-6/core/fields");
+var Category = (0, import_core8.list)({
+  access: import_access10.allowAll,
   fields: {
-    name: (0, import_fields7.text)({
+    name: (0, import_fields8.text)({
       validation: { isRequired: true }
     }),
-    description: (0, import_fields7.text)(),
-    parentId: (0, import_fields7.relationship)({
+    description: (0, import_fields8.text)(),
+    parentId: (0, import_fields8.relationship)({
       ref: "Category",
       many: true,
       isFilterable: true,
@@ -422,29 +523,29 @@ var Category = (0, import_core7.list)({
 });
 
 // schemas/Settings.ts
-var import_core8 = require("@keystone-6/core");
-var import_access8 = require("@keystone-6/core/access");
-var import_fields8 = require("@keystone-6/core/fields");
-var Settings = (0, import_core8.list)({
-  access: import_access8.allowAll,
+var import_core9 = require("@keystone-6/core");
+var import_access11 = require("@keystone-6/core/access");
+var import_fields9 = require("@keystone-6/core/fields");
+var Settings = (0, import_core9.list)({
+  access: import_access11.allowAll,
   isSingleton: true,
   fields: {
-    websiteName: (0, import_fields8.text)(),
-    copyrightText: (0, import_fields8.text)(),
-    highlightedPosts: (0, import_fields8.relationship)({ ref: "Post", many: true }),
-    jobsList: (0, import_fields8.multiselect)({ options: [{ label: "1", value: "1" }, { label: "2", value: "2" }] })
+    websiteName: (0, import_fields9.text)(),
+    copyrightText: (0, import_fields9.text)(),
+    highlightedPosts: (0, import_fields9.relationship)({ ref: "Post", many: true }),
+    jobsList: (0, import_fields9.multiselect)({ options: [{ label: "1", value: "1" }, { label: "2", value: "2" }] })
   },
   graphql: {
     plural: "ManySettings"
   }
 });
 
-// schemas/Storage.ts
-var import_core9 = require("@keystone-6/core");
-var import_access9 = require("@keystone-6/core/access");
-var import_fields9 = require("@keystone-6/core/fields");
-var Storage = (0, import_core9.list)({
-  access: import_access9.allowAll,
+// schemas/File.ts
+var import_core10 = require("@keystone-6/core");
+var import_access12 = require("@keystone-6/core/access");
+var import_fields10 = require("@keystone-6/core/fields");
+var File = (0, import_core10.list)({
+  access: import_access12.allowAll,
   ui: {
     label: "media"
   },
@@ -452,7 +553,9 @@ var Storage = (0, import_core9.list)({
     async resolveInput({ resolvedData, operation }) {
       if (resolvedData.video && resolvedData.video.filename) {
         if (!resolvedData.type) {
-          if (["mp4", "mpa", "mov", "avi", "wmv"].includes(resolvedData.video.filename.split(".").at(-1).toLowerCase())) {
+          if (["mp4", "mpa", "mov", "avi", "wmv"].includes(
+            resolvedData.video.filename.split(".").at(-1).toLowerCase()
+          )) {
             resolvedData.type = "video";
           }
         }
@@ -461,14 +564,14 @@ var Storage = (0, import_core9.list)({
     }
   },
   fields: {
-    altText: (0, import_fields9.text)({ validation: { isRequired: false } }),
-    video: (0, import_fields9.file)({
+    altText: (0, import_fields10.text)({ validation: { isRequired: false } }),
+    video: (0, import_fields10.file)({
       storage: "local"
     }),
-    type: (0, import_fields9.select)({
+    type: (0, import_fields10.select)({
       options: Object.keys(FileTypes)
     }),
-    createdAt: (0, import_fields9.timestamp)({
+    createdAt: (0, import_fields10.timestamp)({
       defaultValue: { kind: "now" },
       ui: {}
     })
@@ -476,32 +579,32 @@ var Storage = (0, import_core9.list)({
 });
 
 // schemas/Tag.ts
-var import_core10 = require("@keystone-6/core");
-var import_access10 = require("@keystone-6/core/access");
-var import_fields10 = require("@keystone-6/core/fields");
-var Tag = (0, import_core10.list)({
-  access: import_access10.allowAll,
+var import_core11 = require("@keystone-6/core");
+var import_access13 = require("@keystone-6/core/access");
+var import_fields11 = require("@keystone-6/core/fields");
+var Tag = (0, import_core11.list)({
+  access: import_access13.allowAll,
   ui: {
     isHidden: true
   },
   fields: {
-    name: (0, import_fields10.text)(),
-    posts: (0, import_fields10.relationship)({ ref: "Post.tags", many: true })
+    name: (0, import_fields11.text)(),
+    posts: (0, import_fields11.relationship)({ ref: "Post.tags", many: true })
   }
 });
 
 // schemas/Coupon.ts
 var import_schema4 = require("@graphql-ts/schema");
-var import_core11 = require("@keystone-6/core");
-var import_access11 = require("@keystone-6/core/access");
-var import_fields11 = require("@keystone-6/core/fields");
-var Coupon = (0, import_core11.list)({
-  access: import_access11.allowAll,
+var import_core12 = require("@keystone-6/core");
+var import_access14 = require("@keystone-6/core/access");
+var import_fields12 = require("@keystone-6/core/fields");
+var Coupon = (0, import_core12.list)({
+  access: import_access14.allowAll,
   fields: {
-    code: (0, import_fields11.integer)({ validation: { isRequired: true, max: 9999 } }),
-    description: (0, import_fields11.text)({ validation: { isRequired: true } }),
-    maxAmount: (0, import_fields11.integer)({ validation: { isRequired: true } }),
-    remaining: (0, import_fields11.virtual)({
+    code: (0, import_fields12.integer)({ validation: { isRequired: true, max: 9999 } }),
+    description: (0, import_fields12.text)({ validation: { isRequired: true } }),
+    maxAmount: (0, import_fields12.integer)({ validation: { isRequired: true } }),
+    remaining: (0, import_fields12.virtual)({
       field: import_schema4.graphql.field({
         type: import_schema4.graphql.Int,
         async resolve({ id, maxAmount }, _, context) {
@@ -521,30 +624,31 @@ var Coupon = (0, import_core11.list)({
         }
       })
     }),
-    belongsTo: (0, import_fields11.relationship)({
+    belongsTo: (0, import_fields12.relationship)({
       ref: "Course",
       many: true,
       ui: {
         description: "\u0686\u0647 \u0645\u062D\u0635\u0648\u0644\u0627\u062A\u06CC \u0631\u0627 \u0634\u0627\u0645\u0644 \u0645\u06CC\u0634\u0648\u062F"
       }
     }),
-    discount: (0, import_fields11.integer)({
+    discount: (0, import_fields12.integer)({
       validation: {
         max: 90,
         min: 5
       }
-    }),
-    couponItem: (0, import_fields11.relationship)({
-      ref: "CouponPivot",
-      many: true,
-      ui: {}
     })
   }
 });
 
+// schemas/Event.ts
+var import_schema5 = require("@graphql-ts/schema");
+var import_core14 = require("@keystone-6/core");
+var import_access15 = require("@keystone-6/core/access");
+var import_fields13 = require("@keystone-6/core/fields");
+
 // src/custom-fields/persian-calander/index.ts
 var import_types = require("@keystone-6/core/types");
-var import_core12 = require("@keystone-6/core");
+var import_core13 = require("@keystone-6/core");
 var persianCalendar = ({
   isIndexed,
   Jcalandar = "2022-12-03",
@@ -562,15 +666,19 @@ var persianCalendar = ({
       console.log("validation input:");
       console.log(args.resolvedData[meta.fieldKey]);
       const val = args.resolvedData[meta.fieldKey];
-      if (val === "" || val === void 0) {
-        args.addValidationError(`The value must be within the range of 0-${Jcalandar}`);
+      if (args.operation === "create") {
+        if (val === "" || val === void 0) {
+          args.addValidationError(
+            `The value must be within the range of 0-${Jcalandar}`
+          );
+        }
       }
       await config2.hooks?.validateInput?.(args);
     }
   },
   input: {
     create: {
-      arg: import_core12.graphql.arg({ type: import_core12.graphql.String }),
+      arg: import_core13.graphql.arg({ type: import_core13.graphql.String }),
       resolve(val, context) {
         if (val === null) {
           return null;
@@ -581,11 +689,11 @@ var persianCalendar = ({
         return val;
       }
     },
-    update: { arg: import_core12.graphql.arg({ type: import_core12.graphql.String }) },
-    orderBy: { arg: import_core12.graphql.arg({ type: import_types.orderDirectionEnum }) }
+    update: { arg: import_core13.graphql.arg({ type: import_core13.graphql.String }) },
+    orderBy: { arg: import_core13.graphql.arg({ type: import_types.orderDirectionEnum }) }
   },
-  output: import_core12.graphql.field({
-    type: import_core12.graphql.String,
+  output: import_core13.graphql.field({
+    type: import_core13.graphql.String,
     resolve({ value, item }, args, context, info) {
       return value;
     }
@@ -596,101 +704,123 @@ var persianCalendar = ({
   }
 });
 
+// schemas/Event.ts
+var Event = (0, import_core14.list)({
+  access: import_access15.allowAll,
+  fields: {
+    name: (0, import_fields13.text)({
+      validation: { isRequired: true }
+    }),
+    description: (0, import_fields13.text)({ ui: { displayMode: "textarea" } }),
+    price: (0, import_fields13.integer)(),
+    priceFa: (0, import_fields13.virtual)({
+      field: import_schema5.graphql.field({
+        type: import_schema5.graphql.String,
+        async resolve(item) {
+          return `${formatMoney(item.price)}`;
+        }
+      })
+    }),
+    status: (0, import_fields13.select)({
+      options: [
+        { label: "Draft", value: "DRAFT" },
+        { label: "Available", value: "AVAILABLE" },
+        { label: "Unavailable", value: "UNAVAILABLE" }
+      ],
+      defaultValue: "DRAFT",
+      ui: {
+        displayMode: "segmented-control",
+        createView: { fieldMode: "hidden" }
+      }
+    }),
+    maxAmount: (0, import_fields13.integer)(),
+    from: persianCalendar(),
+    to: persianCalendar(),
+    users: (0, import_fields13.relationship)({
+      ref: "User.events",
+      many: true,
+      hooks: {
+        resolveInput({ operation, resolvedData, context }) {
+          if (operation === "create" && !resolvedData.users && context.session?.itemId) {
+            return { connect: { id: context.session?.itemId } };
+          }
+          return resolvedData.users;
+        }
+      },
+      ui: {
+        hideCreate: true
+      }
+    }),
+    isAccessible: (0, import_fields13.virtual)({
+      field: import_schema5.graphql.field({
+        type: import_schema5.graphql.Boolean,
+        async resolve(item, _, context) {
+          if (!context.session)
+            return false;
+          const { users } = await context.query.Event.findOne({
+            where: { id: item.id.toString() },
+            query: "users { id }"
+          });
+          if (users.length === 0) {
+            return false;
+          }
+          if (context.session.itemId === users[0].id)
+            return true;
+          return false;
+        }
+      })
+    })
+  }
+});
+
+// schemas/social/Comment.ts
+var import_core15 = require("@keystone-6/core");
+var import_fields14 = require("@keystone-6/core/fields");
+var defaultValidatedValue = true;
+var Comment = (0, import_core15.list)({
+  access: {
+    operation: {
+      query: isLoggedIn,
+      create: isLoggedIn,
+      delete: isAdmin,
+      update: isAdmin
+    }
+  },
+  hooks: {
+    resolveInput: ({ resolvedData, context }) => {
+      if (context.session?.data.role === "0" /* admin */) {
+        if (!resolvedData.user)
+          resolvedData.user = {
+            connect: {
+              id: context.session?.itemId
+            }
+          };
+        return resolvedData;
+      }
+      resolvedData.user = {
+        connect: { id: context.session?.itemId }
+      };
+      resolvedData.isValidated = defaultValidatedValue;
+      return resolvedData;
+    }
+  },
+  fields: {
+    comment: (0, import_fields14.text)({ validation: { isRequired: true } }),
+    user: (0, import_fields14.relationship)({ ref: "User.comments", many: false }),
+    courseItem: (0, import_fields14.relationship)({ ref: "CourseItem.comments" }),
+    isValidated: (0, import_fields14.checkbox)({ defaultValue: defaultValidatedValue }),
+    createdAt: (0, import_fields14.timestamp)({
+      defaultValue: { kind: "now" }
+    })
+  }
+});
+
 // schema.ts
 var lists = {
   User,
   Coupon,
-  CouponPivot: (0, import_core13.list)({
-    ui: {
-      listView: {
-        initialColumns: ["couponCode", "customer", "status"]
-      }
-    },
-    hooks: {
-      validateInput: async (args) => {
-        if (args.operation === "create") {
-          if (!args.resolvedData.customer) {
-            args.addValidationError(
-              "fa:: customer cannot be empty"
-            );
-            return;
-          }
-          if (!args.resolvedData.couponCode) {
-            args.addValidationError(
-              "fa:: coupon Code cannot be empty"
-            );
-          } else {
-            const id = args.resolvedData.couponCode.connect.id;
-            const { code, maxAmount } = await args.context.query.Coupon.findOne({
-              where: { id },
-              query: "code maxAmount"
-            });
-            const numberOfCouponsPerProduct = await args.context.query.CouponPivot.count({
-              where: {
-                customer: {
-                  id: {
-                    equals: args.inputData.customer?.connect?.id
-                  }
-                },
-                couponCode: {
-                  code: {
-                    equals: code
-                  }
-                }
-              }
-            });
-            if (numberOfCouponsPerProduct > 0) {
-              args.addValidationError(
-                "fa:: you already have one"
-              );
-              return;
-            }
-            const couponsWeAlreadyHaveCount = await args.context.query.CouponPivot.count({
-              where: {
-                couponCode: {
-                  code: {
-                    equals: code
-                  }
-                }
-              }
-            });
-            if (maxAmount === couponsWeAlreadyHaveCount) {
-              args.addValidationError("fa:: we maxed out");
-            }
-          }
-        }
-      }
-    },
-    access: import_access12.allowAll,
-    fields: {
-      couponCode: (0, import_fields12.relationship)({
-        ref: "Coupon",
-        many: false,
-        label: "C.C",
-        ui: {
-          labelField: "code"
-        }
-      }),
-      customer: (0, import_fields12.relationship)({
-        ref: "User",
-        many: false
-      }),
-      status: (0, import_fields12.select)({
-        type: "integer",
-        options: [
-          {
-            label: "applied",
-            value: 1
-          },
-          {
-            label: "pending",
-            value: 0
-          }
-        ]
-      })
-    }
-  }),
-  Post: (0, import_core13.list)({
+  Event,
+  Post: (0, import_core16.list)({
     access: {
       filter: {
         query: ({ session: session2 }) => {
@@ -704,14 +834,14 @@ var lists = {
         }
       },
       operation: {
-        ...(0, import_access12.allOperations)(import_access12.allowAll),
+        ...(0, import_access17.allOperations)(import_access17.allowAll),
         query: (args) => {
           return true;
         }
       }
     },
     fields: {
-      title: (0, import_fields12.text)({ validation: { isRequired: true } }),
+      title: (0, import_fields15.text)({ validation: { isRequired: true } }),
       content: (0, import_fields_document.document)({
         formatting: true,
         layouts: [
@@ -732,13 +862,13 @@ var lists = {
         }
       }),
       example: persianCalendar(),
-      someFieldName: (0, import_fields12.calendarDay)({
+      someFieldName: (0, import_fields15.calendarDay)({
         defaultValue: "1970-01-01",
         db: { map: "my_date" },
         validation: { isRequired: true },
         isIndexed: "unique"
       }),
-      author: (0, import_fields12.relationship)({
+      author: (0, import_fields15.relationship)({
         ref: "User.posts",
         ui: {
           displayMode: "cards",
@@ -749,7 +879,7 @@ var lists = {
         },
         many: false
       }),
-      tags: (0, import_fields12.relationship)({
+      tags: (0, import_fields15.relationship)({
         ref: "Tag.posts",
         many: true,
         ui: {
@@ -764,14 +894,16 @@ var lists = {
     }
   }),
   Course,
+  CourseItem,
   Category,
   Tag,
-  Storage,
+  File,
   Settings,
   CartItem,
   Cart,
   Order,
-  OrderItem
+  OrderItem,
+  Comment
 };
 
 // auth.ts
@@ -788,7 +920,7 @@ async function sendResetPasswordEmail(ctx) {
     port: 465,
     secure: true,
     auth: {
-      user: "test@nikan-alumni.org",
+      user: "nikpeyvand@nikan-alumni.org",
       pass: "P@ssw0rd110121"
     }
   });
@@ -808,7 +940,9 @@ async function sendResetPasswordEmail(ctx) {
     template: "resetpassword",
     context: {
       ...ctx,
-      resetlink: `http://localhost:5173/reset-password?email=${encodeURIComponent(ctx.identity)}&token=${ctx.token}`
+      resetlink: `http://localhost:5173/reset-password?email=${encodeURIComponent(
+        ctx.identity
+      )}&token=${ctx.token}`
     }
   });
   console.log("Message sent: %s", info.messageId);
@@ -845,10 +979,10 @@ var session = (0, import_session.statelessSessions)({
 // storage.ts
 var baseUrl = "http://localhost:3030";
 var storage = {
-  "local": {
+  local: {
     kind: "local",
     type: "file",
-    generateUrl: (path2) => `${baseUrl}/file${path2}`,
+    generateUrl: (path2) => `${baseUrl}/files${path2}`,
     serverRoute: {
       path: "/files"
     },
@@ -859,10 +993,11 @@ var storage = {
 // keystone.ts
 var import_ws = __toESM(require("ws"));
 var import_body_parser = __toESM(require("body-parser"));
+var import_lodash = require("lodash");
 var Zibal = require("zibal");
 var wss;
 var keystone_default = withAuth(
-  (0, import_core14.config)({
+  (0, import_core17.config)({
     db: {
       provider: "sqlite",
       url: "file:./keystone.db"
@@ -878,6 +1013,10 @@ var keystone_default = withAuth(
       port: 3030,
       extendExpressApp: (app, ctx) => {
         app.use(import_body_parser.default.json());
+        app.use((req, res, next) => {
+          const path2 = req.path;
+          next();
+        });
         app.post("/auth-item", async (req, res) => {
           console.log(!!ctx.session ? "loggedin" : "not loggedin");
           if (ctx.session) {
@@ -968,7 +1107,19 @@ var keystone_default = withAuth(
         app.post(
           "/cart-item",
           async (req, res) => {
-            if (!req.body.cid || typeof req.body.cid !== "string") {
+            const courseId = req.body.cid;
+            const eventId = req.body.eventid;
+            const productType = eventId ? "event" : "course";
+            const productID = eventId || courseId;
+            const productName = eventId ? "fa:: Event " : "Fa:: Course ";
+            if (courseId && eventId) {
+              res.status(400).json({
+                ok: false,
+                message: "bad request"
+              });
+              return;
+            }
+            if ((!courseId || typeof courseId !== "string") && (!eventId || typeof eventId !== "string")) {
               res.status(400).json({
                 ok: false,
                 message: "bad request"
@@ -986,7 +1137,6 @@ var keystone_default = withAuth(
               });
               return;
             }
-            const courseId = req.body.cid;
             const session2 = ctx.session;
             try {
               let cartId;
@@ -1005,26 +1155,27 @@ var keystone_default = withAuth(
                 },
                 query: `id
                                         items {
-                                            course {
+                                            ${productType} {
                                                 id
                                             }
                                         }`
               });
-              console.log(cart);
               if (cart) {
                 cartId = cart.id;
-                if (cart.items.map((i) => i.course.id).includes(courseId)) {
+                if (cart.items.map(
+                  (i) => (0, import_lodash.get)(i, `${productType}.id`, "")
+                ).filter(Boolean).includes(productID)) {
                   res.json({
                     ok: false,
-                    message: "course already added"
+                    message: productName + " already added"
                   });
                   return;
                 }
                 const newCartItem = await ctx.prisma.CartItem.create({
                   data: {
-                    course: {
+                    [productType]: {
                       connect: {
-                        id: courseId
+                        id: productID
                       }
                     },
                     cart: {
@@ -1044,9 +1195,9 @@ var keystone_default = withAuth(
                     },
                     items: {
                       create: {
-                        course: {
+                        [productType]: {
                           connect: {
-                            id: courseId
+                            id: productID
                           }
                         }
                       }
@@ -1127,100 +1278,111 @@ var keystone_default = withAuth(
             }
           }
         );
-        app.get(
-          "/ipg/cb",
-          async (req, res) => {
-            try {
-              const sudoContext = ctx.sudo();
-              const cartId = req.query.orderId;
-              if (typeof cartId === "string") {
-                throw new Error("error in params");
-              }
-              const { totalPrice, user: { id: userId }, items, isCompleted } = await sudoContext.query.Cart.findOne({
-                where: {
-                  id: cartId
-                },
-                query: " totalPrice user { id } items { id priceWithDiscount course {id} } isCompleted"
-              });
-              if (isCompleted) {
-                res.status(400).send("fa:: purtes already compeleted");
-                return;
-              }
-              const cartItem = items.map((i) => {
+        app.get("/ipg/cb", async (req, res) => {
+          try {
+            const sudoContext = ctx.sudo();
+            const cartId = req.query.orderId;
+            if (typeof cartId === "string") {
+              throw new Error("error in params");
+            }
+            const {
+              totalPrice,
+              user: { id: userId },
+              items,
+              isCompleted
+            } = await sudoContext.query.Cart.findOne({
+              where: {
+                id: cartId
+              },
+              query: " totalPrice user { id } items { id priceWithDiscount course {id} } isCompleted"
+            });
+            if (isCompleted) {
+              res.status(400).send(
+                "fa:: purtes already compeleted"
+              );
+              return;
+            }
+            const cartItem = items.map(
+              (i) => {
                 return {
                   name: "hi there",
                   course: { connect: { id: i.course.id } },
                   price: i.priceWithDiscount
                 };
-              });
-              const newOrder = await sudoContext.query.Order.createOne({
-                data: {
-                  totalCost: totalPrice,
-                  paymentStatus: 1,
-                  user: {
-                    connect: {
-                      id: userId
-                    }
-                  },
-                  items: {
-                    create: cartItem
+              }
+            );
+            const newOrder = await sudoContext.query.Order.createOne({
+              data: {
+                totalCost: totalPrice,
+                paymentStatus: 1,
+                user: {
+                  connect: {
+                    id: userId
                   }
-                }
-              });
-              await sudoContext.query.Cart.updateOne({
-                where: {
-                  id: cartId
                 },
-                data: {
-                  isCompleted: true
+                items: {
+                  create: cartItem
                 }
+              }
+            });
+            await sudoContext.query.Cart.updateOne({
+              where: {
+                id: cartId
+              },
+              data: {
+                isCompleted: true
+              }
+            });
+            res.send("orderid is => " + newOrder.id);
+            sudoContext.exitSudo();
+          } catch (error) {
+            console.log(error);
+            res.send(error);
+          }
+        });
+        app.get(
+          "/checkout",
+          async (req, res) => {
+            if (!ctx.session) {
+              res.status(400).json({
+                ok: false,
+                message: "fa:: session expires login agin"
               });
-              res.send("orderid is => " + newOrder.id);
-              sudoContext.exitSudo();
+              return;
+            }
+            const zibal = new Zibal({
+              merchant: "zibal",
+              callbackUrl: "http://localhost:3030/ipg/cb"
+            });
+            try {
+              const [{ totalPrice, id: cartid }] = await ctx.query.Cart.findMany({
+                where: {
+                  user: {
+                    id: {
+                      equals: ctx.session?.itemId
+                    }
+                  }
+                },
+                query: " totalPrice id"
+              });
+              const response = await zibal.request({
+                amount: 2e5,
+                orderId: cartid,
+                merchant: "zibal",
+                callbackUrl: "http://localhost:3030/ipg/cb",
+                mobile: "09102124368",
+                description: "THIS IS MY DESCRIPTION",
+                allowedCards: ["5022291092719457"],
+                linkToPay: false,
+                sms: false
+              });
+              res.redirect(response.paymentUrl);
             } catch (error) {
-              console.log(error);
-              res.send(error);
+              console.error(error);
+              res.status(500).send(error);
             }
           }
         );
-        app.get("/checkout", async (req, res) => {
-          if (!ctx.session) {
-            res.status(400).json({
-              ok: false,
-              message: "fa:: session expires login agin"
-            });
-            return;
-          }
-          const zibal = new Zibal({
-            merchant: "zibal",
-            callbackUrl: "http://localhost:3030/ipg/cb"
-          });
-          try {
-            const [{ totalPrice, id: cartid }] = await ctx.query.Cart.findMany({
-              where: {
-                user: {
-                  id: { equals: ctx.session?.itemId }
-                }
-              },
-              query: " totalPrice id"
-            });
-            const response = await zibal.request({
-              amount: 2e5,
-              orderId: cartid,
-              merchant: "zibal",
-              callbackUrl: "http://localhost:3030/ipg/cb",
-              mobile: "09102124368",
-              description: "THIS IS MY DESCRIPTION",
-              allowedCards: ["5022291092719457"],
-              linkToPay: false,
-              sms: false
-            });
-            res.redirect(response.paymentUrl);
-          } catch (error) {
-            console.error(error);
-            res.status(500).send(error);
-          }
-        });
         app.get("/kick", (req, res) => {
           if (wss && req.query.userid && !Array.isArray(req.query.userid)) {
             wss.clients.forEach((ws) => {

@@ -1,0 +1,11 @@
+query event($status: String = "AVAILABLE") {
+  events(where: { status: { equals: $status } }) {
+    id
+    name
+    from
+    to
+    price
+    status
+    isAccessible
+  }
+}

@@ -1,14 +1,7 @@
 import { graphql } from '@graphql-ts/schema';
 import { list } from '@keystone-6/core';
 import { allowAll } from '@keystone-6/core/access';
-import { BaseAccessArgs } from '@keystone-6/core/dist/declarations/src/types/config/access-control';
-import {
-    checkbox,
-    integer,
-    relationship,
-    text,
-    virtual,
-} from '@keystone-6/core/fields';
+import { integer, relationship, text, virtual } from '@keystone-6/core/fields';
 import { BaseKeystoneTypeInfo, KeystoneContext } from '@keystone-6/core/types';
 
 export const Coupon = list({
@@ -57,14 +50,6 @@ export const Coupon = list({
             validation: {
                 max: 90,
                 min: 5,
-            },
-        }),
-        // TODO create virtual filds that sas how many spends
-        couponItem: relationship({
-            ref: 'CouponPivot',
-            many: true,
-            ui: {
-                // labelField: 'customer',
             },
         }),
     },

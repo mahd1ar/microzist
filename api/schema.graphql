@@ -14,8 +14,12 @@ type User {
   role: String
   courses(where: CourseWhereInput! = {}, orderBy: [CourseOrderByInput!]! = [], take: Int, skip: Int! = 0): [Course!]
   coursesCount(where: CourseWhereInput! = {}): Int
+  events(where: EventWhereInput! = {}, orderBy: [EventOrderByInput!]! = [], take: Int, skip: Int! = 0): [Event!]
+  eventsCount(where: EventWhereInput! = {}): Int
   posts(where: PostWhereInput! = {}, orderBy: [PostOrderByInput!]! = [], take: Int, skip: Int! = 0): [Post!]
   postsCount(where: PostWhereInput! = {}): Int
+  comments(where: CommentWhereInput! = {}, orderBy: [CommentOrderByInput!]! = [], take: Int, skip: Int! = 0): [Comment!]
+  commentsCount(where: CommentWhereInput! = {}): Int
   createdAt: DateTime
   passwordResetToken: PasswordState
   passwordResetIssuedAt: DateTime
@@ -45,7 +49,9 @@ input UserWhereInput {
   orders: OrderManyRelationFilter
   role: StringNullableFilter
   courses: CourseManyRelationFilter
+  events: EventManyRelationFilter
   posts: PostManyRelationFilter
+  comments: CommentManyRelationFilter
   createdAt: DateTimeNullableFilter
   passwordResetToken: PasswordFilter
   passwordResetIssuedAt: DateTimeNullableFilter
@@ -137,10 +143,22 @@ input CourseManyRelationFilter {
   none: CourseWhereInput
 }
 
+input EventManyRelationFilter {
+  every: EventWhereInput
+  some: EventWhereInput
+  none: EventWhereInput
+}
+
 input PostManyRelationFilter {
   every: PostWhereInput
   some: PostWhereInput
   none: PostWhereInput
+}
+
+input CommentManyRelationFilter {
+  every: CommentWhereInput
+  some: CommentWhereInput
+  none: CommentWhereInput
 }
 
 input DateTimeNullableFilter {
@@ -183,7 +201,9 @@ input UserUpdateInput {
   orders: OrderRelateToManyForUpdateInput
   role: String
   courses: CourseRelateToManyForUpdateInput
+  events: EventRelateToManyForUpdateInput
   posts: PostRelateToManyForUpdateInput
+  comments: CommentRelateToManyForUpdateInput
   createdAt: DateTime
   passwordResetToken: String
   passwordResetIssuedAt: DateTime
@@ -211,11 +231,25 @@ input CourseRelateToManyForUpdateInput {
   connect: [CourseWhereUniqueInput!]
 }
 
+input EventRelateToManyForUpdateInput {
+  disconnect: [EventWhereUniqueInput!]
+  set: [EventWhereUniqueInput!]
+  create: [EventCreateInput!]
+  connect: [EventWhereUniqueInput!]
+}
+
 input PostRelateToManyForUpdateInput {
   disconnect: [PostWhereUniqueInput!]
   set: [PostWhereUniqueInput!]
   create: [PostCreateInput!]
   connect: [PostWhereUniqueInput!]
+}
+
+input CommentRelateToManyForUpdateInput {
+  disconnect: [CommentWhereUniqueInput!]
+  set: [CommentWhereUniqueInput!]
+  create: [CommentCreateInput!]
+  connect: [CommentWhereUniqueInput!]
 }
 
 input UserUpdateArgs {
@@ -232,7 +266,9 @@ input UserCreateInput {
   orders: OrderRelateToManyForCreateInput
   role: String
   courses: CourseRelateToManyForCreateInput
+  events: EventRelateToManyForCreateInput
   posts: PostRelateToManyForCreateInput
+  comments: CommentRelateToManyForCreateInput
   createdAt: DateTime
   passwordResetToken: String
   passwordResetIssuedAt: DateTime
@@ -254,9 +290,19 @@ input CourseRelateToManyForCreateInput {
   connect: [CourseWhereUniqueInput!]
 }
 
+input EventRelateToManyForCreateInput {
+  create: [EventCreateInput!]
+  connect: [EventWhereUniqueInput!]
+}
+
 input PostRelateToManyForCreateInput {
   create: [PostCreateInput!]
   connect: [PostWhereUniqueInput!]
+}
+
+input CommentRelateToManyForCreateInput {
+  create: [CommentCreateInput!]
+  connect: [CommentWhereUniqueInput!]
 }
 
 type Coupon {
@@ -268,8 +314,6 @@ type Coupon {
   belongsTo(where: CourseWhereInput! = {}, orderBy: [CourseOrderByInput!]! = [], take: Int, skip: Int! = 0): [Course!]
   belongsToCount(where: CourseWhereInput! = {}): Int
   discount: Int
-  couponItem(where: CouponPivotWhereInput! = {}, orderBy: [CouponPivotOrderByInput!]! = [], take: Int, skip: Int! = 0): [CouponPivot!]
-  couponItemCount(where: CouponPivotWhereInput! = {}): Int
 }
 
 input CouponWhereUniqueInput {
@@ -286,7 +330,6 @@ input CouponWhereInput {
   maxAmount: IntFilter
   belongsTo: CourseManyRelationFilter
   discount: IntNullableFilter
-  couponItem: CouponPivotManyRelationFilter
 }
 
 input IntFilter {
@@ -311,12 +354,6 @@ input IntNullableFilter {
   not: IntNullableFilter
 }
 
-input CouponPivotManyRelationFilter {
-  every: CouponPivotWhereInput
-  some: CouponPivotWhereInput
-  none: CouponPivotWhereInput
-}
-
 input CouponOrderByInput {
   id: OrderDirection
   code: OrderDirection
@@ -331,14 +368,6 @@ input CouponUpdateInput {
   maxAmount: Int
   belongsTo: CourseRelateToManyForUpdateInput
   discount: Int
-  couponItem: CouponPivotRelateToManyForUpdateInput
-}
-
-input CouponPivotRelateToManyForUpdateInput {
-  disconnect: [CouponPivotWhereUniqueInput!]
-  set: [CouponPivotWhereUniqueInput!]
-  create: [CouponPivotCreateInput!]
-  connect: [CouponPivotWhereUniqueInput!]
 }
 
 input CouponUpdateArgs {
@@ -352,77 +381,94 @@ input CouponCreateInput {
   maxAmount: Int
   belongsTo: CourseRelateToManyForCreateInput
   discount: Int
-  couponItem: CouponPivotRelateToManyForCreateInput
 }
 
-input CouponPivotRelateToManyForCreateInput {
-  create: [CouponPivotCreateInput!]
-  connect: [CouponPivotWhereUniqueInput!]
-}
-
-type CouponPivot {
+type Event {
   id: ID!
-  couponCode: Coupon
-  customer: User
-  status: Int
+  name: String
+  description: String
+  price: Int
+  priceFa: String
+  status: String
+  maxAmount: Int
+  from: String
+  to: String
+  users(where: UserWhereInput! = {}, orderBy: [UserOrderByInput!]! = [], take: Int, skip: Int! = 0): [User!]
+  usersCount(where: UserWhereInput! = {}): Int
+  isAccessible: Boolean
 }
 
-input CouponPivotWhereUniqueInput {
+input EventWhereUniqueInput {
   id: ID
 }
 
-input CouponPivotWhereInput {
-  AND: [CouponPivotWhereInput!]
-  OR: [CouponPivotWhereInput!]
-  NOT: [CouponPivotWhereInput!]
+input EventWhereInput {
+  AND: [EventWhereInput!]
+  OR: [EventWhereInput!]
+  NOT: [EventWhereInput!]
   id: IDFilter
-  couponCode: CouponWhereInput
-  customer: UserWhereInput
-  status: IntNullableFilter
+  name: StringFilter
+  description: StringFilter
+  price: IntNullableFilter
+  status: StringNullableFilter
+  maxAmount: IntNullableFilter
+  users: UserManyRelationFilter
 }
 
-input CouponPivotOrderByInput {
+input UserManyRelationFilter {
+  every: UserWhereInput
+  some: UserWhereInput
+  none: UserWhereInput
+}
+
+input EventOrderByInput {
   id: OrderDirection
+  name: OrderDirection
+  description: OrderDirection
+  price: OrderDirection
   status: OrderDirection
+  maxAmount: OrderDirection
+  from: OrderDirection
+  to: OrderDirection
 }
 
-input CouponPivotUpdateInput {
-  couponCode: CouponRelateToOneForUpdateInput
-  customer: UserRelateToOneForUpdateInput
-  status: Int
+input EventUpdateInput {
+  name: String
+  description: String
+  price: Int
+  status: String
+  maxAmount: Int
+  from: String
+  to: String
+  users: UserRelateToManyForUpdateInput
 }
 
-input CouponRelateToOneForUpdateInput {
-  create: CouponCreateInput
-  connect: CouponWhereUniqueInput
-  disconnect: Boolean
+input UserRelateToManyForUpdateInput {
+  disconnect: [UserWhereUniqueInput!]
+  set: [UserWhereUniqueInput!]
+  create: [UserCreateInput!]
+  connect: [UserWhereUniqueInput!]
 }
 
-input UserRelateToOneForUpdateInput {
-  create: UserCreateInput
-  connect: UserWhereUniqueInput
-  disconnect: Boolean
+input EventUpdateArgs {
+  where: EventWhereUniqueInput!
+  data: EventUpdateInput!
 }
 
-input CouponPivotUpdateArgs {
-  where: CouponPivotWhereUniqueInput!
-  data: CouponPivotUpdateInput!
+input EventCreateInput {
+  name: String
+  description: String
+  price: Int
+  status: String
+  maxAmount: Int
+  from: String
+  to: String
+  users: UserRelateToManyForCreateInput
 }
 
-input CouponPivotCreateInput {
-  couponCode: CouponRelateToOneForCreateInput
-  customer: UserRelateToOneForCreateInput
-  status: Int
-}
-
-input CouponRelateToOneForCreateInput {
-  create: CouponCreateInput
-  connect: CouponWhereUniqueInput
-}
-
-input UserRelateToOneForCreateInput {
-  create: UserCreateInput
-  connect: UserWhereUniqueInput
+input UserRelateToManyForCreateInput {
+  create: [UserCreateInput!]
+  connect: [UserWhereUniqueInput!]
 }
 
 type Post {
@@ -491,6 +537,12 @@ input PostUpdateInput {
   tags: TagRelateToManyForUpdateInput
 }
 
+input UserRelateToOneForUpdateInput {
+  create: UserCreateInput
+  connect: UserWhereUniqueInput
+  disconnect: Boolean
+}
+
 input TagRelateToManyForUpdateInput {
   disconnect: [TagWhereUniqueInput!]
   set: [TagWhereUniqueInput!]
@@ -512,6 +564,11 @@ input PostCreateInput {
   tags: TagRelateToManyForCreateInput
 }
 
+input UserRelateToOneForCreateInput {
+  create: UserCreateInput
+  connect: UserWhereUniqueInput
+}
+
 input TagRelateToManyForCreateInput {
   create: [TagCreateInput!]
   connect: [TagWhereUniqueInput!]
@@ -526,6 +583,8 @@ type Course {
   priceFa: String
   users(where: UserWhereInput! = {}, orderBy: [UserOrderByInput!]! = [], take: Int, skip: Int! = 0): [User!]
   usersCount(where: UserWhereInput! = {}): Int
+  courseItem(where: CourseItemWhereInput! = {}, orderBy: [CourseItemOrderByInput!]! = [], take: Int, skip: Int! = 0): [CourseItem!]
+  courseItemCount(where: CourseItemWhereInput! = {}): Int
   isAccessible: Boolean
 }
 
@@ -543,12 +602,13 @@ input CourseWhereInput {
   status: StringNullableFilter
   price: IntNullableFilter
   users: UserManyRelationFilter
+  courseItem: CourseItemManyRelationFilter
 }
 
-input UserManyRelationFilter {
-  every: UserWhereInput
-  some: UserWhereInput
-  none: UserWhereInput
+input CourseItemManyRelationFilter {
+  every: CourseItemWhereInput
+  some: CourseItemWhereInput
+  none: CourseItemWhereInput
 }
 
 input CourseOrderByInput {
@@ -565,13 +625,14 @@ input CourseUpdateInput {
   status: String
   price: Int
   users: UserRelateToManyForUpdateInput
+  courseItem: CourseItemRelateToManyForUpdateInput
 }
 
-input UserRelateToManyForUpdateInput {
-  disconnect: [UserWhereUniqueInput!]
-  set: [UserWhereUniqueInput!]
-  create: [UserCreateInput!]
-  connect: [UserWhereUniqueInput!]
+input CourseItemRelateToManyForUpdateInput {
+  disconnect: [CourseItemWhereUniqueInput!]
+  set: [CourseItemWhereUniqueInput!]
+  create: [CourseItemCreateInput!]
+  connect: [CourseItemWhereUniqueInput!]
 }
 
 input CourseUpdateArgs {
@@ -585,11 +646,92 @@ input CourseCreateInput {
   status: String
   price: Int
   users: UserRelateToManyForCreateInput
+  courseItem: CourseItemRelateToManyForCreateInput
 }
 
-input UserRelateToManyForCreateInput {
-  create: [UserCreateInput!]
-  connect: [UserWhereUniqueInput!]
+input CourseItemRelateToManyForCreateInput {
+  create: [CourseItemCreateInput!]
+  connect: [CourseItemWhereUniqueInput!]
+}
+
+type CourseItem {
+  id: ID!
+  no: Int
+  name: String
+  description: String
+  video: File
+  course: Course
+  comments(where: CommentWhereInput! = {}, orderBy: [CommentOrderByInput!]! = [], take: Int, skip: Int! = 0): [Comment!]
+  commentsCount(where: CommentWhereInput! = {}): Int
+}
+
+input CourseItemWhereUniqueInput {
+  id: ID
+}
+
+input CourseItemWhereInput {
+  AND: [CourseItemWhereInput!]
+  OR: [CourseItemWhereInput!]
+  NOT: [CourseItemWhereInput!]
+  id: IDFilter
+  no: IntNullableFilter
+  name: StringFilter
+  description: StringFilter
+  video: FileWhereInput
+  course: CourseWhereInput
+  comments: CommentManyRelationFilter
+}
+
+input CourseItemOrderByInput {
+  id: OrderDirection
+  no: OrderDirection
+  name: OrderDirection
+  description: OrderDirection
+}
+
+input CourseItemUpdateInput {
+  no: Int
+  name: String
+  description: String
+  video: FileRelateToOneForUpdateInput
+  course: CourseRelateToOneForUpdateInput
+  comments: CommentRelateToManyForUpdateInput
+}
+
+input FileRelateToOneForUpdateInput {
+  create: FileCreateInput
+  connect: FileWhereUniqueInput
+  disconnect: Boolean
+}
+
+input CourseRelateToOneForUpdateInput {
+  create: CourseCreateInput
+  connect: CourseWhereUniqueInput
+  disconnect: Boolean
+}
+
+input CourseItemUpdateArgs {
+  where: CourseItemWhereUniqueInput!
+  data: CourseItemUpdateInput!
+}
+
+input CourseItemCreateInput {
+  no: Int
+  name: String
+  description: String
+  video: FileRelateToOneForCreateInput
+  course: CourseRelateToOneForCreateInput
+  comments: CommentRelateToManyForCreateInput
+}
+
+input FileRelateToOneForCreateInput {
+  create: FileCreateInput
+  connect: FileWhereUniqueInput
+}
+
+input CourseRelateToOneForCreateInput {
+  create: CourseCreateInput
+  connect: CourseWhereUniqueInput
 }
 
 type Category {
@@ -695,7 +837,7 @@ input TagCreateInput {
   posts: PostRelateToManyForCreateInput
 }
 
-type Storage {
+type File {
   id: ID!
   altText: String
   video: FileFieldOutput
@@ -709,28 +851,28 @@ type FileFieldOutput {
   url: String!
 }
 
-input StorageWhereUniqueInput {
+input FileWhereUniqueInput {
   id: ID
 }
 
-input StorageWhereInput {
-  AND: [StorageWhereInput!]
-  OR: [StorageWhereInput!]
-  NOT: [StorageWhereInput!]
+input FileWhereInput {
+  AND: [FileWhereInput!]
+  OR: [FileWhereInput!]
+  NOT: [FileWhereInput!]
   id: IDFilter
   altText: StringFilter
   type: StringNullableFilter
   createdAt: DateTimeNullableFilter
 }
 
-input StorageOrderByInput {
+input FileOrderByInput {
   id: OrderDirection
   altText: OrderDirection
   type: OrderDirection
   createdAt: OrderDirection
 }
 
-input StorageUpdateInput {
+input FileUpdateInput {
   altText: String
   video: FileFieldInput
   type: String
@@ -744,12 +886,12 @@ input FileFieldInput {
 """The `Upload` scalar type represents a file upload."""
 scalar Upload
 
-input StorageUpdateArgs {
-  where: StorageWhereUniqueInput!
-  data: StorageUpdateInput!
+input FileUpdateArgs {
+  where: FileWhereUniqueInput!
+  data: FileUpdateInput!
 }
 
-input StorageCreateInput {
+input FileCreateInput {
   altText: String
   video: FileFieldInput
   type: String
@@ -806,7 +948,10 @@ input SettingsCreateInput {
 
 type CartItem {
   id: ID!
+  type: String
   course: Course
+  event: Event
+  quantity: Int
   coupon: Coupon
   priceWithDiscount: Float
   cart: Cart
@@ -822,23 +967,34 @@ input CartItemWhereInput {
   NOT: [CartItemWhereInput!]
   id: IDFilter
   course: CourseWhereInput
+  event: EventWhereInput
+  quantity: IntNullableFilter
   coupon: CouponWhereInput
   cart: CartWhereInput
 }
 
 input CartItemOrderByInput {
   id: OrderDirection
+  quantity: OrderDirection
 }
 
 input CartItemUpdateInput {
   course: CourseRelateToOneForUpdateInput
+  event: EventRelateToOneForUpdateInput
+  quantity: Int
   coupon: CouponRelateToOneForUpdateInput
   cart: CartRelateToOneForUpdateInput
 }
 
-input CourseRelateToOneForUpdateInput {
-  create: CourseCreateInput
-  connect: CourseWhereUniqueInput
+input EventRelateToOneForUpdateInput {
+  create: EventCreateInput
+  connect: EventWhereUniqueInput
+  disconnect: Boolean
+}
+
+input CouponRelateToOneForUpdateInput {
+  create: CouponCreateInput
+  connect: CouponWhereUniqueInput
   disconnect: Boolean
 }
 
@@ -855,13 +1011,20 @@ input CartItemUpdateArgs {
 
 input CartItemCreateInput {
   course: CourseRelateToOneForCreateInput
+  event: EventRelateToOneForCreateInput
+  quantity: Int
   coupon: CouponRelateToOneForCreateInput
   cart: CartRelateToOneForCreateInput
 }
 
-input CourseRelateToOneForCreateInput {
-  create: CourseCreateInput
-  connect: CourseWhereUniqueInput
+input EventRelateToOneForCreateInput {
+  create: EventCreateInput
+  connect: EventWhereUniqueInput
+}
+
+input CouponRelateToOneForCreateInput {
+  create: CouponCreateInput
+  connect: CouponWhereUniqueInput
 }
 
 input CartRelateToOneForCreateInput {
@@ -1085,6 +1248,70 @@ input OrderRelateToOneForCreateInput {
   connect: OrderWhereUniqueInput
 }
 
+type Comment {
+  id: ID!
+  comment: String
+  user: User
+  courseItem: CourseItem
+  isValidated: Boolean
+  createdAt: DateTime
+}
+
+input CommentWhereUniqueInput {
+  id: ID
+}
+
+input CommentWhereInput {
+  AND: [CommentWhereInput!]
+  OR: [CommentWhereInput!]
+  NOT: [CommentWhereInput!]
+  id: IDFilter
+  comment: StringFilter
+  user: UserWhereInput
+  courseItem: CourseItemWhereInput
+  isValidated: BooleanFilter
+  createdAt: DateTimeNullableFilter
+}
+
+input CommentOrderByInput {
+  id: OrderDirection
+  comment: OrderDirection
+  isValidated: OrderDirection
+  createdAt: OrderDirection
+}
+
+input CommentUpdateInput {
+  comment: String
+  user: UserRelateToOneForUpdateInput
+  courseItem: CourseItemRelateToOneForUpdateInput
+  isValidated: Boolean
+  createdAt: DateTime
+}
+
+input CourseItemRelateToOneForUpdateInput {
+  create: CourseItemCreateInput
+  connect: CourseItemWhereUniqueInput
+  disconnect: Boolean
+}
+
+input CommentUpdateArgs {
+  where: CommentWhereUniqueInput!
+  data: CommentUpdateInput!
+}
+
+input CommentCreateInput {
+  comment: String
+  user: UserRelateToOneForCreateInput
+  courseItem: CourseItemRelateToOneForCreateInput
+  isValidated: Boolean
+  createdAt: DateTime
+}
+
+input CourseItemRelateToOneForCreateInput {
+  create: CourseItemCreateInput
+  connect: CourseItemWhereUniqueInput
+}
+
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
@@ -1103,12 +1330,12 @@ type Mutation {
   updateCoupons(data: [CouponUpdateArgs!]!): [Coupon]
   deleteCoupon(where: CouponWhereUniqueInput!): Coupon
   deleteCoupons(where: [CouponWhereUniqueInput!]!): [Coupon]
-  createCouponPivot(data: CouponPivotCreateInput!): CouponPivot
-  createCouponPivots(data: [CouponPivotCreateInput!]!): [CouponPivot]
-  updateCouponPivot(where: CouponPivotWhereUniqueInput!, data: CouponPivotUpdateInput!): CouponPivot
-  updateCouponPivots(data: [CouponPivotUpdateArgs!]!): [CouponPivot]
-  deleteCouponPivot(where: CouponPivotWhereUniqueInput!): CouponPivot
-  deleteCouponPivots(where: [CouponPivotWhereUniqueInput!]!): [CouponPivot]
+  createEvent(data: EventCreateInput!): Event
+  createEvents(data: [EventCreateInput!]!): [Event]
+  updateEvent(where: EventWhereUniqueInput!, data: EventUpdateInput!): Event
+  updateEvents(data: [EventUpdateArgs!]!): [Event]
+  deleteEvent(where: EventWhereUniqueInput!): Event
+  deleteEvents(where: [EventWhereUniqueInput!]!): [Event]
   createPost(data: PostCreateInput!): Post
   createPosts(data: [PostCreateInput!]!): [Post]
   updatePost(where: PostWhereUniqueInput!, data: PostUpdateInput!): Post
@@ -1121,6 +1348,12 @@ type Mutation {
   updateCourses(data: [CourseUpdateArgs!]!): [Course]
   deleteCourse(where: CourseWhereUniqueInput!): Course
   deleteCourses(where: [CourseWhereUniqueInput!]!): [Course]
+  createCourseItem(data: CourseItemCreateInput!): CourseItem
+  createCourseItems(data: [CourseItemCreateInput!]!): [CourseItem]
+  updateCourseItem(where: CourseItemWhereUniqueInput!, data: CourseItemUpdateInput!): CourseItem
+  updateCourseItems(data: [CourseItemUpdateArgs!]!): [CourseItem]
+  deleteCourseItem(where: CourseItemWhereUniqueInput!): CourseItem
+  deleteCourseItems(where: [CourseItemWhereUniqueInput!]!): [CourseItem]
   createCategory(data: CategoryCreateInput!): Category
   createCategories(data: [CategoryCreateInput!]!): [Category]
   updateCategory(where: CategoryWhereUniqueInput!, data: CategoryUpdateInput!): Category
@@ -1133,12 +1366,12 @@ type Mutation {
   updateTags(data: [TagUpdateArgs!]!): [Tag]
   deleteTag(where: TagWhereUniqueInput!): Tag
   deleteTags(where: [TagWhereUniqueInput!]!): [Tag]
-  createStorage(data: StorageCreateInput!): Storage
-  createStorages(data: [StorageCreateInput!]!): [Storage]
-  updateStorage(where: StorageWhereUniqueInput!, data: StorageUpdateInput!): Storage
-  updateStorages(data: [StorageUpdateArgs!]!): [Storage]
-  deleteStorage(where: StorageWhereUniqueInput!): Storage
-  deleteStorages(where: [StorageWhereUniqueInput!]!): [Storage]
+  createFile(data: FileCreateInput!): File
+  createFiles(data: [FileCreateInput!]!): [File]
+  updateFile(where: FileWhereUniqueInput!, data: FileUpdateInput!): File
+  updateFiles(data: [FileUpdateArgs!]!): [File]
+  deleteFile(where: FileWhereUniqueInput!): File
+  deleteFiles(where: [FileWhereUniqueInput!]!): [File]
   createSettings(data: SettingsCreateInput!): Settings
   createManySettings(data: [SettingsCreateInput!]!): [Settings]
   updateSettings(where: SettingsWhereUniqueInput! = {id: 1}, data: SettingsUpdateInput!): Settings
@@ -1169,6 +1402,12 @@ type Mutation {
   updateOrderItems(data: [OrderItemUpdateArgs!]!): [OrderItem]
   deleteOrderItem(where: OrderItemWhereUniqueInput!): OrderItem
   deleteOrderItems(where: [OrderItemWhereUniqueInput!]!): [OrderItem]
+  createComment(data: CommentCreateInput!): Comment
+  createComments(data: [CommentCreateInput!]!): [Comment]
+  updateComment(where: CommentWhereUniqueInput!, data: CommentUpdateInput!): Comment
+  updateComments(data: [CommentUpdateArgs!]!): [Comment]
+  deleteComment(where: CommentWhereUniqueInput!): Comment
+  deleteComments(where: [CommentWhereUniqueInput!]!): [Comment]
   endSession: Boolean!
   authenticateUserWithPassword(email: String!, password: String!): UserAuthenticationWithPasswordResult
   createInitialUser(data: CreateInitialUserInput!): UserAuthenticationWithPasswordSuccess!
@@ -1212,24 +1451,27 @@ type Query {
   coupons(where: CouponWhereInput! = {}, orderBy: [CouponOrderByInput!]! = [], take: Int, skip: Int! = 0): [Coupon!]
   coupon(where: CouponWhereUniqueInput!): Coupon
   couponsCount(where: CouponWhereInput! = {}): Int
-  couponPivots(where: CouponPivotWhereInput! = {}, orderBy: [CouponPivotOrderByInput!]! = [], take: Int, skip: Int! = 0): [CouponPivot!]
-  couponPivot(where: CouponPivotWhereUniqueInput!): CouponPivot
-  couponPivotsCount(where: CouponPivotWhereInput! = {}): Int
+  events(where: EventWhereInput! = {}, orderBy: [EventOrderByInput!]! = [], take: Int, skip: Int! = 0): [Event!]
+  event(where: EventWhereUniqueInput!): Event
+  eventsCount(where: EventWhereInput! = {}): Int
   posts(where: PostWhereInput! = {}, orderBy: [PostOrderByInput!]! = [], take: Int, skip: Int! = 0): [Post!]
   post(where: PostWhereUniqueInput!): Post
   postsCount(where: PostWhereInput! = {}): Int
   courses(where: CourseWhereInput! = {}, orderBy: [CourseOrderByInput!]! = [], take: Int, skip: Int! = 0): [Course!]
   course(where: CourseWhereUniqueInput!): Course
   coursesCount(where: CourseWhereInput! = {}): Int
+  courseItems(where: CourseItemWhereInput! = {}, orderBy: [CourseItemOrderByInput!]! = [], take: Int, skip: Int! = 0): [CourseItem!]
+  courseItem(where: CourseItemWhereUniqueInput!): CourseItem
+  courseItemsCount(where: CourseItemWhereInput! = {}): Int
   categories(where: CategoryWhereInput! = {}, orderBy: [CategoryOrderByInput!]! = [], take: Int, skip: Int! = 0): [Category!]
   category(where: CategoryWhereUniqueInput!): Category
   categoriesCount(where: CategoryWhereInput! = {}): Int
   tags(where: TagWhereInput! = {}, orderBy: [TagOrderByInput!]! = [], take: Int, skip: Int! = 0): [Tag!]
   tag(where: TagWhereUniqueInput!): Tag
   tagsCount(where: TagWhereInput! = {}): Int
-  storages(where: StorageWhereInput! = {}, orderBy: [StorageOrderByInput!]! = [], take: Int, skip: Int! = 0): [Storage!]
-  storage(where: StorageWhereUniqueInput!): Storage
-  storagesCount(where: StorageWhereInput! = {}): Int
+  files(where: FileWhereInput! = {}, orderBy: [FileOrderByInput!]! = [], take: Int, skip: Int! = 0): [File!]
+  file(where: FileWhereUniqueInput!): File
+  filesCount(where: FileWhereInput! = {}): Int
   manySettings(where: SettingsWhereInput! = {id: {equals: 1}}, orderBy: [SettingsOrderByInput!]! = [], take: Int, skip: Int! = 0): [Settings!]
   settings(where: SettingsWhereUniqueInput! = {id: 1}): Settings
   manySettingsCount(where: SettingsWhereInput! = {id: {equals: 1}}): Int
@@ -1245,6 +1487,9 @@ type Query {
   orderItems(where: OrderItemWhereInput! = {}, orderBy: [OrderItemOrderByInput!]! = [], take: Int, skip: Int! = 0): [OrderItem!]
   orderItem(where: OrderItemWhereUniqueInput!): OrderItem
   orderItemsCount(where: OrderItemWhereInput! = {}): Int
+  comments(where: CommentWhereInput! = {}, orderBy: [CommentOrderByInput!]! = [], take: Int, skip: Int! = 0): [Comment!]
+  comment(where: CommentWhereUniqueInput!): Comment
+  commentsCount(where: CommentWhereInput! = {}): Int
   keystone: KeystoneMeta!
   authenticatedItem: AuthenticatedItem
   validateUserPasswordResetToken(email: String!, token: String!): ValidateUserPasswordResetTokenResult

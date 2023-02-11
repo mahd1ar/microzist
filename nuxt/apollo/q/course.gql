@@ -1,0 +1,13 @@
+query course($id: ID!) {
+  course(where: { id: $id }) {
+    id
+    name
+    description
+    courseItem {
+      id
+      no
+      name
+      description
+    }
+  }
+}

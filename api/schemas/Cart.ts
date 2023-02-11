@@ -14,7 +14,7 @@ import { BaseKeystoneTypeInfo, KeystoneContext } from '@keystone-6/core/types';
 import { isLoggedIn } from '../data/access';
 
 export const Cart = list({
-    // TODO [security concern] filter by session id 
+    // TODO [security concern] filter by session id
     access: {
         operation: {
             query: isLoggedIn,
@@ -46,12 +46,21 @@ export const Cart = list({
                 ) {
                     const { items } = await context.query.Cart.findOne({
                         where: { id: item.id.toString() },
-                        query: 'items { course { name } }',
+                        query: 'items { course { name } event { name } }',
                     });
 
-                    return items.map((i: any) => i.course.name).join(' & ');
+                    return (
+                        items
+                            .map((i: any) => i.event?.name || '')
+                            .filter(Boolean)
+                            .join(' . ') +
+                        items
+                            .map((i: any) => i.course?.name || '')
+                            .filter(Boolean)
+                            .join(' . ')
+                    );
                 },
-            },),
+            }),
         }),
         items: relationship({
             ref: 'CartItem.cart',
@@ -72,8 +81,14 @@ export const Cart = list({
                         where: { id: item.id.toString() },
                         query: 'items { priceWithDiscount }',
                     });
-                    console.log(items)
-                    return items.reduce((total: number, { priceWithDiscount }: { priceWithDiscount: number }) => total += priceWithDiscount, 0)
+                    console.log(items);
+                    return items.reduce(
+                        (
+                            total: number,
+                            { priceWithDiscount }: { priceWithDiscount: number }
+                        ) => (total += priceWithDiscount),
+                        0
+                    );
                 },
             }),
         }),

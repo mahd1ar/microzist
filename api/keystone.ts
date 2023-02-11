@@ -10,11 +10,11 @@ import {
 import { withAuth, session } from './auth';
 import { storage } from './storage';
 import WebSocket from 'ws';
-import { BaseKeystoneTypeInfo, KeystoneContext } from '@keystone-6/core/types';
-import { Request } from 'express';
 import bodyParser from 'body-parser';
 
 import { sendCommand } from './data/utils';
+
+import { get } from 'lodash';
 
 // TODO load .env
 // import dotenv from 'dotenv';
@@ -105,12 +105,16 @@ export default withAuth(
             cors: { origin: ['http://localhost:5173'], credentials: true },
             port: 3030,
             extendExpressApp: (app, ctx) => {
+                app.use(bodyParser.json());
 
-                app.use(bodyParser.json())
+                app.use((req, res, next) => {
+                    const path: string = req.path;
+                    next();
+                });
 
                 // auth item
                 app.post('/auth-item', async (req, res) => {
-                    console.log(!!ctx.session ? 'loggedin' : 'not loggedin')
+                    console.log(!!ctx.session ? 'loggedin' : 'not loggedin');
                     if (ctx.session) {
                         const session: GeneralSession = ctx.session;
                         try {
@@ -182,8 +186,8 @@ export default withAuth(
                             });
                             sendCommand({
                                 action: 'logout',
-                                message: 'session expoire'
-                            })
+                                message: 'session expoire',
+                            });
                             return;
                         }
 
@@ -200,9 +204,9 @@ export default withAuth(
                             res.json({
                                 ok: true,
                                 message:
-                                    'fa :: deleted successfuly ' + deletedCart.id,
+                                    'fa :: deleted successfuly ' +
+                                    deletedCart.id,
                             });
-
                         } catch (error) {
                             console.log(error);
                             res.status(500).json({
@@ -212,21 +216,36 @@ export default withAuth(
                             sendCommand({
                                 action: 'show_message',
                                 message: 'something went wrong',
-                                type: 'error'
-                            })
+                                type: 'error',
+                            });
                         }
-
                     }
                 );
 
                 // add course to cart
-                app.post<{ cid: string }, GeneralApiResponse>(
+                app.post<{ cid: string; eventid: string }, GeneralApiResponse>(
                     '/cart-item',
                     async (req, res) => {
+                        const courseId = req.body.cid;
+                        const eventId = req.body.eventid;
+
+                        const productType = eventId ? 'event' : 'course';
+                        const productID = eventId || courseId;
+                        const productName = eventId
+                            ? 'fa:: Event '
+                            : 'Fa:: Course ';
+
+                        if (courseId && eventId) {
+                            res.status(400).json({
+                                ok: false,
+                                message: 'bad request',
+                            });
+                            return;
+                        }
 
                         if (
-                            !req.body.cid ||
-                            typeof req.body.cid !== 'string'
+                            (!courseId || typeof courseId !== 'string') &&
+                            (!eventId || typeof eventId !== 'string')
                         ) {
                             res.status(400).json({
                                 ok: false,
@@ -241,8 +260,8 @@ export default withAuth(
                             });
                             sendCommand({
                                 action: 'logout',
-                                message: 'session expoire'
-                            })
+                                message: 'session expoire',
+                            });
                             return;
                         }
 
@@ -253,22 +272,15 @@ export default withAuth(
                             isCompleted: boolean;
                         };
 
-                        const courseId = req.body.cid;
                         const session: GeneralSession = ctx.session;
-                        // try {
 
-                        // } catch (error) {
-                        //     console.log(error);
-                        // }
-                        // res.send({ ok: true, message: 'as' });
-                        // return;
                         try {
                             let cartId: string;
                             const [cart] = await ctx.query.Cart.findMany({
                                 where: {
                                     user: {
                                         id: {
-                                            equals: session?.itemId
+                                            equals: session?.itemId,
                                         },
                                     },
                                     AND: {
@@ -279,25 +291,26 @@ export default withAuth(
                                 },
                                 query: `id
                                         items {
-                                            course {
+                                            ${productType} {
                                                 id
                                             }
                                         }`,
                             });
-
-                            console.log(cart)
 
                             if (cart) {
                                 cartId = cart.id;
 
                                 if (
                                     cart.items
-                                        .map((i: any) => i.course.id)
-                                        .includes(courseId)
+                                        .map((i: any) =>
+                                            get(i, `${productType}.id`, '')
+                                        )
+                                        .filter(Boolean)
+                                        .includes(productID)
                                 ) {
                                     res.json({
                                         ok: false,
-                                        message: 'course already added',
+                                        message: productName + ' already added',
                                     });
                                     return;
                                 }
@@ -305,9 +318,9 @@ export default withAuth(
                                 const newCartItem: Cart =
                                     await ctx.prisma.CartItem.create({
                                         data: {
-                                            course: {
+                                            [productType]: {
                                                 connect: {
-                                                    id: courseId,
+                                                    id: productID,
                                                 },
                                             },
                                             cart: {
@@ -318,7 +331,6 @@ export default withAuth(
                                         },
                                     });
                             } else {
-
                                 const newCart: Cart =
                                     await ctx.prisma.Cart.create({
                                         data: {
@@ -329,10 +341,9 @@ export default withAuth(
                                             },
                                             items: {
                                                 create: {
-                                                    course: {
+                                                    [productType]: {
                                                         connect: {
-                                                            // course id
-                                                            id: courseId,
+                                                            id: productID,
                                                         },
                                                     },
                                                 },
@@ -356,7 +367,7 @@ export default withAuth(
                 );
 
                 // add coupon
-                app.get<{ id: string, cartitem: string }, GeneralApiResponse>(
+                app.get<{ id: string; cartitem: string }, GeneralApiResponse>(
                     '/coupon',
                     async (req, res) => {
                         type Coupon = {
@@ -439,130 +450,140 @@ export default withAuth(
                     }
                 );
 
+                //calback
+                app.get<ZibalCBQuery, any>('/ipg/cb', async (req, res) => {
+                    try {
+                        const sudoContext = ctx.sudo();
+                        const cartId = req.query.orderId;
+                        if (typeof cartId === 'string') {
+                            throw new Error('error in params');
+                        }
 
-                app.get<ZibalCBQuery, any>(
-                    '/ipg/cb',
-                    async (req, res) => {
+                        const {
+                            totalPrice,
+                            user: { id: userId },
+                            items,
+                            isCompleted,
+                        } = await sudoContext.query.Cart.findOne({
+                            where: {
+                                id: cartId,
+                            },
+                            query: ' totalPrice user { id } items { id priceWithDiscount course {id} } isCompleted',
+                        });
 
-                        try {
-                            const sudoContext = ctx.sudo()
-                            const cartId = req.query.orderId;
-                            if (typeof cartId === 'string') {
-                                throw new Error("error in params")
-                            }
+                        if (isCompleted) {
+                            res.status(400).send(
+                                'fa:: purtes already compeleted'
+                            );
+                            return;
+                        }
 
-                            const { totalPrice, user: { id: userId }, items, isCompleted } = await sudoContext.query.Cart.findOne({
-                                where: {
-                                    id: cartId
-                                },
-                                query: " totalPrice user { id } items { id priceWithDiscount course {id} } isCompleted"
-                            })
-
-                            if (isCompleted) {
-                                res.status(400).send("fa:: purtes already compeleted")
-                                return
-                            }
-
-                            const cartItem = items.map((i: { id: string, priceWithDiscount: number, course: { id: string } }) => {
+                        const cartItem = items.map(
+                            (i: {
+                                id: string;
+                                priceWithDiscount: number;
+                                course: { id: string };
+                            }) => {
                                 return {
                                     name: 'hi there',
                                     course: { connect: { id: i.course.id } },
-                                    price: i.priceWithDiscount
-                                }
-                            })
+                                    price: i.priceWithDiscount,
+                                };
+                            }
+                        );
 
-
-                            const newOrder = await sudoContext.query.Order.createOne({
+                        const newOrder =
+                            await sudoContext.query.Order.createOne({
                                 data: {
                                     totalCost: totalPrice,
                                     paymentStatus: 1,
                                     user: {
                                         connect: {
-                                            id: userId
-                                        }
+                                            id: userId,
+                                        },
                                     },
                                     items: {
-                                        create: cartItem
-                                    }
-
-                                }
-                            })
-
-                            await sudoContext.query.Cart.updateOne({
-                                where: {
-                                    id: cartId
+                                        create: cartItem,
+                                    },
                                 },
-                                data: {
-                                    isCompleted: true
-                                }
-                            })
+                            });
 
-                            res.send("orderid is => " + newOrder.id)
-                            // await ctx.prisma.Order.create({
+                        // TODO add Courcess to userId.courses
 
-                            // })
-                            sudoContext.exitSudo()
+                        await sudoContext.query.Cart.updateOne({
+                            where: {
+                                id: cartId,
+                            },
+                            data: {
+                                isCompleted: true,
+                            },
+                        });
 
+                        res.send('orderid is => ' + newOrder.id);
+                        // await ctx.prisma.Order.create({
+
+                        // })
+                        sudoContext.exitSudo();
+                    } catch (error) {
+                        console.log(error);
+                        res.send(error);
+                    }
+                });
+
+                // checkout
+                app.get<{}, GeneralApiResponse>(
+                    '/checkout',
+                    async (req, res) => {
+                        if (!ctx.session) {
+                            res.status(400).json({
+                                ok: false,
+                                message: 'fa:: session expires login agin',
+                            });
+                            return;
+                        }
+
+                        const zibal = new Zibal({
+                            merchant: 'zibal', // Your IPG's Merchant Id (You Can Get it From Zibal's Dashboard)
+                            callbackUrl: 'http://localhost:3030/ipg/cb', // The URL Where User will be Redirected to After Payment
+                        });
+
+                        try {
+                            const [{ totalPrice, id: cartid }] =
+                                await ctx.query.Cart.findMany({
+                                    where: {
+                                        user: {
+                                            id: {
+                                                equals: (
+                                                    ctx.session as GeneralSession
+                                                )?.itemId,
+                                            },
+                                        },
+                                    },
+                                    query: ' totalPrice id',
+                                });
+
+                            // Payment Request
+                            const response = await zibal.request({
+                                amount: 200000, // Required - In Rials
+                                orderId: cartid, // Optional
+                                merchant: 'zibal', // As Said Above, You can Specify merchant for Each Transaction too.
+                                callbackUrl: 'http://localhost:3030/ipg/cb', // As Said Above, You can Specify merchant for Each Transaction too.
+                                mobile: '09102124368', // Optional - User's Card Numbers will Show inf Dropdown in Shaparak Page if you Send User's Mobile
+                                description: 'THIS IS MY DESCRIPTION', // Optional
+                                allowedCards: ['5022291092719457'], // Optional - Any Transaction with a Card Number which is not Present in this Array will be Unsuccessful
+                                linkToPay: false, // Optional - If true, we will generate a Short Link for this transaction.
+                                sms: false, // Optional - If true, we will Send the Short Link to User's Mobile
+                            });
+
+                            res.redirect(response.paymentUrl);
                         } catch (error) {
-                            console.log(error)
-                            res.send(error)
+                            console.error(error); // { result: 103, message: 'authentication error', statusMessage: '{merchant} غیرفعال' }
+                            // TODO write somewhere for godsakes
+                            res.status(500).send(error);
                         }
                     }
                 );
 
-                // checkout
-                app.get<{}, GeneralApiResponse>('/checkout', async (req, res) => {
-
-                    if (!ctx.session) {
-                        res.status(400).json({
-                            ok: false,
-                            message: 'fa:: session expires login agin'
-                        })
-                        return
-                    }
-
-
-                    const zibal = new Zibal({
-                        merchant: 'zibal', // Your IPG's Merchant Id (You Can Get it From Zibal's Dashboard)
-                        callbackUrl: 'http://localhost:3030/ipg/cb', // The URL Where User will be Redirected to After Payment
-                    });
-
-
-                    try {
-
-
-                        const [{ totalPrice, id: cartid }] = await ctx.query.Cart.findMany({
-                            where: {
-                                user: {
-                                    id: { equals: (ctx.session as GeneralSession)?.itemId }
-                                }
-                            },
-                            query: ' totalPrice id'
-                        })
-
-                        // Payment Request
-                        const response = await zibal.request({
-                            amount: 200000, // Required - In Rials
-                            orderId: cartid, // Optional
-                            merchant: 'zibal', // As Said Above, You can Specify merchant for Each Transaction too.
-                            callbackUrl: 'http://localhost:3030/ipg/cb', // As Said Above, You can Specify merchant for Each Transaction too.
-                            mobile: '09102124368', // Optional - User's Card Numbers will Show inf Dropdown in Shaparak Page if you Send User's Mobile
-                            description: 'THIS IS MY DESCRIPTION', // Optional
-                            allowedCards: ['5022291092719457'], // Optional - Any Transaction with a Card Number which is not Present in this Array will be Unsuccessful
-                            linkToPay: false, // Optional - If true, we will generate a Short Link for this transaction.
-                            sms: false, // Optional - If true, we will Send the Short Link to User's Mobile
-                        });
-
-                        res.redirect(response.paymentUrl);
-
-                    } catch (error) {
-                        console.error(error); // { result: 103, message: 'authentication error', statusMessage: '{merchant} غیرفعال' }
-                        // TODO write somewhere for godsakes
-                        res.status(500).send(error);
-                    }
-
-
-                });
                 // kick
                 app.get<{ userid: string | undefined }>('/kick', (req, res) => {
                     if (

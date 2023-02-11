@@ -1,5 +1,5 @@
 import { list } from '@keystone-6/core';
-import { allowAll } from '@keystone-6/core/access';
+import { allOperations } from '@keystone-6/core/access';
 import {
     relationship,
     password,
@@ -7,6 +7,7 @@ import {
     timestamp,
     select,
 } from '@keystone-6/core/fields';
+import { isAdmin } from '../data/access';
 import { Roles } from '../data/enums';
 // import { permissions, rules } from "../access";
 
@@ -14,10 +15,13 @@ const keys = Object.keys(Roles).filter((i) => Number(i) > -1);
 const values = Object.keys(Roles).filter((i) => Number(i) > -1 === false);
 const RolesItem = keys.map((key, inx) => ({ value: key, label: values[inx] }));
 
-console.log(RolesItem);
-
 export const User = list({
-    access: allowAll,
+    access: {
+        operation: {
+            ...allOperations(isAdmin),
+            query: () => true,
+        },
+    },
     ui: {
         // hide the backend UI from regular users
         // TODO deal with this later v
@@ -52,12 +56,17 @@ export const User = list({
             ref: 'Course.users',
             many: true,
         }),
+        events: relationship({
+            ref: 'Event.users',
+            many: true,
+        }),
         // productImages: relationship({
         //   ref: "ProductImage.user",
         //   many: true,
         // }),
 
         posts: relationship({ ref: 'Post.author', many: true }),
+        comments: relationship({ ref: 'Comment.user', many: true }),
         // images: relationship({ ref: 'Storage.uploadedBy', many: true }),
 
         createdAt: timestamp({

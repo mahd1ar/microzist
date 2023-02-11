@@ -10,12 +10,18 @@ query CartByUser($user: ID!) {
     items {
       id
       priceWithDiscount
+      type
       coupon {
         id
         code
         discount
       }
       course {
+        id
+        name
+        price
+      }
+      event {
         id
         name
         price

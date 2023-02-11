@@ -1,16 +1,9 @@
 import { list } from '@keystone-6/core';
 import { allowAll } from '@keystone-6/core/access';
-import {
-    text,
-    relationship,
-    image,
-    timestamp,
-    file,
-    select,
-} from '@keystone-6/core/fields';
+import { text, timestamp, file, select } from '@keystone-6/core/fields';
 import { FileTypes } from '../data/enums';
 
-export const Storage = list({
+export const File = list({
     access: allowAll,
     ui: {
         label: 'media',
@@ -23,20 +16,22 @@ export const Storage = list({
         async resolveInput({ resolvedData, operation }) {
             // if (operation === 'create')
             if (resolvedData.video && resolvedData.video.filename) {
-
                 if (!resolvedData.type) {
-                    if (['mp4', 'mpa', 'mov', 'avi', 'wmv'].includes(resolvedData.video.filename.split('.').at(-1).toLowerCase())) {
+                    if (
+                        ['mp4', 'mpa', 'mov', 'avi', 'wmv'].includes(
+                            resolvedData.video.filename
+                                .split('.')
+                                .at(-1)
+                                .toLowerCase()
+                        )
+                    ) {
                         // console.log(929)
-                        resolvedData.type = 'video'
-
+                        resolvedData.type = 'video';
                     }
-
-
                 }
             }
 
             return resolvedData;
-
         },
     },
 
@@ -47,7 +42,7 @@ export const Storage = list({
             storage: 'local',
         }),
         type: select({
-            options: Object.keys(FileTypes)
+            options: Object.keys(FileTypes),
         }),
         // uploadedBy: relationship({
         //     ref: 'User.images',
@@ -56,9 +51,8 @@ export const Storage = list({
 
         createdAt: timestamp({
             defaultValue: { kind: 'now' },
-            ui: {}
+            ui: {},
         }),
-
     },
     // hooks: {
 
@@ -69,4 +63,4 @@ export const Storage = list({
     //     }
     //   }
     // }
-})
+});
