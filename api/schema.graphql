@@ -387,15 +387,22 @@ type Event {
   id: ID!
   name: String
   description: String
+  content: Event_content_Document
   price: Int
   priceFa: String
-  status: String
   maxAmount: Int
+  remaining: Int
+  status: String
   from: String
   to: String
+  location: String
   users(where: UserWhereInput! = {}, orderBy: [UserOrderByInput!]! = [], take: Int, skip: Int! = 0): [User!]
   usersCount(where: UserWhereInput! = {}): Int
   isAccessible: Boolean
+}
+
+type Event_content_Document {
+  document(hydrateRelationships: Boolean! = false): JSON!
 }
 
 input EventWhereUniqueInput {
@@ -410,8 +417,9 @@ input EventWhereInput {
   name: StringFilter
   description: StringFilter
   price: IntNullableFilter
+  maxAmount: IntFilter
   status: StringNullableFilter
-  maxAmount: IntNullableFilter
+  location: StringFilter
   users: UserManyRelationFilter
 }
 
@@ -426,20 +434,23 @@ input EventOrderByInput {
   name: OrderDirection
   description: OrderDirection
   price: OrderDirection
-  status: OrderDirection
   maxAmount: OrderDirection
+  status: OrderDirection
   from: OrderDirection
   to: OrderDirection
+  location: OrderDirection
 }
 
 input EventUpdateInput {
   name: String
   description: String
+  content: JSON
   price: Int
-  status: String
   maxAmount: Int
+  status: String
   from: String
   to: String
+  location: String
   users: UserRelateToManyForUpdateInput
 }
 
@@ -458,11 +469,13 @@ input EventUpdateArgs {
 input EventCreateInput {
   name: String
   description: String
+  content: JSON
   price: Int
-  status: String
   maxAmount: Int
+  status: String
   from: String
   to: String
+  location: String
   users: UserRelateToManyForCreateInput
 }
 
@@ -953,8 +966,8 @@ type CartItem {
   event: Event
   quantity: Int
   coupon: Coupon
-  priceWithDiscount: Float
   cart: Cart
+  priceWithDiscount: Float
 }
 
 input CartItemWhereUniqueInput {
@@ -1106,6 +1119,7 @@ type Order {
   totalCost: Float
   items(where: OrderItemWhereInput! = {}, orderBy: [OrderItemOrderByInput!]! = [], take: Int, skip: Int! = 0): [OrderItem!]
   itemsCount(where: OrderItemWhereInput! = {}): Int
+  trackId: String
   user: User
   paymentStatus: Int
   orderDate: DateTime
@@ -1122,6 +1136,7 @@ input OrderWhereInput {
   id: IDFilter
   totalCost: FloatNullableFilter
   items: OrderItemManyRelationFilter
+  trackId: StringFilter
   user: UserWhereInput
   paymentStatus: IntNullableFilter
   orderDate: DateTimeNullableFilter
@@ -1147,6 +1162,7 @@ input OrderItemManyRelationFilter {
 input OrderOrderByInput {
   id: OrderDirection
   totalCost: OrderDirection
+  trackId: OrderDirection
   paymentStatus: OrderDirection
   orderDate: OrderDirection
 }
@@ -1154,6 +1170,7 @@ input OrderOrderByInput {
 input OrderUpdateInput {
   totalCost: Float
   items: OrderItemRelateToManyForUpdateInput
+  trackId: String
   user: UserRelateToOneForUpdateInput
   paymentStatus: Int
   orderDate: DateTime
@@ -1174,6 +1191,7 @@ input OrderUpdateArgs {
 input OrderCreateInput {
   totalCost: Float
   items: OrderItemRelateToManyForCreateInput
+  trackId: String
   user: UserRelateToOneForCreateInput
   paymentStatus: Int
   orderDate: DateTime
@@ -1189,6 +1207,8 @@ type OrderItem {
   name: String
   description: String
   course: Course
+  event: Event
+  quantity: Int
   price: Int
   order: Order
 }
@@ -1205,6 +1225,8 @@ input OrderItemWhereInput {
   name: StringFilter
   description: StringFilter
   course: CourseWhereInput
+  event: EventWhereInput
+  quantity: IntNullableFilter
   price: IntNullableFilter
   order: OrderWhereInput
 }
@@ -1213,6 +1235,7 @@ input OrderItemOrderByInput {
   id: OrderDirection
   name: OrderDirection
   description: OrderDirection
+  quantity: OrderDirection
   price: OrderDirection
 }
 
@@ -1220,6 +1243,8 @@ input OrderItemUpdateInput {
   name: String
   description: String
   course: CourseRelateToOneForUpdateInput
+  event: EventRelateToOneForUpdateInput
+  quantity: Int
   price: Int
   order: OrderRelateToOneForUpdateInput
 }
@@ -1239,6 +1264,8 @@ input OrderItemCreateInput {
   name: String
   description: String
   course: CourseRelateToOneForCreateInput
+  event: EventRelateToOneForCreateInput
+  quantity: Int
   price: Int
   order: OrderRelateToOneForCreateInput
 }

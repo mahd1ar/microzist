@@ -1,0 +1,15 @@
+query event($id: ID!) {
+  event(where: { id: $id }) {
+    id
+    name
+    content {
+      document
+    }
+    location
+    from
+    to
+    isAccessible
+    price
+    priceFa
+  }
+}

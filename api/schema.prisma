@@ -42,16 +42,19 @@ model Coupon {
 }
 
 model Event {
-  id                  String     @id @default(cuid())
-  name                String     @default("")
-  description         String     @default("")
-  price               Int?
-  status              String?    @default("DRAFT")
-  maxAmount           Int?
-  from                String?
-  to                  String?
-  users               User[]     @relation("Event_users")
-  from_CartItem_event CartItem[] @relation("CartItem_event")
+  id                   String      @id @default(cuid())
+  name                 String      @default("")
+  description          String      @default("")
+  content              String      @default("[{\"type\":\"paragraph\",\"children\":[{\"text\":\"\"}]}]")
+  price                Int?
+  maxAmount            Int
+  status               String?     @default("DRAFT")
+  from                 String?
+  to                   String?
+  location             String      @default("")
+  users                User[]      @relation("Event_users")
+  from_CartItem_event  CartItem[]  @relation("CartItem_event")
+  from_OrderItem_event OrderItem[] @relation("OrderItem_event")
 }
 
 model Post {
@@ -160,6 +163,7 @@ model Order {
   id            String      @id @default(cuid())
   totalCost     Float?
   items         OrderItem[] @relation("OrderItem_order")
+  trackId       String      @default("")
   user          User?       @relation("Order_user", fields: [userId], references: [id])
   userId        String?     @map("user")
   paymentStatus Int?        @default(0)
@@ -174,11 +178,15 @@ model OrderItem {
   description String  @default("")
   course      Course? @relation("OrderItem_course", fields: [courseId], references: [id])
   courseId    String? @map("course")
+  event       Event?  @relation("OrderItem_event", fields: [eventId], references: [id])
+  eventId     String? @map("event")
+  quantity    Int?    @default(1)
   price       Int?
   order       Order?  @relation("OrderItem_order", fields: [orderId], references: [id])
   orderId     String? @map("order")
 
   @@index([courseId])
+  @@index([eventId])
   @@index([orderId])
 }
 

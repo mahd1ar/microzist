@@ -71,10 +71,19 @@ declare module '*/courses.gql' {
 }
     
 
-declare module '*/events.gql' {
+declare module '*/event.gql' {
   import { DocumentNode } from 'graphql';
   const defaultDocument: DocumentNode;
   export const event: DocumentNode;
+
+  export default defaultDocument;
+}
+    
+
+declare module '*/events.gql' {
+  import { DocumentNode } from 'graphql';
+  const defaultDocument: DocumentNode;
+  export const events: DocumentNode;
 
   export default defaultDocument;
 }

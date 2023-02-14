@@ -9,8 +9,10 @@ import {
     relationship,
 } from '@keystone-6/core/fields';
 import { BaseKeystoneTypeInfo, KeystoneContext } from '@keystone-6/core/types';
-import { formatMoney } from '../data/utils';
+
 import { persianCalendar } from '../src/custom-fields/persian-calander';
+import { wordifyfa } from "../data/lib/wordifyfa"
+import { document } from '@keystone-6/fields-document';
 
 export const Event = list({
     access: allowAll,
@@ -19,15 +21,61 @@ export const Event = list({
             validation: { isRequired: true },
         }),
         description: text({ ui: { displayMode: 'textarea' } }),
+        content: document({
+            formatting: true,
+            layouts: [
+                [1, 1],
+                [1, 1, 1],
+                [2, 1],
+                [1, 2],
+                [1, 2, 1],
+            ],
+            links: true,
+            dividers: true,
+            relationships: {
+                mention: {
+                    listKey: 'User',
+                    label: 'Mention',
+                    selection: 'id name',
+                },
+            },
+        }),
         price: integer(),
         priceFa: virtual({
             field: graphql.field({
                 type: graphql.String,
                 async resolve(item) {
                     // @ts-ignore
-                    return `${formatMoney(item.price)}`;
+                    return item.price ? `${wordifyfa(item.price)} تومان ` : 'رایگان';
                 },
             }),
+        }),
+        maxAmount: integer({ validation: { isRequired: true } }),
+        remaining: virtual({
+            field: graphql.field({
+                type: graphql.Int,
+                // @ts-ignore
+                async resolve(
+                    { id, maxAmount },
+                    _,
+                    context: KeystoneContext<BaseKeystoneTypeInfo>
+                ) {
+                    try {
+                        const currentlyInUse =
+                            await context.query.User.count({
+                                where: { events: { some: { id: { equals: id } } } }
+                            });
+
+
+
+                        return maxAmount - currentlyInUse;
+                    } catch (error) {
+                        console.error(error);
+                        return maxAmount;
+                    }
+                },
+            }),
+            // graphQLReturnType: "String",
         }),
         status: select({
             options: [
@@ -41,9 +89,10 @@ export const Event = list({
                 createView: { fieldMode: 'hidden' },
             },
         }),
-        maxAmount: integer(),
+
         from: persianCalendar(),
         to: persianCalendar(),
+        location: text(),
         users: relationship({
             ref: 'User.events',
             many: true,

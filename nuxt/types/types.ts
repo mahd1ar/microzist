@@ -668,10 +668,12 @@ export type Event = {
   from?: Maybe<Scalars['String']>;
   id: Scalars['ID'];
   isAccessible?: Maybe<Scalars['Boolean']>;
+  location?: Maybe<Scalars['String']>;
   maxAmount?: Maybe<Scalars['Int']>;
   name?: Maybe<Scalars['String']>;
   price?: Maybe<Scalars['Int']>;
   priceFa?: Maybe<Scalars['String']>;
+  remaining?: Maybe<Scalars['Int']>;
   status?: Maybe<Scalars['String']>;
   to?: Maybe<Scalars['String']>;
   users?: Maybe<Array<User>>;
@@ -694,6 +696,7 @@ export type EventUsersCountArgs = {
 export type EventCreateInput = {
   description?: InputMaybe<Scalars['String']>;
   from?: InputMaybe<Scalars['String']>;
+  location?: InputMaybe<Scalars['String']>;
   maxAmount?: InputMaybe<Scalars['Int']>;
   name?: InputMaybe<Scalars['String']>;
   price?: InputMaybe<Scalars['Int']>;
@@ -712,6 +715,7 @@ export type EventOrderByInput = {
   description?: InputMaybe<OrderDirection>;
   from?: InputMaybe<OrderDirection>;
   id?: InputMaybe<OrderDirection>;
+  location?: InputMaybe<OrderDirection>;
   maxAmount?: InputMaybe<OrderDirection>;
   name?: InputMaybe<OrderDirection>;
   price?: InputMaybe<OrderDirection>;
@@ -750,6 +754,7 @@ export type EventUpdateArgs = {
 export type EventUpdateInput = {
   description?: InputMaybe<Scalars['String']>;
   from?: InputMaybe<Scalars['String']>;
+  location?: InputMaybe<Scalars['String']>;
   maxAmount?: InputMaybe<Scalars['Int']>;
   name?: InputMaybe<Scalars['String']>;
   price?: InputMaybe<Scalars['Int']>;
@@ -764,7 +769,8 @@ export type EventWhereInput = {
   OR?: InputMaybe<Array<EventWhereInput>>;
   description?: InputMaybe<StringFilter>;
   id?: InputMaybe<IdFilter>;
-  maxAmount?: InputMaybe<IntNullableFilter>;
+  location?: InputMaybe<StringFilter>;
+  maxAmount?: InputMaybe<IntFilter>;
   name?: InputMaybe<StringFilter>;
   price?: InputMaybe<IntNullableFilter>;
   status?: InputMaybe<StringNullableFilter>;
@@ -1627,6 +1633,7 @@ export type Order = {
   orderDate?: Maybe<Scalars['DateTime']>;
   paymentStatus?: Maybe<Scalars['Int']>;
   totalCost?: Maybe<Scalars['Float']>;
+  trackId?: Maybe<Scalars['String']>;
   user?: Maybe<User>;
 };
 
@@ -1648,6 +1655,7 @@ export type OrderCreateInput = {
   orderDate?: InputMaybe<Scalars['DateTime']>;
   paymentStatus?: InputMaybe<Scalars['Int']>;
   totalCost?: InputMaybe<Scalars['Float']>;
+  trackId?: InputMaybe<Scalars['String']>;
   user?: InputMaybe<UserRelateToOneForCreateInput>;
 };
 
@@ -1660,18 +1668,22 @@ export type OrderItem = {
   __typename?: 'OrderItem';
   course?: Maybe<Course>;
   description?: Maybe<Scalars['String']>;
+  event?: Maybe<Event>;
   id: Scalars['ID'];
   name?: Maybe<Scalars['String']>;
   order?: Maybe<Order>;
   price?: Maybe<Scalars['Int']>;
+  quantity?: Maybe<Scalars['Int']>;
 };
 
 export type OrderItemCreateInput = {
   course?: InputMaybe<CourseRelateToOneForCreateInput>;
   description?: InputMaybe<Scalars['String']>;
+  event?: InputMaybe<EventRelateToOneForCreateInput>;
   name?: InputMaybe<Scalars['String']>;
   order?: InputMaybe<OrderRelateToOneForCreateInput>;
   price?: InputMaybe<Scalars['Int']>;
+  quantity?: InputMaybe<Scalars['Int']>;
 };
 
 export type OrderItemManyRelationFilter = {
@@ -1685,6 +1697,7 @@ export type OrderItemOrderByInput = {
   id?: InputMaybe<OrderDirection>;
   name?: InputMaybe<OrderDirection>;
   price?: InputMaybe<OrderDirection>;
+  quantity?: InputMaybe<OrderDirection>;
 };
 
 export type OrderItemRelateToManyForCreateInput = {
@@ -1707,9 +1720,11 @@ export type OrderItemUpdateArgs = {
 export type OrderItemUpdateInput = {
   course?: InputMaybe<CourseRelateToOneForUpdateInput>;
   description?: InputMaybe<Scalars['String']>;
+  event?: InputMaybe<EventRelateToOneForUpdateInput>;
   name?: InputMaybe<Scalars['String']>;
   order?: InputMaybe<OrderRelateToOneForUpdateInput>;
   price?: InputMaybe<Scalars['Int']>;
+  quantity?: InputMaybe<Scalars['Int']>;
 };
 
 export type OrderItemWhereInput = {
@@ -1718,10 +1733,12 @@ export type OrderItemWhereInput = {
   OR?: InputMaybe<Array<OrderItemWhereInput>>;
   course?: InputMaybe<CourseWhereInput>;
   description?: InputMaybe<StringFilter>;
+  event?: InputMaybe<EventWhereInput>;
   id?: InputMaybe<IdFilter>;
   name?: InputMaybe<StringFilter>;
   order?: InputMaybe<OrderWhereInput>;
   price?: InputMaybe<IntNullableFilter>;
+  quantity?: InputMaybe<IntNullableFilter>;
 };
 
 export type OrderItemWhereUniqueInput = {
@@ -1739,6 +1756,7 @@ export type OrderOrderByInput = {
   orderDate?: InputMaybe<OrderDirection>;
   paymentStatus?: InputMaybe<OrderDirection>;
   totalCost?: InputMaybe<OrderDirection>;
+  trackId?: InputMaybe<OrderDirection>;
 };
 
 export type OrderRelateToManyForCreateInput = {
@@ -1774,6 +1792,7 @@ export type OrderUpdateInput = {
   orderDate?: InputMaybe<Scalars['DateTime']>;
   paymentStatus?: InputMaybe<Scalars['Int']>;
   totalCost?: InputMaybe<Scalars['Float']>;
+  trackId?: InputMaybe<Scalars['String']>;
   user?: InputMaybe<UserRelateToOneForUpdateInput>;
 };
 
@@ -1786,6 +1805,7 @@ export type OrderWhereInput = {
   orderDate?: InputMaybe<DateTimeNullableFilter>;
   paymentStatus?: InputMaybe<IntNullableFilter>;
   totalCost?: InputMaybe<FloatNullableFilter>;
+  trackId?: InputMaybe<StringFilter>;
   user?: InputMaybe<UserWhereInput>;
 };
 
@@ -2691,11 +2711,18 @@ export type CoursesQueryVariables = Exact<{ [key: string]: never; }>;
 export type CoursesQuery = { __typename?: 'Query', courses?: Array<{ __typename?: 'Course', id: string, name?: string | null, description?: string | null, isAccessible?: boolean | null }> | null };
 
 export type EventQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type EventQuery = { __typename?: 'Query', event?: { __typename?: 'Event', id: string, name?: string | null, description?: string | null, location?: string | null, from?: string | null, to?: string | null, isAccessible?: boolean | null, price?: number | null, priceFa?: string | null } | null };
+
+export type EventsQueryVariables = Exact<{
   status?: InputMaybe<Scalars['String']>;
 }>;
 
 
-export type EventQuery = { __typename?: 'Query', events?: Array<{ __typename?: 'Event', id: string, name?: string | null, from?: string | null, to?: string | null, price?: number | null, status?: string | null, isAccessible?: boolean | null }> | null };
+export type EventsQuery = { __typename?: 'Query', events?: Array<{ __typename?: 'Event', id: string, name?: string | null, from?: string | null, to?: string | null, price?: number | null, status?: string | null, isAccessible?: boolean | null, remaining?: number | null }> | null };
 
 export type MyCoursesQueryVariables = Exact<{
   id: Scalars['ID'];

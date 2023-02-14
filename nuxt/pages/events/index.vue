@@ -1,49 +1,58 @@
 <template>
-  <section class="text-gray-600 body-font">
-    <div class="container px-5 py-24 mx-auto">
-      <div v-if="eventsquery.result?.value" class="flex flex-wrap -m-4">
+  <section class="body-font text-gray-600">
+    <div class="container mx-auto px-5 py-24">
+      <div
+        v-if="eventsquery.result && eventsquery.result?.value"
+        class="-m-4 flex flex-wrap"
+      >
         <div
           v-for="ev in eventsquery.result.value.events || []"
           :key="ev.id"
           class="p-4 md:w-1/3"
         >
           <div
-            class="h-full border-2 border-gray-200 border-opacity-60 rounded-lg overflow-hidden"
+            class="h-full overflow-hidden rounded-lg border-2 border-gray-200 border-opacity-60"
           >
             <img
-              class="lg:h-48 md:h-36 w-full object-cover object-center"
+              class="w-full object-cover object-center md:h-36 lg:h-48"
               src="https://dummyimage.com/720x400"
               alt="blog"
             />
             <div class="p-6">
               <h2
-                class="tracking-widest text-xs title-font font-medium text-gray-400 mb-1"
+                class="title-font mb-1 text-xs font-medium tracking-widest text-gray-400"
               >
                 CATEGORY
               </h2>
-              <h1 class="title-font text-lg font-medium text-gray-900 mb-3">
+              <h1 class="title-font mb-3 text-lg font-medium text-gray-900">
                 {{ ev.name }}
               </h1>
-              <p class="leading-relaxed mb-3">
+              <p class="mb-3 leading-relaxed">
                 Photo booth fam kinfolk cold-pressed sriracha leggings jianbing
                 microdosing tousled waistcoat.
               </p>
               <!-- is accessable -->
               <div>
                 <button
-                  @click="addToCart(ev.id, ev.name)"
-                  v-if="!ev.isAccessible"
-                  class="text-green-600 bg-green-100 font-bold rounded px-2 py-1"
+                  @click="addToCart(ev.id, ev.name || '')"
+                  v-if="!ev.isAccessible && (ev.remaining || 0) > 0"
+                  class="rounded bg-green-100 px-2 py-1 font-bold text-green-600"
                 >
                   add to cart
                 </button>
+                <div v-if="ev.remaining === 0">
+                  fa::zarfiyat class takmil shode
+                </div>
+                <div v-if="ev.isAccessible">
+                  fa::u are participated in this event
+                </div>
               </div>
-              <div class="flex items-center flex-wrap ">
+              <div class="flex flex-wrap items-center">
                 <a
-                  class="text-indigo-500 inline-flex items-center md:mb-2 lg:mb-0"
+                  class="inline-flex items-center text-indigo-500 md:mb-2 lg:mb-0"
                   >Learn More
                   <svg
-                    class="w-4 h-4 ml-2"
+                    class="ml-2 h-4 w-4"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
                     stroke-width="2"
@@ -56,10 +65,10 @@
                   </svg>
                 </a>
                 <span
-                  class="text-gray-400 mr-3 inline-flex items-center lg:ml-auto md:ml-0 ml-auto leading-none text-sm pr-3 py-1 border-r-2 border-gray-200"
+                  class="mr-3 ml-auto inline-flex items-center border-r-2 border-gray-200 py-1 pr-3 text-sm leading-none text-gray-400 md:ml-0 lg:ml-auto"
                 >
                   <svg
-                    class="w-4 h-4 mr-1"
+                    class="mr-1 h-4 w-4"
                     stroke="currentColor"
                     stroke-width="2"
                     fill="none"
@@ -74,10 +83,10 @@
                   >1.2K
                 </span>
                 <span
-                  class="text-gray-400 inline-flex items-center leading-none text-sm"
+                  class="inline-flex items-center text-sm leading-none text-gray-400"
                 >
                   <svg
-                    class="w-4 h-4 mr-1"
+                    class="mr-1 h-4 w-4"
                     stroke="currentColor"
                     stroke-width="2"
                     fill="none"
@@ -101,21 +110,21 @@
 
 <script lang="ts" setup>
 import EVENTS from '@/apollo/q/events.gql'
-import { EventQuery, EventQueryVariables } from '../../types/types'
+import { EventsQuery, EventsQueryVariables } from '../../types/types'
 import { defineComponent, useContext, useStore } from '@nuxtjs/composition-api'
 import { useQuery } from '@vue/apollo-composable/dist'
 import { GeneralApiResponse } from '../../../api/data/types'
 import { showGeneralApiMessage } from '../../data/utils'
 
-const eventsquery = useQuery<EventQuery, EventQueryVariables>(EVENTS)
+const eventsquery = useQuery<EventsQuery, EventsQueryVariables>(EVENTS)
 
 const ctx = useContext()
 
-async function addToCart (eventid: string, eventname: string) {
+async function addToCart(eventid: string, eventname: string) {
   if (ctx.store.getters.isLoggedIn) {
     try {
       const { data } = await ctx.$axios.post<GeneralApiResponse>('/cart-item', {
-        eventid
+        eventid,
       })
 
       showGeneralApiMessage(data, ctx)

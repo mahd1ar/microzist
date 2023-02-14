@@ -25,6 +25,13 @@ export const OrderItem = list({
                 labelField: 'name',
             }
         }),
+        event: relationship({
+            ref: 'Event',
+            ui: {
+                labelField: 'name',
+            }
+        }),
+        quantity: integer({ defaultValue: 1 }),
         // TODO this items has interesting UI filds
         // photo: relationship({
         //   ref: "ProductImage",

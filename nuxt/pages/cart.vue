@@ -28,7 +28,7 @@
                   {{
                     ((cartitem.course?.price || 0) *
                       (cartitem.coupon?.discount || 100)) /
-                      100
+                    100
                   }}
                 </strong>
                 <s>
@@ -75,6 +75,9 @@
           price with discount:
           {{ cart.result.value.carts[0].totalPrice }}
         </div>
+        <a target="_blank" href="http://localhost:3030/checkout">
+          <span class="text-3xl">checkout -&gt;</span>
+        </a>
         <pre class="bg-black text-yellow-100" dir="ltr"></pre>
       </div>
       <div v-else>fa:: cart is empty</div>
@@ -90,7 +93,7 @@ import {
   useStore,
   onMounted,
   reactive,
-  useContext
+  useContext,
 } from '@nuxtjs/composition-api'
 import { useLazyQuery } from '@vue/apollo-composable/dist'
 import { showGeneralError, showGeneralApiMessage } from '~/data/utils'
@@ -103,7 +106,7 @@ const cart = useLazyQuery<CartByUserQuery, CartByUserQueryVariables>(CARTBYUSER)
 
 const couponsInput = reactive<Record<string, string>>({})
 
-async function addCoupon (code: string = '', cartitem: string = '') {
+async function addCoupon(code: string = '', cartitem: string = '') {
   if (code.trim() === '') {
     showGeneralApiMessage(
       { ok: false, message: 'fa:; code must not be empty' },
@@ -116,8 +119,8 @@ async function addCoupon (code: string = '', cartitem: string = '') {
     const { data } = await ctx.$axios.get<GeneralApiResponse>('/coupon', {
       params: {
         id: code,
-        cartitem
-      }
+        cartitem,
+      },
     })
 
     showGeneralApiMessage(data, ctx)
@@ -128,10 +131,10 @@ async function addCoupon (code: string = '', cartitem: string = '') {
   console.log(code)
 }
 
-async function deleteFromCart (cartid: string) {
+async function deleteFromCart(cartid: string) {
   try {
     const { data } = await ctx.$axios.delete<GeneralApiResponse>('/cart-item', {
-      data: { cartid }
+      data: { cartid },
     })
     cart.refetch()
     showGeneralApiMessage(data, ctx)

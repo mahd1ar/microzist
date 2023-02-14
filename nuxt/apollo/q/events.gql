@@ -1,4 +1,4 @@
-query event($status: String = "AVAILABLE") {
+query events($status: String = "AVAILABLE") {
   events(where: { status: { equals: $status } }) {
     id
     name
@@ -7,5 +7,6 @@ query event($status: String = "AVAILABLE") {
     price
     status
     isAccessible
+    remaining
   }
 }

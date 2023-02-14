@@ -1,5 +1,5 @@
 import { list } from '@keystone-6/core';
-import { allowAll } from '@keystone-6/core/access';
+import { allOperations, allowAll } from '@keystone-6/core/access';
 import { BaseAccessArgs } from '@keystone-6/core/dist/declarations/src/types/config/access-control';
 import {
     checkbox,
@@ -27,9 +27,7 @@ const isUser = (args: BaseAccessArgs<BaseListTypeInfo>) => {
 export const CartItem = list({
     access: {
         operation: {
-            query: isUser,
-            create: isUser,
-            delete: isUser,
+            ...allOperations(isUser),
             update: isUser,
         },
     },
@@ -135,6 +133,10 @@ export const CartItem = list({
         event: relationship({ ref: 'Event' }),
         quantity: integer({ defaultValue: 1 }),
         coupon: relationship({ ref: 'Coupon', ui: { labelField: 'code' } }),
+        cart: relationship({
+            ref: 'Cart.items',
+            ui: { hideCreate: true },
+        }),
         priceWithDiscount: virtual({
             field: graphql.field({
                 type: graphql.Float,
@@ -163,10 +165,6 @@ export const CartItem = list({
                     }
                 },
             }),
-        }),
-        cart: relationship({
-            ref: 'Cart.items',
-            ui: { hideCreate: true },
         }),
     },
 });

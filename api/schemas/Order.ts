@@ -23,6 +23,7 @@ export const Order = list({
     fields: {
         totalCost: float(),
         items: relationship({ ref: 'OrderItem.order', many: true }),
+        trackId: text(),
         user: relationship({ ref: 'User.orders' }),
         paymentStatus: select({
             type: 'integer',
@@ -43,6 +44,7 @@ export const Order = list({
             defaultValue: 0,
         }),
         orderDate: timestamp({ defaultValue: { kind: 'now' } }),
+
         // charge: text(),
     },
     ui: {

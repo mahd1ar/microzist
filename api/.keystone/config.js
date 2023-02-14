@@ -33,12 +33,13 @@ var import_core17 = require("@keystone-6/core");
 
 // schema.ts
 var import_core16 = require("@keystone-6/core");
-var import_access17 = require("@keystone-6/core/access");
+var import_access18 = require("@keystone-6/core/access");
 var import_fields15 = require("@keystone-6/core/fields");
-var import_fields_document = require("@keystone-6/fields-document");
+var import_fields_document2 = require("@keystone-6/fields-document");
 
 // schemas/CartItem.ts
 var import_core = require("@keystone-6/core");
+var import_access = require("@keystone-6/core/access");
 var import_fields = require("@keystone-6/core/fields");
 
 // data/utils.ts
@@ -67,9 +68,7 @@ var isUser = (args) => {
 var CartItem = (0, import_core.list)({
   access: {
     operation: {
-      query: isUser,
-      create: isUser,
-      delete: isUser,
+      ...(0, import_access.allOperations)(isUser),
       update: isUser
     }
   },
@@ -140,6 +139,10 @@ var CartItem = (0, import_core.list)({
     event: (0, import_fields.relationship)({ ref: "Event" }),
     quantity: (0, import_fields.integer)({ defaultValue: 1 }),
     coupon: (0, import_fields.relationship)({ ref: "Coupon", ui: { labelField: "code" } }),
+    cart: (0, import_fields.relationship)({
+      ref: "Cart.items",
+      ui: { hideCreate: true }
+    }),
     priceWithDiscount: (0, import_fields.virtual)({
       field: import_schema.graphql.field({
         type: import_schema.graphql.Float,
@@ -160,10 +163,6 @@ var CartItem = (0, import_core.list)({
           }
         }
       })
-    }),
-    cart: (0, import_fields.relationship)({
-      ref: "Cart.items",
-      ui: { hideCreate: true }
     })
   }
 });
@@ -253,13 +252,14 @@ var Cart = (0, import_core2.list)({
 
 // schemas/Order.ts
 var import_core3 = require("@keystone-6/core");
-var import_access2 = require("@keystone-6/core/access");
+var import_access3 = require("@keystone-6/core/access");
 var import_fields3 = require("@keystone-6/core/fields");
 var Order = (0, import_core3.list)({
-  access: import_access2.allowAll,
+  access: import_access3.allowAll,
   fields: {
     totalCost: (0, import_fields3.float)(),
     items: (0, import_fields3.relationship)({ ref: "OrderItem.order", many: true }),
+    trackId: (0, import_fields3.text)(),
     user: (0, import_fields3.relationship)({ ref: "User.orders" }),
     paymentStatus: (0, import_fields3.select)({
       type: "integer",
@@ -288,10 +288,10 @@ var Order = (0, import_core3.list)({
 
 // schemas/OrderItem.ts
 var import_core4 = require("@keystone-6/core");
-var import_access3 = require("@keystone-6/core/access");
+var import_access4 = require("@keystone-6/core/access");
 var import_fields4 = require("@keystone-6/core/fields");
 var OrderItem = (0, import_core4.list)({
-  access: import_access3.allowAll,
+  access: import_access4.allowAll,
   fields: {
     name: (0, import_fields4.text)({ validation: { isRequired: true } }),
     description: (0, import_fields4.text)({
@@ -305,6 +305,13 @@ var OrderItem = (0, import_core4.list)({
         labelField: "name"
       }
     }),
+    event: (0, import_fields4.relationship)({
+      ref: "Event",
+      ui: {
+        labelField: "name"
+      }
+    }),
+    quantity: (0, import_fields4.integer)({ defaultValue: 1 }),
     price: (0, import_fields4.integer)(),
     order: (0, import_fields4.relationship)({ ref: "Order.items" })
   }
@@ -313,12 +320,12 @@ var OrderItem = (0, import_core4.list)({
 // schemas/Course.ts
 var import_fields5 = require("@keystone-6/core/fields");
 var import_core5 = require("@keystone-6/core");
-var import_access4 = require("@keystone-6/core/access");
+var import_access5 = require("@keystone-6/core/access");
 var import_schema3 = require("@graphql-ts/schema");
 var Course = (0, import_core5.list)({
   access: {
     operation: {
-      ...(0, import_access4.allOperations)(import_access4.allowAll),
+      ...(0, import_access5.allOperations)(import_access5.allowAll),
       create: isLoggedIn
     },
     filter: {
@@ -417,11 +424,11 @@ var Course = (0, import_core5.list)({
 // schemas/CourseItems.ts
 var import_fields6 = require("@keystone-6/core/fields");
 var import_core6 = require("@keystone-6/core");
-var import_access6 = require("@keystone-6/core/access");
+var import_access7 = require("@keystone-6/core/access");
 var CourseItem = (0, import_core6.list)({
   access: {
     operation: {
-      ...(0, import_access6.allOperations)(import_access6.allowAll),
+      ...(0, import_access7.allOperations)(import_access7.allowAll),
       create: isLoggedIn
     }
   },
@@ -453,7 +460,7 @@ var CourseItem = (0, import_core6.list)({
 
 // schemas/User.ts
 var import_core7 = require("@keystone-6/core");
-var import_access8 = require("@keystone-6/core/access");
+var import_access9 = require("@keystone-6/core/access");
 var import_fields7 = require("@keystone-6/core/fields");
 var keys = Object.keys(Roles).filter((i) => Number(i) > -1);
 var values = Object.keys(Roles).filter((i) => Number(i) > -1 === false);
@@ -461,7 +468,7 @@ var RolesItem = keys.map((key, inx) => ({ value: key, label: values[inx] }));
 var User = (0, import_core7.list)({
   access: {
     operation: {
-      ...(0, import_access8.allOperations)(isAdmin),
+      ...(0, import_access9.allOperations)(isAdmin),
       query: () => true
     }
   },
@@ -504,10 +511,10 @@ var User = (0, import_core7.list)({
 
 // schemas/Categoryy.ts
 var import_core8 = require("@keystone-6/core");
-var import_access10 = require("@keystone-6/core/access");
+var import_access11 = require("@keystone-6/core/access");
 var import_fields8 = require("@keystone-6/core/fields");
 var Category = (0, import_core8.list)({
-  access: import_access10.allowAll,
+  access: import_access11.allowAll,
   fields: {
     name: (0, import_fields8.text)({
       validation: { isRequired: true }
@@ -524,10 +531,10 @@ var Category = (0, import_core8.list)({
 
 // schemas/Settings.ts
 var import_core9 = require("@keystone-6/core");
-var import_access11 = require("@keystone-6/core/access");
+var import_access12 = require("@keystone-6/core/access");
 var import_fields9 = require("@keystone-6/core/fields");
 var Settings = (0, import_core9.list)({
-  access: import_access11.allowAll,
+  access: import_access12.allowAll,
   isSingleton: true,
   fields: {
     websiteName: (0, import_fields9.text)(),
@@ -542,10 +549,10 @@ var Settings = (0, import_core9.list)({
 
 // schemas/File.ts
 var import_core10 = require("@keystone-6/core");
-var import_access12 = require("@keystone-6/core/access");
+var import_access13 = require("@keystone-6/core/access");
 var import_fields10 = require("@keystone-6/core/fields");
 var File = (0, import_core10.list)({
-  access: import_access12.allowAll,
+  access: import_access13.allowAll,
   ui: {
     label: "media"
   },
@@ -580,10 +587,10 @@ var File = (0, import_core10.list)({
 
 // schemas/Tag.ts
 var import_core11 = require("@keystone-6/core");
-var import_access13 = require("@keystone-6/core/access");
+var import_access14 = require("@keystone-6/core/access");
 var import_fields11 = require("@keystone-6/core/fields");
 var Tag = (0, import_core11.list)({
-  access: import_access13.allowAll,
+  access: import_access14.allowAll,
   ui: {
     isHidden: true
   },
@@ -596,10 +603,10 @@ var Tag = (0, import_core11.list)({
 // schemas/Coupon.ts
 var import_schema4 = require("@graphql-ts/schema");
 var import_core12 = require("@keystone-6/core");
-var import_access14 = require("@keystone-6/core/access");
+var import_access15 = require("@keystone-6/core/access");
 var import_fields12 = require("@keystone-6/core/fields");
 var Coupon = (0, import_core12.list)({
-  access: import_access14.allowAll,
+  access: import_access15.allowAll,
   fields: {
     code: (0, import_fields12.integer)({ validation: { isRequired: true, max: 9999 } }),
     description: (0, import_fields12.text)({ validation: { isRequired: true } }),
@@ -643,7 +650,7 @@ var Coupon = (0, import_core12.list)({
 // schemas/Event.ts
 var import_schema5 = require("@graphql-ts/schema");
 var import_core14 = require("@keystone-6/core");
-var import_access15 = require("@keystone-6/core/access");
+var import_access16 = require("@keystone-6/core/access");
 var import_fields13 = require("@keystone-6/core/fields");
 
 // src/custom-fields/persian-calander/index.ts
@@ -704,20 +711,222 @@ var persianCalendar = ({
   }
 });
 
+// data/lib/wordifyfa/toEnglishDigits.ts
+function toEnglishDigits(num) {
+  if (num === null || num === void 0) {
+    return "";
+  }
+  if (typeof num !== "string" || num.length === 0)
+    return num.toString();
+  const faDigits = "\u06F0\u06F1\u06F2\u06F3\u06F4\u06F5\u06F6\u06F7\u06F8\u06F9";
+  const arDigits = "\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669";
+  let output = "";
+  for (let ipos = 0; ipos < num.length; ipos++) {
+    let faIndex = faDigits.indexOf(num[ipos]);
+    if (faIndex >= 0) {
+      output += faIndex.toString();
+      continue;
+    }
+    let arIndex = arDigits.indexOf(num[ipos]);
+    if (arIndex >= 0) {
+      output += arIndex.toString();
+      continue;
+    }
+    output += num[ipos];
+  }
+  return output.replace(/,/g, "");
+}
+
+// data/lib/wordifyfa/index.ts
+function wordifyfa(input, level = 0) {
+  if (input === null) {
+    return "";
+  }
+  let num = parseInt(toEnglishDigits(input));
+  if (num < 0) {
+    num = num * -1;
+    return "\u0645\u0646\u0641\u06CC " + wordifyfa(num, level);
+  }
+  if (num === 0) {
+    if (level === 0) {
+      return "\u0635\u0641\u0631";
+    } else {
+      return "";
+    }
+  }
+  let result = "";
+  const yekan = ["\u06CC\u06A9", "\u062F\u0648", "\u0633\u0647", "\u0686\u0647\u0627\u0631", "\u067E\u0646\u062C", "\u0634\u0634", "\u0647\u0641\u062A", "\u0647\u0634\u062A", "\u0646\u0647"], dahgan = ["\u0628\u06CC\u0633\u062A", "\u0633\u06CC", "\u0686\u0647\u0644", "\u067E\u0646\u062C\u0627\u0647", "\u0634\u0635\u062A", "\u0647\u0641\u062A\u0627\u062F", "\u0647\u0634\u062A\u0627\u062F", "\u0646\u0648\u062F"], sadgan = ["\u06CC\u06A9\u0635\u062F", "\u062F\u0648\u06CC\u0633\u062A", "\u0633\u06CC\u0635\u062F", "\u0686\u0647\u0627\u0631\u0635\u062F", "\u067E\u0627\u0646\u0635\u062F", "\u0634\u0634\u0635\u062F", "\u0647\u0641\u062A\u0635\u062F", "\u0647\u0634\u062A\u0635\u062F", "\u0646\u0647\u0635\u062F"], dah = ["\u062F\u0647", "\u06CC\u0627\u0632\u062F\u0647", "\u062F\u0648\u0627\u0632\u062F\u0647", "\u0633\u06CC\u0632\u062F\u0647", "\u0686\u0647\u0627\u0631\u062F\u0647", "\u067E\u0627\u0646\u0632\u062F\u0647", "\u0634\u0627\u0646\u0632\u062F\u0647", "\u0647\u0641\u062F\u0647", "\u0647\u06CC\u062C\u062F\u0647", "\u0646\u0648\u0632\u062F\u0647"];
+  if (level > 0) {
+    result += " \u0648 ";
+    level -= 1;
+  }
+  if (num < 10) {
+    result += yekan[num - 1];
+  } else if (num < 20) {
+    result += dah[num - 10];
+  } else if (num < 100) {
+    result += dahgan[Math.floor(num / 10) - 2] + wordifyfa(num % 10, level + 1);
+  } else if (num < 1e3) {
+    result += sadgan[Math.floor(num / 100) - 1] + wordifyfa(num % 100, level + 1);
+  } else if (num < 1e6) {
+    result += wordifyfa(Math.floor(num / 1e3), level) + " \u0647\u0632\u0627\u0631" + wordifyfa(num % 1e3, level + 1);
+  } else if (num < 1e9) {
+    result += wordifyfa(Math.floor(num / 1e6), level) + " \u0645\u06CC\u0644\u06CC\u0648\u0646" + wordifyfa(num % 1e6, level + 1);
+  } else if (num < 1e12) {
+    result += wordifyfa(Math.floor(num / 1e9), level) + " \u0645\u06CC\u0644\u06CC\u0627\u0631\u062F" + wordifyfa(num % 1e9, level + 1);
+  } else if (num < 1e15) {
+    result += wordifyfa(Math.floor(num / 1e12), level) + " \u062A\u0631\u06CC\u0644\u06CC\u0627\u0631\u062F" + wordifyfa(num % 1e12, level + 1);
+  }
+  return result;
+}
+function wordifyRials(num) {
+  if (num === null || num === void 0 || num === "") {
+    return "";
+  }
+  return wordifyfa(num, 0) + " \u0631\u06CC\u0627\u0644";
+}
+function wordifyRialsInTomans(num) {
+  if (num === null || num === void 0 || num === "") {
+    return "";
+  }
+  if (typeof num == "string") {
+    var cleanNumber = toEnglishDigits(num);
+    num = parseInt(cleanNumber);
+  }
+  const originalAmount = num;
+  if (num >= 10 || num <= -10) {
+    num = Math.floor(num / 10);
+  } else {
+    num = 0;
+  }
+  const haveRial = (originalAmount / 10).toString().split(".")[1];
+  return (num ? wordifyfa(num, 0) + " \u062A\u0648\u0645\u0627\u0646" : "") + (num && haveRial ? " \u0648 " : "") + (haveRial ? `${wordifyfa(haveRial, 0)} \u0631\u06CC\u0627\u0644` : "");
+}
+function momentApprox(date, baseDate, suffixBefore = "\u067E\u06CC\u0634", suffixAfter = "\u0628\u0639\u062F") {
+  return wordifyMomentApprox(date, baseDate, suffixBefore, suffixAfter, false);
+}
+function wordifyMomentApprox(date, baseDate, suffixBefore = "\u067E\u06CC\u0634", suffixAfter = "\u0628\u0639\u062F", doWordify = true) {
+  if (date === null || date === void 0 || date === "") {
+    return "";
+  }
+  if (baseDate == null || baseDate == void 0 || baseDate == "") {
+    baseDate = new Date();
+  }
+  if (typeof date == "string") {
+    date = new Date(date);
+  }
+  if (typeof baseDate == "string") {
+    baseDate = new Date(baseDate);
+  }
+  let suffix = suffixBefore;
+  let diff = Math.floor((baseDate.getTime() - date.getTime()) / 1e3) * 1e3;
+  if (diff < 0) {
+    suffix = suffixAfter;
+    diff = Math.abs(diff);
+  }
+  let diffYears = Math.floor(diff / 315576e5);
+  if (diffYears > 0) {
+    return (doWordify ? wordifyfa(diffYears) : diffYears) + " \u0633\u0627\u0644 " + suffix;
+  }
+  let diffMonths = Math.floor(diff / 26298e5);
+  if (diffMonths > 0) {
+    return (doWordify ? wordifyfa(diffMonths) : diffMonths) + " \u0645\u0627\u0647 " + suffix;
+  }
+  let diffWeeks = Math.floor(diff / 6048e5);
+  if (diffWeeks > 0) {
+    return (doWordify ? wordifyfa(diffWeeks) : diffWeeks) + " \u0647\u0641\u062A\u0647 " + suffix;
+  }
+  let diffDays = Math.floor(diff / 864e5);
+  if (diffDays > 0) {
+    return (doWordify ? wordifyfa(diffDays) : diffDays) + " \u0631\u0648\u0632 " + suffix;
+  }
+  let diffHours = Math.floor(diff / 36e5);
+  if (diffHours > 0) {
+    return (doWordify ? wordifyfa(diffHours) : diffHours) + " \u0633\u0627\u0639\u062A " + suffix;
+  }
+  let diffMinutes = Math.floor(diff / 6e4);
+  if (diffMinutes > 0) {
+    return (doWordify ? wordifyfa(diffMinutes) : diffMinutes) + " \u062F\u0642\u06CC\u0642\u0647 " + suffix;
+  }
+  let diffSeconds = Math.floor(diff / 1e3);
+  if (diffSeconds > 0) {
+    return "\u0686\u0646\u062F \u0644\u062D\u0638\u0647 " + suffix;
+  }
+  return "\u0628\u0644\u0627\u0641\u0627\u0635\u0644\u0647";
+}
+(function() {
+  if (typeof window !== "undefined") {
+    window["wordifyfa"] = wordifyfa;
+    window["wordifyRials"] = wordifyRials;
+    window["wordifyRialsInTomans"] = wordifyRialsInTomans;
+    window["wordifyMomentApprox"] = wordifyMomentApprox;
+    window["momentApprox"] = momentApprox;
+  } else if (typeof module !== "undefined" && module.exports) {
+    module.exports["wordifyfa"] = wordifyfa;
+    module.exports["wordifyRials"] = wordifyRials;
+    module.exports["wordifyRialsInTomans"] = wordifyRialsInTomans;
+    module.exports["wordifyMomentApprox"] = wordifyMomentApprox;
+    module.exports["momentApprox"] = momentApprox;
+  } else if (typeof define === "function" && define.amd) {
+    define(() => wordifyfa);
+    define(() => wordifyRials);
+    define(() => wordifyRialsInTomans);
+    define(() => wordifyMomentApprox);
+    define(() => momentApprox);
+  }
+})();
+
 // schemas/Event.ts
+var import_fields_document = require("@keystone-6/fields-document");
 var Event = (0, import_core14.list)({
-  access: import_access15.allowAll,
+  access: import_access16.allowAll,
   fields: {
     name: (0, import_fields13.text)({
       validation: { isRequired: true }
     }),
     description: (0, import_fields13.text)({ ui: { displayMode: "textarea" } }),
+    content: (0, import_fields_document.document)({
+      formatting: true,
+      layouts: [
+        [1, 1],
+        [1, 1, 1],
+        [2, 1],
+        [1, 2],
+        [1, 2, 1]
+      ],
+      links: true,
+      dividers: true,
+      relationships: {
+        mention: {
+          listKey: "User",
+          label: "Mention",
+          selection: "id name"
+        }
+      }
+    }),
     price: (0, import_fields13.integer)(),
     priceFa: (0, import_fields13.virtual)({
       field: import_schema5.graphql.field({
         type: import_schema5.graphql.String,
         async resolve(item) {
-          return `${formatMoney(item.price)}`;
+          return item.price ? `${wordifyfa(item.price)} \u062A\u0648\u0645\u0627\u0646 ` : "\u0631\u0627\u06CC\u06AF\u0627\u0646";
+        }
+      })
+    }),
+    maxAmount: (0, import_fields13.integer)({ validation: { isRequired: true } }),
+    remaining: (0, import_fields13.virtual)({
+      field: import_schema5.graphql.field({
+        type: import_schema5.graphql.Int,
+        async resolve({ id, maxAmount }, _, context) {
+          try {
+            const currentlyInUse = await context.query.User.count({
+              where: { events: { some: { id: { equals: id } } } }
+            });
+            return maxAmount - currentlyInUse;
+          } catch (error) {
+            console.error(error);
+            return maxAmount;
+          }
         }
       })
     }),
@@ -733,9 +942,9 @@ var Event = (0, import_core14.list)({
         createView: { fieldMode: "hidden" }
       }
     }),
-    maxAmount: (0, import_fields13.integer)(),
     from: persianCalendar(),
     to: persianCalendar(),
+    location: (0, import_fields13.text)(),
     users: (0, import_fields13.relationship)({
       ref: "User.events",
       many: true,
@@ -834,7 +1043,7 @@ var lists = {
         }
       },
       operation: {
-        ...(0, import_access17.allOperations)(import_access17.allowAll),
+        ...(0, import_access18.allOperations)(import_access18.allowAll),
         query: (args) => {
           return true;
         }
@@ -842,7 +1051,7 @@ var lists = {
     },
     fields: {
       title: (0, import_fields15.text)({ validation: { isRequired: true } }),
-      content: (0, import_fields_document.document)({
+      content: (0, import_fields_document2.document)({
         formatting: true,
         layouts: [
           [1, 1],
@@ -1017,6 +1226,15 @@ var keystone_default = withAuth(
           const path2 = req.path;
           next();
         });
+        app.get("/test", async (req, res) => {
+          try {
+            res.send("test url");
+          } catch (error) {
+            console.log("WHAT THE FUCK?");
+            console.log(error);
+            res.send(String(error));
+          }
+        });
         app.post("/auth-item", async (req, res) => {
           console.log(!!ctx.session ? "loggedin" : "not loggedin");
           if (ctx.session) {
@@ -1036,27 +1254,6 @@ var keystone_default = withAuth(
             }
           } else
             res.send(void 0);
-        });
-        app.get("/test", async (req, res) => {
-          try {
-            console.log(
-              ctx.prisma._hasPreviewFlag(
-                "interactiveTransactions"
-              )
-            );
-            await ctx.prisma.$transaction(async (tx) => {
-              const x = await tx.prisma.Coupon.update({
-                where: { id: "clcuazkb30048jglof25krj2v" },
-                data: { code: 7278 }
-              });
-              return x;
-            });
-            res.send("hi\u{1F612}");
-          } catch (error) {
-            console.log("WHAT THE FUCK?");
-            console.log(error);
-            res.send(String(error));
-          }
         });
         app.delete(
           "/cart-item",
@@ -1278,68 +1475,6 @@ var keystone_default = withAuth(
             }
           }
         );
-        app.get("/ipg/cb", async (req, res) => {
-          try {
-            const sudoContext = ctx.sudo();
-            const cartId = req.query.orderId;
-            if (typeof cartId === "string") {
-              throw new Error("error in params");
-            }
-            const {
-              totalPrice,
-              user: { id: userId },
-              items,
-              isCompleted
-            } = await sudoContext.query.Cart.findOne({
-              where: {
-                id: cartId
-              },
-              query: " totalPrice user { id } items { id priceWithDiscount course {id} } isCompleted"
-            });
-            if (isCompleted) {
-              res.status(400).send(
-                "fa:: purtes already compeleted"
-              );
-              return;
-            }
-            const cartItem = items.map(
-              (i) => {
-                return {
-                  name: "hi there",
-                  course: { connect: { id: i.course.id } },
-                  price: i.priceWithDiscount
-                };
-              }
-            );
-            const newOrder = await sudoContext.query.Order.createOne({
-              data: {
-                totalCost: totalPrice,
-                paymentStatus: 1,
-                user: {
-                  connect: {
-                    id: userId
-                  }
-                },
-                items: {
-                  create: cartItem
-                }
-              }
-            });
-            await sudoContext.query.Cart.updateOne({
-              where: {
-                id: cartId
-              },
-              data: {
-                isCompleted: true
-              }
-            });
-            res.send("orderid is => " + newOrder.id);
-            sudoContext.exitSudo();
-          } catch (error) {
-            console.log(error);
-            res.send(error);
-          }
-        });
         app.get(
           "/checkout",
           async (req, res) => {
@@ -1350,9 +1485,10 @@ var keystone_default = withAuth(
               });
               return;
             }
+            const callbackUrl = "http://localhost:3030/ipg/cb";
             const zibal = new Zibal({
               merchant: "zibal",
-              callbackUrl: "http://localhost:3030/ipg/cb"
+              callbackUrl
             });
             try {
               const [{ totalPrice, id: cartid }] = await ctx.query.Cart.findMany({
@@ -1365,8 +1501,22 @@ var keystone_default = withAuth(
                 },
                 query: " totalPrice id"
               });
+              if (totalPrice === 0) {
+                const urlSearchParams = new URLSearchParams();
+                const zibalqueryParams = {
+                  success: "1",
+                  orderId: cartid,
+                  status: "2",
+                  trackId: "0"
+                };
+                for (let [key, value] of Object.entries(zibalqueryParams))
+                  urlSearchParams.append(key, value);
+                const url = callbackUrl + "?" + urlSearchParams.toString();
+                res.redirect(url);
+                return;
+              }
               const response = await zibal.request({
-                amount: 2e5,
+                amount: totalPrice,
                 orderId: cartid,
                 merchant: "zibal",
                 callbackUrl: "http://localhost:3030/ipg/cb",
@@ -1383,6 +1533,105 @@ var keystone_default = withAuth(
             }
           }
         );
+        app.get("/ipg/cb", async (req, res) => {
+          if (req.query.success === "0") {
+            res.sendStatus(500).send("fa:: zbal error!");
+            return;
+          }
+          try {
+            const sudoContext = ctx.sudo();
+            const cartId = req.query.orderId;
+            const trackId = req.query.trackId;
+            if (typeof cartId !== "string" || typeof trackId !== "string") {
+              throw new Error("error in params");
+              return;
+            }
+            const {
+              totalPrice,
+              user: { id: userId },
+              items,
+              isCompleted
+            } = await sudoContext.query.Cart.findOne({
+              where: {
+                id: cartId
+              },
+              query: `totalPrice
+                                    user { id } 
+                                    items { 
+                                        id
+                                        priceWithDiscount 
+                                        course { id } 
+                                        event { id } 
+                                    }
+                                    isCompleted`
+            });
+            if (isCompleted) {
+              res.status(400).send("fa:: purtes already compeleted");
+              return;
+            }
+            const cartItem = items.map(
+              (i) => {
+                const productType = i.event ? "event" : "course";
+                const productId = i.event?.id || i.course?.id;
+                const productTypePlural = i.event ? "events" : "courses";
+                return {
+                  productType,
+                  productId,
+                  productTypePlural,
+                  price: i.priceWithDiscount
+                };
+              }
+            );
+            const newOrder = await sudoContext.query.Order.createOne({
+              data: {
+                totalCost: totalPrice,
+                paymentStatus: 1,
+                trackId,
+                user: {
+                  connect: {
+                    id: userId
+                  }
+                },
+                items: {
+                  create: cartItem.map((i) => {
+                    return {
+                      name: i.price === 0 ? "free event" : "hi there",
+                      [i.productType]: { connect: { id: i.productId } },
+                      price: i.price
+                    };
+                  })
+                }
+              }
+            });
+            await sudoContext.query.Cart.updateOne({
+              where: {
+                id: cartId
+              },
+              data: {
+                isCompleted: true
+              }
+            });
+            await sudoContext.query.User.updateMany({
+              data: cartItem.map((i) => {
+                return {
+                  where: {
+                    id: userId
+                  },
+                  data: {
+                    [i.productTypePlural]: {
+                      connect: { id: i.productId }
+                    }
+                  }
+                };
+              })
+            });
+            res.send("orderid is => " + newOrder.id);
+            sudoContext.exitSudo();
+          } catch (error) {
+            console.log(error);
+            res.send(error);
+          }
+        });
         app.get("/kick", (req, res) => {
           if (wss && req.query.userid && !Array.isArray(req.query.userid)) {
             wss.clients.forEach((ws) => {

@@ -108,9 +108,22 @@ export default withAuth(
                 app.use(bodyParser.json());
 
                 app.use((req, res, next) => {
+                    // TODO
                     const path: string = req.path;
                     next();
                 });
+
+
+                app.get('/test', async (req, res) => {
+                    try {
+                        res.send('test url')
+                    } catch (error) {
+                        console.log('WHAT THE FUCK?');
+                        console.log(error);
+                        res.send(String(error));
+                    }
+                });
+
 
                 // auth item
                 app.post('/auth-item', async (req, res) => {
@@ -132,36 +145,6 @@ export default withAuth(
                             console.error(error);
                         }
                     } else res.send(undefined);
-                });
-
-                app.get('/test', async (req, res) => {
-                    try {
-                        // console.log(keystoneContext.prisma.$transaction);
-                        // await keystoneContext.prisma.$transaction([
-                        //     keystoneContext.prisma.Coupon.update({
-                        //         where: { id: 'clcuazkb30048jglof25krj2v' },
-                        //         data: { code: 7778 },
-                        //     }),
-                        // ]);
-                        console.log(
-                            ctx.prisma._hasPreviewFlag(
-                                'interactiveTransactions'
-                            )
-                        );
-                        await ctx.prisma.$transaction(async (tx: any) => {
-                            const x = await tx.prisma.Coupon.update({
-                                where: { id: 'clcuazkb30048jglof25krj2v' },
-                                data: { code: 7278 },
-                            });
-
-                            return x;
-                        });
-                        res.send('hi😒');
-                    } catch (error) {
-                        console.log('WHAT THE FUCK?');
-                        console.log(error);
-                        res.send(String(error));
-                    }
                 });
 
                 // delete from cart
@@ -222,7 +205,7 @@ export default withAuth(
                     }
                 );
 
-                // add course to cart
+                // add  to cart
                 app.post<{ cid: string; eventid: string }, GeneralApiResponse>(
                     '/cart-item',
                     async (req, res) => {
@@ -253,6 +236,8 @@ export default withAuth(
                             });
                             return;
                         }
+
+                        // make sure user is logged in
                         if (!ctx.session) {
                             res.status(400).send({
                                 ok: false,
@@ -450,86 +435,6 @@ export default withAuth(
                     }
                 );
 
-                //calback
-                app.get<ZibalCBQuery, any>('/ipg/cb', async (req, res) => {
-                    try {
-                        const sudoContext = ctx.sudo();
-                        const cartId = req.query.orderId;
-                        if (typeof cartId === 'string') {
-                            throw new Error('error in params');
-                        }
-
-                        const {
-                            totalPrice,
-                            user: { id: userId },
-                            items,
-                            isCompleted,
-                        } = await sudoContext.query.Cart.findOne({
-                            where: {
-                                id: cartId,
-                            },
-                            query: ' totalPrice user { id } items { id priceWithDiscount course {id} } isCompleted',
-                        });
-
-                        if (isCompleted) {
-                            res.status(400).send(
-                                'fa:: purtes already compeleted'
-                            );
-                            return;
-                        }
-
-                        const cartItem = items.map(
-                            (i: {
-                                id: string;
-                                priceWithDiscount: number;
-                                course: { id: string };
-                            }) => {
-                                return {
-                                    name: 'hi there',
-                                    course: { connect: { id: i.course.id } },
-                                    price: i.priceWithDiscount,
-                                };
-                            }
-                        );
-
-                        const newOrder =
-                            await sudoContext.query.Order.createOne({
-                                data: {
-                                    totalCost: totalPrice,
-                                    paymentStatus: 1,
-                                    user: {
-                                        connect: {
-                                            id: userId,
-                                        },
-                                    },
-                                    items: {
-                                        create: cartItem,
-                                    },
-                                },
-                            });
-
-                        // TODO add Courcess to userId.courses
-
-                        await sudoContext.query.Cart.updateOne({
-                            where: {
-                                id: cartId,
-                            },
-                            data: {
-                                isCompleted: true,
-                            },
-                        });
-
-                        res.send('orderid is => ' + newOrder.id);
-                        // await ctx.prisma.Order.create({
-
-                        // })
-                        sudoContext.exitSudo();
-                    } catch (error) {
-                        console.log(error);
-                        res.send(error);
-                    }
-                });
-
                 // checkout
                 app.get<{}, GeneralApiResponse>(
                     '/checkout',
@@ -542,9 +447,11 @@ export default withAuth(
                             return;
                         }
 
+                        const callbackUrl = 'http://localhost:3030/ipg/cb'
+
                         const zibal = new Zibal({
                             merchant: 'zibal', // Your IPG's Merchant Id (You Can Get it From Zibal's Dashboard)
-                            callbackUrl: 'http://localhost:3030/ipg/cb', // The URL Where User will be Redirected to After Payment
+                            callbackUrl, // The URL Where User will be Redirected to After Payment
                         });
 
                         try {
@@ -562,9 +469,27 @@ export default withAuth(
                                     query: ' totalPrice id',
                                 });
 
+                            if (totalPrice === 0) {
+                                const urlSearchParams = new URLSearchParams();
+                                const zibalqueryParams: ZibalCBQuery = {
+                                    success: '1',
+                                    orderId: cartid, // 'free-' + ~~(Math.random() * 100000),
+                                    status: '2',
+                                    trackId: '0'
+                                }
+
+                                for (let [key, value] of Object.entries(zibalqueryParams))
+                                    urlSearchParams.append(key, value)
+
+                                const url = callbackUrl + '?' + urlSearchParams.toString()
+
+                                res.redirect(url);
+                                return
+                            }
+
                             // Payment Request
                             const response = await zibal.request({
-                                amount: 200000, // Required - In Rials
+                                amount: totalPrice, // Required - In Rials
                                 orderId: cartid, // Optional
                                 merchant: 'zibal', // As Said Above, You can Specify merchant for Each Transaction too.
                                 callbackUrl: 'http://localhost:3030/ipg/cb', // As Said Above, You can Specify merchant for Each Transaction too.
@@ -583,6 +508,142 @@ export default withAuth(
                         }
                     }
                 );
+
+
+                //calback
+                app.get<ZibalCBQuery, any>('/ipg/cb', async (req, res) => {
+                    if (req.query.success === '0') {
+                        // TODO redicet the motherfucker to frontend
+                        res.sendStatus(500).send("fa:: zbal error!")
+                        return
+                    }
+
+                    try {
+                        const sudoContext = ctx.sudo();
+
+                        const cartId = req.query.orderId;
+                        const trackId = req.query.trackId;
+                        if (typeof cartId !== 'string' || typeof trackId !== 'string') {
+                            throw new Error('error in params');
+                            return
+                        }
+
+
+                        const {
+                            totalPrice,
+                            user: { id: userId },
+                            items,
+                            isCompleted,
+                        } = await sudoContext.query.Cart.findOne({
+                            where: {
+                                id: cartId,
+                            },
+                            query: `totalPrice
+                                    user { id } 
+                                    items { 
+                                        id
+                                        priceWithDiscount 
+                                        course { id } 
+                                        event { id } 
+                                    }
+                                    isCompleted` ,
+                        });
+
+                        if (isCompleted) {
+
+                            res
+                                .status(400)
+                                .send('fa:: purtes already compeleted');
+
+                            return;
+                        }
+
+
+                        const cartItem: {
+                            productType: string,
+                            productId: string,
+                            productTypePlural: string,
+                            price: number,
+                        }[] = items.map(
+                            (i: {
+                                id: string;
+                                priceWithDiscount: number;
+                                course: { id: string } | null;
+                                event: { id: string } | null
+                            }) => {
+                                const productType = i.event ? 'event' : 'course';
+                                const productId = i.event?.id || i.course?.id;
+                                const productTypePlural = i.event ? 'events' : 'courses';
+                                return {
+                                    productType,
+                                    productId,
+                                    productTypePlural,
+                                    price: i.priceWithDiscount,
+                                };
+                            }
+                        );
+
+
+                        const newOrder =
+                            await sudoContext.query.Order.createOne({
+                                data: {
+                                    totalCost: totalPrice,
+                                    paymentStatus: 1,
+                                    trackId,
+                                    user: {
+                                        connect: {
+                                            id: userId,
+                                        },
+                                    },
+                                    items: {
+                                        create: cartItem.map(i => {
+                                            return {
+                                                name: i.price === 0 ? 'free event' : 'hi there',
+                                                [i.productType]: { connect: { id: i.productId } },
+                                                price: i.price,
+                                            }
+                                        }),
+                                    },
+                                },
+                            });
+
+                        // TODO add Courcess to userId.courses
+                        await sudoContext.query.Cart.updateOne({
+                            where: {
+                                id: cartId,
+                            },
+                            data: {
+                                isCompleted: true,
+                            },
+                        });
+
+                        // add course or event to user profile
+                        await sudoContext.query.User.updateMany({
+                            data: cartItem.map(i => {
+
+                                return {
+                                    where: {
+                                        id: userId
+                                    },
+                                    data: {
+                                        [i.productTypePlural]: {
+                                            connect: { id: i.productId }
+                                        }
+                                    }
+                                }
+                            })
+                        })
+
+                        // TODO redirect to frontend
+                        res.send('orderid is => ' + newOrder.id);
+
+                        sudoContext.exitSudo();
+                    } catch (error) {
+                        console.log(error);
+                        res.send(error);
+                    }
+                });
+
 
                 // kick
                 app.get<{ userid: string | undefined }>('/kick', (req, res) => {
