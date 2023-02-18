@@ -1,5 +1,5 @@
 <template>
-  <div class="relative flex h-96 items-center justify-center bg-[#161616]">
+  <div class="relative flex  items-center justify-center bg-[#161616]">
     <div class="dna" style="--strands: 16">
       <div class="strand" style="--s: 0"></div>
       <div class="strand" style="--s: 1"></div>

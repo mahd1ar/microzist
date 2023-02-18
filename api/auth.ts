@@ -26,10 +26,11 @@ import { sendResetPasswordEmail } from './email/resetpassword';
 //   especially in production (statelessSessions will throw if SESSION_SECRET is undefined)
 
 // TODO node production text
-let sessionSecret = 'ABCDEFGH1234567887654321HGFEDCBA'; // process.env.SESSION_SECRET;
-// if (!sessionSecret && process.env.NODE_ENV !== 'production') {
-//   sessionSecret = randomBytes(32).toString('hex');
-// }
+// let sessionSecret = process.env.SESSION_SECRET;
+let sessionSecret = 'ABCDEFGH1234567887654321HGFEDCBZ'; // process.env.SESSION_SECRET;
+if (!sessionSecret && process.env.NODE_ENV !== 'production') {
+    sessionSecret = randomBytes(32).toString('hex');
+}
 
 // withAuth is a function we can use to wrap our base configuration
 const { withAuth } = createAuth({

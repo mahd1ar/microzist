@@ -1,10 +1,8 @@
 <template>
   <div>
     <transition name="fade" mode="out-in">
-      <MotionDNA v-if="loading" />
+      <MotionDNA class="h-96" v-if="loading" />
       <div v-else>
-        <!-- gap -->
-        <div class="h-6" aria-hidden="true"></div>
         <slot />
       </div>
     </transition>
@@ -18,8 +16,8 @@ import { PropType } from 'vue'
 const { loading } = defineProps({
   loading: {
     type: Boolean as PropType<boolean>,
-    required: true,
-  },
+    required: true
+  }
 })
 </script>
 

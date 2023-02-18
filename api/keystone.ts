@@ -1,21 +1,15 @@
 import { config } from '@keystone-6/core';
-import { lists } from './schema';
-const Zibal = require('zibal');
-import {
-    ZibalPaymentResponse,
-    ZibalConfig,
-    GeneralSession,
-    GeneralApiResponse,
-} from './data/types';
-import { withAuth, session } from './auth';
-import { storage } from './storage';
-import WebSocket from 'ws';
 import bodyParser from 'body-parser';
-
-import { sendCommand } from './data/utils';
-
 import { get } from 'lodash';
-
+import WebSocket from 'ws';
+import { session, withAuth } from './auth';
+import { GeneralApiResponse, GeneralSession } from './data/types';
+import { sendCommand } from './data/utils';
+import { lists } from './schema';
+import { storage } from './storage';
+const Zibal = require('zibal');
+import axios from 'axios';
+import qs from 'qs';
 // TODO load .env
 // import dotenv from 'dotenv';
 // import path from 'path';
@@ -32,49 +26,6 @@ type ZibalCBQuery = {
 };
 
 let wss: WebSocket.Server<WebSocket.WebSocket>;
-
-// session.
-
-// "Fe26.2**e8283474544d8ed9c33645bc502f89cc68d6528697b352ee022c36a8aad758bc*WcGnegP3_gqxT00MsGtcIg*CI-QDOaRWAFabLWXVLrjVqXsJ9a_VZS_NYAZMfsWkyvtFAULQ4nRpfLvtlCzJw4UxsnAKRb8RMqj8biubGK1jQ*1675850956562*d9e517c18e9f6ce9ab063daf0e5f907f9291d84ed98869b55b4f4b23aacc0040*GQJtqk1vboKMo5kwZozZ3aN9wmYG8Z8Ol2yvsdVhSEk"
-// TODO DETETE this bullshit
-type CartItemDatabase = {
-    id: string;
-    userId: string;
-    isCompleted: boolean;
-    user: {
-        id: string;
-        name: string;
-        lastName: string;
-        email: string;
-        password: string;
-        role: string;
-        createdAt: Date;
-        passwordResetToken: string;
-        passwordResetIssuedAt: Date;
-        passwordResetRedeemedAt: Date;
-    };
-    course: {
-        id: string;
-        name: string;
-        description: string;
-        status: string;
-        price: number;
-    }[];
-};
-
-type CartItem = {
-    id: string;
-    courseId: string;
-    cartId: string;
-};
-
-type Course = {
-    id: string;
-    name: string;
-    description: string;
-    status: string;
-    price: number;
-};
 
 type User = {
     id: string;
@@ -113,10 +64,9 @@ export default withAuth(
                     next();
                 });
 
-
                 app.get('/test', async (req, res) => {
                     try {
-                        res.send('test url')
+                        res.send('test url');
                     } catch (error) {
                         console.log('WHAT THE FUCK?');
                         console.log(error);
@@ -124,6 +74,145 @@ export default withAuth(
                     }
                 });
 
+                // signup new user
+                app.post<
+                    {
+                        email: string;
+                        token: string;
+                        password: string;
+                        're-password': string;
+                        firstname: string;
+                        lastname: string;
+                    },
+                    GeneralApiResponse
+                >('/signup', async (req, res) => {
+                    const hcaptchaResponse = req.body.token;
+
+                    // TODO get this from dotenv
+                    const secret =
+                        process.env.NODE_ENV === 'production'
+                            ? '0x724D577DcAB12A7C40baF7a310113A1e00eC1878'
+                            : '0x0000000000000000000000000000000000000000';
+                    const url =
+                        'https://cors.nikan-alumni.com/https://hcaptcha.com/siteverify';
+
+                    // validating
+
+                    if (
+                        !req.body.firstname ||
+                        !req.body.firstname.trim() ||
+                        !req.body.lastname ||
+                        !req.body.lastname.trim()
+                    ) {
+                        res.status(400).json({
+                            message: 'fa::firstname_or_lastname_is_empty',
+                            ok: false,
+                        });
+                        return;
+                    }
+
+                    if (!req.body.token || !req.body.token.trim()) {
+                        res.status(400).json({
+                            message: 'fa::captcha_empty',
+                            ok: false,
+                        });
+                        return;
+                    }
+
+                    if (!req.body.email || !req.body.email.trim()) {
+                        res.status(400).json({
+                            message: 'fa::email_empty',
+                            ok: false,
+                        });
+                        return;
+                    }
+
+                    if (!req.body.password || !req.body.password.trim()) {
+                        res.status(400).json({
+                            message: 'fa::password_empty',
+                            ok: false,
+                        });
+                        return;
+                    } else {
+                        if (req.body.password !== req.body['re-password']) {
+                            res.status(400).json({
+                                message: 'fa::password_confirm_mismatch',
+                                ok: false,
+                            });
+                            return;
+                        }
+                    }
+
+                    const headers = {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    };
+
+                    const axiosData = {
+                        secret,
+                        response: hcaptchaResponse,
+                    };
+                    console.log('here');
+                    const response = await axios.post(
+                        url,
+                        qs.stringify(axiosData),
+                        {
+                            headers,
+                        }
+                    );
+
+                    if (!response.data.success) {
+                        res.status(400).json({
+                            message: 'fa::hcaptcha_validation_error',
+                            ok: false,
+                        });
+
+                        return;
+                    }
+
+                    const sudoContext = await ctx.sudo();
+                    // TODO 😈 save password
+
+                    try {
+                        const newuser = await sudoContext.query.User.createOne({
+                            data: {
+                                name: req.body.firstname,
+                                lastName: req.body.lastname,
+                                email: req.body.email,
+                                password: req.body.password,
+                            },
+                            query: 'id name lastName email',
+                        });
+
+                        // TODO send email
+
+                        res.json({
+                            message: 'fa::user_created',
+                            ok: true,
+                            paylod: { newuser },
+                        });
+                    } catch (error) {
+                        if (
+                            String(error).search(
+                                'Unique constraint failed on the fields'
+                            ) > -1
+                        ) {
+                            res.status(400).json({
+                                message: 'fa::duplicate_email',
+                                ok: false,
+                            });
+                            return;
+                        }
+                        console.log('error:');
+                        console.log(error);
+
+                        res.status(400).json({
+                            message: 'SOMTHING WENT WRON',
+                            ok: false,
+                        });
+                    } finally {
+                        sudoContext.exitSudo();
+                    }
+                });
 
                 // auth item
                 app.post('/auth-item', async (req, res) => {
@@ -447,7 +536,7 @@ export default withAuth(
                             return;
                         }
 
-                        const callbackUrl = 'http://localhost:3030/ipg/cb'
+                        const callbackUrl = 'http://localhost:3030/ipg/cb';
 
                         const zibal = new Zibal({
                             merchant: 'zibal', // Your IPG's Merchant Id (You Can Get it From Zibal's Dashboard)
@@ -475,16 +564,21 @@ export default withAuth(
                                     success: '1',
                                     orderId: cartid, // 'free-' + ~~(Math.random() * 100000),
                                     status: '2',
-                                    trackId: '0'
-                                }
+                                    trackId: '0',
+                                };
 
-                                for (let [key, value] of Object.entries(zibalqueryParams))
-                                    urlSearchParams.append(key, value)
+                                for (let [key, value] of Object.entries(
+                                    zibalqueryParams
+                                ))
+                                    urlSearchParams.append(key, value);
 
-                                const url = callbackUrl + '?' + urlSearchParams.toString()
+                                const url =
+                                    callbackUrl +
+                                    '?' +
+                                    urlSearchParams.toString();
 
                                 res.redirect(url);
-                                return
+                                return;
                             }
 
                             // Payment Request
@@ -509,13 +603,12 @@ export default withAuth(
                     }
                 );
 
-
                 //calback
                 app.get<ZibalCBQuery, any>('/ipg/cb', async (req, res) => {
                     if (req.query.success === '0') {
                         // TODO redicet the motherfucker to frontend
-                        res.sendStatus(500).send("fa:: zbal error!")
-                        return
+                        res.sendStatus(500).send('fa:: zbal error!');
+                        return;
                     }
 
                     try {
@@ -523,11 +616,13 @@ export default withAuth(
 
                         const cartId = req.query.orderId;
                         const trackId = req.query.trackId;
-                        if (typeof cartId !== 'string' || typeof trackId !== 'string') {
+                        if (
+                            typeof cartId !== 'string' ||
+                            typeof trackId !== 'string'
+                        ) {
                             throw new Error('error in params');
-                            return
+                            return;
                         }
-
 
                         const {
                             totalPrice,
@@ -546,34 +641,36 @@ export default withAuth(
                                         course { id } 
                                         event { id } 
                                     }
-                                    isCompleted` ,
+                                    isCompleted`,
                         });
 
                         if (isCompleted) {
-
-                            res
-                                .status(400)
-                                .send('fa:: purtes already compeleted');
+                            res.status(400).send(
+                                'fa:: purtes already compeleted'
+                            );
 
                             return;
                         }
 
-
                         const cartItem: {
-                            productType: string,
-                            productId: string,
-                            productTypePlural: string,
-                            price: number,
+                            productType: string;
+                            productId: string;
+                            productTypePlural: string;
+                            price: number;
                         }[] = items.map(
                             (i: {
                                 id: string;
                                 priceWithDiscount: number;
                                 course: { id: string } | null;
-                                event: { id: string } | null
+                                event: { id: string } | null;
                             }) => {
-                                const productType = i.event ? 'event' : 'course';
+                                const productType = i.event
+                                    ? 'event'
+                                    : 'course';
                                 const productId = i.event?.id || i.course?.id;
-                                const productTypePlural = i.event ? 'events' : 'courses';
+                                const productTypePlural = i.event
+                                    ? 'events'
+                                    : 'courses';
                                 return {
                                     productType,
                                     productId,
@@ -582,7 +679,6 @@ export default withAuth(
                                 };
                             }
                         );
-
 
                         const newOrder =
                             await sudoContext.query.Order.createOne({
@@ -596,12 +692,19 @@ export default withAuth(
                                         },
                                     },
                                     items: {
-                                        create: cartItem.map(i => {
+                                        create: cartItem.map((i) => {
                                             return {
-                                                name: i.price === 0 ? 'free event' : 'hi there',
-                                                [i.productType]: { connect: { id: i.productId } },
+                                                name:
+                                                    i.price === 0
+                                                        ? 'free event'
+                                                        : 'hi there',
+                                                [i.productType]: {
+                                                    connect: {
+                                                        id: i.productId,
+                                                    },
+                                                },
                                                 price: i.price,
-                                            }
+                                            };
                                         }),
                                     },
                                 },
@@ -619,20 +722,19 @@ export default withAuth(
 
                         // add course or event to user profile
                         await sudoContext.query.User.updateMany({
-                            data: cartItem.map(i => {
-
+                            data: cartItem.map((i) => {
                                 return {
                                     where: {
-                                        id: userId
+                                        id: userId,
                                     },
                                     data: {
                                         [i.productTypePlural]: {
-                                            connect: { id: i.productId }
-                                        }
-                                    }
-                                }
-                            })
-                        })
+                                            connect: { id: i.productId },
+                                        },
+                                    },
+                                };
+                            }),
+                        });
 
                         // TODO redirect to frontend
                         res.send('orderid is => ' + newOrder.id);
@@ -643,7 +745,6 @@ export default withAuth(
                         res.send(error);
                     }
                 });
-
 
                 // kick
                 app.get<{ userid: string | undefined }>('/kick', (req, res) => {

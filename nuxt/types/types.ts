@@ -664,6 +664,7 @@ export type DateTimeNullableFilter = {
 
 export type Event = {
   __typename?: 'Event';
+  content?: Maybe<Event_Content_Document>;
   description?: Maybe<Scalars['String']>;
   from?: Maybe<Scalars['String']>;
   id: Scalars['ID'];
@@ -694,6 +695,7 @@ export type EventUsersCountArgs = {
 };
 
 export type EventCreateInput = {
+  content?: InputMaybe<Scalars['JSON']>;
   description?: InputMaybe<Scalars['String']>;
   from?: InputMaybe<Scalars['String']>;
   location?: InputMaybe<Scalars['String']>;
@@ -752,6 +754,7 @@ export type EventUpdateArgs = {
 };
 
 export type EventUpdateInput = {
+  content?: InputMaybe<Scalars['JSON']>;
   description?: InputMaybe<Scalars['String']>;
   from?: InputMaybe<Scalars['String']>;
   location?: InputMaybe<Scalars['String']>;
@@ -779,6 +782,16 @@ export type EventWhereInput = {
 
 export type EventWhereUniqueInput = {
   id?: InputMaybe<Scalars['ID']>;
+};
+
+export type Event_Content_Document = {
+  __typename?: 'Event_content_Document';
+  document: Scalars['JSON'];
+};
+
+
+export type Event_Content_DocumentDocumentArgs = {
+  hydrateRelationships?: Scalars['Boolean'];
 };
 
 export type File = {
@@ -2715,7 +2728,7 @@ export type EventQueryVariables = Exact<{
 }>;
 
 
-export type EventQuery = { __typename?: 'Query', event?: { __typename?: 'Event', id: string, name?: string | null, description?: string | null, location?: string | null, from?: string | null, to?: string | null, isAccessible?: boolean | null, price?: number | null, priceFa?: string | null } | null };
+export type EventQuery = { __typename?: 'Query', event?: { __typename?: 'Event', id: string, name?: string | null, location?: string | null, from?: string | null, to?: string | null, isAccessible?: boolean | null, price?: number | null, priceFa?: string | null, content?: { __typename?: 'Event_content_Document', document: any } | null } | null };
 
 export type EventsQueryVariables = Exact<{
   status?: InputMaybe<Scalars['String']>;

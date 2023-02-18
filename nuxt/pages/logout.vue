@@ -12,12 +12,10 @@ import LOGOUT from '@/apollo/m/logout.gql'
 import { LogoutMutation } from '@/types/types'
 import { useMutation } from '@vue/apollo-composable/dist'
 import { defineComponent } from 'vue'
-let prvPage: string
+import { useDebounceFn } from '@vueuse/core'
 
 export default defineComponent({
   beforeRouteEnter (to, from, next) {
-    prvPage = from.fullPath
-
     next(vm => {
       if (vm.$store.getters.isLoggedIn === false) {
         vm.$router.push(vm.localePath('/'))
@@ -32,19 +30,27 @@ export default defineComponent({
       LOGOUT
     )
 
-    onDone(async r => {
-      router.push('/')
+    const onDoneDebouncedFn = useDebounceFn(() => {
       // @ts-ignore
       ctx.$izitoast.info({ title: 'fa:: success' })
-    })
+      ctx.store.dispatch('toggleUser', false)
+      // setTimeout(() => {
+      //   location.href = '/'
+      // }, 2500)
+      router.push('/')
+    }, 300)
+
+    onDone(onDoneDebouncedFn)
 
     onError(() => {
       alert('ERROR')
       router.push('/')
     })
 
-    onMounted(() => {
-      mutate()
+    onMounted(async () => {
+      // ctx.$axios.post('/signout', {}, { withCredentials: true })
+      await mutate()
+      await mutate()
     })
 
     return {

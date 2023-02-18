@@ -5,9 +5,7 @@
         <li>
           <nuxt-link to="/">home</nuxt-link>
         </li>
-        <li>
-          <nuxt-link to="/login">login</nuxt-link>
-        </li>
+
         <li>
           <nuxt-link to="/courses">courses</nuxt-link>
         </li>
@@ -24,6 +22,16 @@
           <button @click="cart = !cart">V</button>
           <cart-box v-if="cart" class="absolute left-0 w-44 bg-lime-600" />
         </div>
+      </div>
+      <div v-else>
+        <ul class="flex gap-2">
+          <li>
+            <nuxt-link to="/login">login</nuxt-link>
+          </li>
+          <li>
+            <nuxt-link to="/signup">signin</nuxt-link>
+          </li>
+        </ul>
       </div>
     </div>
   </div>

@@ -48,7 +48,8 @@
                 </div>
               </div>
               <div class="flex flex-wrap items-center">
-                <a
+                <nuxt-link
+                  :to="'/events/' + ev.id"
                   class="inline-flex items-center text-indigo-500 md:mb-2 lg:mb-0"
                   >Learn More
                   <svg
@@ -63,7 +64,7 @@
                     <path d="M5 12h14"></path>
                     <path d="M12 5l7 7-7 7"></path>
                   </svg>
-                </a>
+                </nuxt-link>
                 <span
                   class="mr-3 ml-auto inline-flex items-center border-r-2 border-gray-200 py-1 pr-3 text-sm leading-none text-gray-400 md:ml-0 lg:ml-auto"
                 >
@@ -120,11 +121,11 @@ const eventsquery = useQuery<EventsQuery, EventsQueryVariables>(EVENTS)
 
 const ctx = useContext()
 
-async function addToCart(eventid: string, eventname: string) {
+async function addToCart (eventid: string, eventname: string) {
   if (ctx.store.getters.isLoggedIn) {
     try {
       const { data } = await ctx.$axios.post<GeneralApiResponse>('/cart-item', {
-        eventid,
+        eventid
       })
 
       showGeneralApiMessage(data, ctx)

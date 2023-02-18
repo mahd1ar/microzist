@@ -34,6 +34,7 @@ export default {
     { src: '~/plugins/eventbus.ts' },
     { src: '~/plugins/snip.js' },
     { src: '~/plugins/general.client.js', mode: 'client' },
+    { src: '~/plugins/axios.js' },
   ],
 
   serverMiddleware: [

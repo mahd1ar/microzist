@@ -4,3 +4,4 @@ import { MotionPlugin } from '@vueuse/motion'
 
 Vue.use(VueSnip)
 Vue.use(MotionPlugin)
+

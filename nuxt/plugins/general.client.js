@@ -1,3 +1,4 @@
+
 const changeHtml = (lang) => {
   document.querySelector('html').lang = lang
   document.querySelector('html').dir = lang === 'fa' ? 'rtl' : 'ltr'
@@ -15,3 +16,5 @@ export default function (ctx) {
     changeHtml(newLocale)
   }
 }
+
+

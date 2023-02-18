@@ -18,7 +18,9 @@
                 id="event-info"
                 class="flex flex-col gap-6 rounded bg-slate-50 p-4 shadow-sm"
               >
-                <div class="flex h-8 items-center justify-between border-b">
+                <div
+                  class="flex h-8 items-center justify-between border-b text-sm"
+                >
                   <div class="flex items-center gap-2">
                     <div>
                       <svg class="h-4 w-4 text-emerald-500" viewBox="0 0 24 24">
@@ -35,7 +37,9 @@
                   </div>
                 </div>
 
-                <div class="flex h-8 items-center justify-between border-b">
+                <div
+                  class="flex h-8 items-center justify-between border-b text-sm"
+                >
                   <div class="flex items-center gap-2">
                     <div>
                       <svg class="h-4 w-4 text-emerald-500" viewBox="0 0 24 24">
@@ -52,7 +56,9 @@
                   </div>
                 </div>
 
-                <div class="flex h-8 items-center justify-between border-b">
+                <div
+                  class="flex h-8 items-center justify-between border-b text-sm"
+                >
                   <div class="flex items-center gap-2">
                     <div>
                       <svg class="h-4 w-4 text-emerald-500" viewBox="0 0 24 24">
@@ -69,7 +75,9 @@
                   </div>
                 </div>
 
-                <div class="flex h-8 items-center justify-between border-b">
+                <div
+                  class="flex h-8 items-center justify-between border-b text-sm"
+                >
                   <div class="flex items-center gap-2">
                     <div>
                       <svg class="w-5 text-emerald-500" viewBox="0 0 32 32">
@@ -81,21 +89,39 @@
                     </div>
                     <div>هزینه</div>
                   </div>
-                  <div>{{ eventq.result.value?.event?.priceFa }}</div>
+                  <div class="text-base">
+                    {{ eventq.result.value?.event?.priceFa }}
+                  </div>
                 </div>
 
                 <button
                   v-if="!eventq.result.value?.event?.isAccessible"
-                  class="flex h-12 items-center justify-between border-b bg-emerald-600 py-2 text-center font-bold text-white hover:bg-emerald-500"
+                  class=" h-12 w-full border-b bg-emerald-600 py-2 text-center font-bold text-white hover:bg-emerald-500 "
                 >
                   ثبت نام در این رویداد
                 </button>
+                <div
+                  v-else
+                  class="flex items-center justify-center h-12 w-full border-b bg-green-600 py-2 text-center font-bold text-white  "
+                >
+                  <svg class="w-6 aspect-square" viewBox="0 0 24 24">
+                    <path
+                      fill="currentColor"
+                      d="m10 16.4l-4-4L7.4 11l2.6 2.6L16.6 7L18 8.4Z"
+                    />
+                  </svg>
+                  <div>
+                    شما در این رویداد ثبت نام کردید
+                  </div>
+                </div>
               </div>
             </div>
           </aside>
           <div class="w-2/3 flex-shrink-0">
             <h1>Innovation & Technological Entrepreneurship Team</h1>
-            <json-content :content="content" />
+            <json-content
+              :content="eventq.result.value?.event?.content?.document"
+            />
           </div>
         </div>
       </div>
@@ -113,29 +139,22 @@ import { PersianCalander } from '@/data/utils'
 
 export default defineComponent({
   name: 'EventPage',
-  setup() {
+  setup () {
     const ctx = useContext()
 
     const eventq = useQuery<EventQuery, EventQueryVariables>(EVENTQ, {
-      id: ctx.route.value.params.id,
+      id: ctx.route.value.params.id
     })
 
     const show = ref(false)
 
-    const content = `
-    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod te invidunt. ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam. et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
-    
-    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore.
-    `
-
     return {
       eventq,
       show,
-      content,
       convertDate: (input: string) =>
-        input ? new PersianCalander(input).toLetterMounth().join(' ') : '',
+        input ? new PersianCalander(input).toLetterMounth().join(' ') : ''
     }
-  },
+  }
 })
 </script>
 

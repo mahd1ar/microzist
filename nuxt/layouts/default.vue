@@ -1,5 +1,6 @@
 <template>
   <main
+    dir="rtl"
     class="relative flex-col items-start justify-between min-h-screen bg-gray-100 sm:pt-0"
   >
     <div
@@ -35,6 +36,8 @@
     </div>
     <div class="w-full flex-grow">
       <HeaderSection />
+
+      <div class="h-8" aria-hidden="true"></div>
 
       <Nuxt ref="nuxt" />
 

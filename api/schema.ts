@@ -24,13 +24,10 @@ import {
     integer,
     select,
 } from '@keystone-6/core/fields';
-import {
-    ListFilterAccessControl,
-    ListOperationAccessControl,
-} from '@keystone-6/core/types';
+
 // the document field is a more complicated field, so it has it's own package
 import { document } from '@keystone-6/fields-document';
-import { isAdmin } from './data/access';
+
 import { GeneralSession } from './data/types';
 import {
     Category,

@@ -29,18 +29,84 @@ __export(keystone_exports, {
   default: () => keystone_default
 });
 module.exports = __toCommonJS(keystone_exports);
-var import_core17 = require("@keystone-6/core");
+var import_core18 = require("@keystone-6/core");
+var import_body_parser = __toESM(require("body-parser"));
+var import_lodash = require("lodash");
+var import_ws = __toESM(require("ws"));
 
-// schema.ts
-var import_core16 = require("@keystone-6/core");
-var import_access18 = require("@keystone-6/core/access");
-var import_fields15 = require("@keystone-6/core/fields");
-var import_fields_document2 = require("@keystone-6/fields-document");
+// auth.ts
+var import_crypto = require("crypto");
+var import_auth = require("@keystone-6/auth");
+var import_session = require("@keystone-6/core/session");
 
-// schemas/CartItem.ts
-var import_core = require("@keystone-6/core");
-var import_access = require("@keystone-6/core/access");
-var import_fields = require("@keystone-6/core/fields");
+// email/resetpassword.ts
+var import_nodemailer = __toESM(require("nodemailer"));
+var import_path = __toESM(require("path"));
+var import_nodemailer_express_handlebars = __toESM(require("nodemailer-express-handlebars"));
+async function sendResetPasswordEmail(ctx) {
+  let transporter = import_nodemailer.default.createTransport({
+    host: "mail.nikan-alumni.org",
+    port: 465,
+    secure: true,
+    auth: {
+      user: "nikpeyvand@nikan-alumni.org",
+      pass: "P@ssw0rd110121"
+    }
+  });
+  const options = {
+    extName: ".hbs",
+    viewPath: import_path.default.resolve(__dirname, "./email-templates"),
+    viewEngine: {
+      defaultLayout: false
+    }
+  };
+  transporter.use("compile", (0, import_nodemailer_express_handlebars.default)(options));
+  let info = await transporter.sendMail({
+    from: '"from nikan" <test@nikan-alumni.org>',
+    to: ctx.identity,
+    subject: "Hello \u2714 world",
+    text: "Hello world?",
+    template: "resetpassword",
+    context: {
+      ...ctx,
+      resetlink: `http://localhost:5173/reset-password?email=${encodeURIComponent(
+        ctx.identity
+      )}&token=${ctx.token}`
+    }
+  });
+  console.log("Message sent: %s", info.messageId);
+  console.log("Preview URL: %s", import_nodemailer.default.getTestMessageUrl(info));
+}
+
+// auth.ts
+var sessionSecret = "ABCDEFGH1234567887654321HGFEDCBZ";
+if (!sessionSecret && process.env.NODE_ENV !== "production") {
+  sessionSecret = (0, import_crypto.randomBytes)(32).toString("hex");
+}
+var { withAuth } = (0, import_auth.createAuth)({
+  listKey: "User",
+  identityField: "email",
+  sessionData: "name role createdAt",
+  secretField: "password",
+  passwordResetLink: {
+    sendToken: async ({ identity, itemId, token }) => {
+      await sendResetPasswordEmail({
+        itemId,
+        identity,
+        token
+      });
+    },
+    tokensValidForMins: 60
+  },
+  initFirstItem: {
+    fields: ["name", "lastName", "email", "password"]
+  }
+});
+var sessionMaxAge = 60 * 60 * 24 * 30;
+var session = (0, import_session.statelessSessions)({
+  maxAge: sessionMaxAge,
+  secret: sessionSecret
+});
 
 // data/utils.ts
 var import_axios = __toESM(require("axios"));
@@ -58,7 +124,16 @@ function sendCommand(cmd) {
   console.log(cmd);
 }
 
+// schema.ts
+var import_core17 = require("@keystone-6/core");
+var import_access18 = require("@keystone-6/core/access");
+var import_fields15 = require("@keystone-6/core/fields");
+var import_fields_document2 = require("@keystone-6/fields-document");
+
 // schemas/CartItem.ts
+var import_core = require("@keystone-6/core");
+var import_access = require("@keystone-6/core/access");
+var import_fields = require("@keystone-6/core/fields");
 var import_schema = require("@graphql-ts/schema");
 var isUser = (args) => {
   if (!!args.session === false)
@@ -520,6 +595,9 @@ var Category = (0, import_core8.list)({
       validation: { isRequired: true }
     }),
     description: (0, import_fields8.text)(),
+    priority: (0, import_fields8.integer)({
+      defaultValue: 0
+    }),
     parentId: (0, import_fields8.relationship)({
       ref: "Category",
       many: true,
@@ -649,13 +727,54 @@ var Coupon = (0, import_core12.list)({
 
 // schemas/Event.ts
 var import_schema5 = require("@graphql-ts/schema");
-var import_core14 = require("@keystone-6/core");
+var import_core15 = require("@keystone-6/core");
 var import_access16 = require("@keystone-6/core/access");
 var import_fields13 = require("@keystone-6/core/fields");
 
+// schemas/component-blocks/hero.tsx
+var import_core13 = require("@keystone-ui/core");
+var import_component_blocks = require("@keystone-6/fields-document/component-blocks");
+var hero = (0, import_component_blocks.component)({
+  label: "Hero",
+  schema: {
+    imageSrc: import_component_blocks.fields.text({
+      label: "Image URL",
+      defaultValue: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809"
+    }),
+    caption: import_component_blocks.fields.conditional(import_component_blocks.fields.checkbox({ label: "Has caption" }), {
+      false: import_component_blocks.fields.empty(),
+      true: import_component_blocks.fields.child({
+        kind: "block",
+        placeholder: "Write a caption...",
+        formatting: "inherit",
+        links: "inherit"
+      })
+    })
+  },
+  preview: function Hero(props) {
+    return /* @__PURE__ */ (0, import_core13.jsx)("div", null, /* @__PURE__ */ (0, import_core13.jsx)(import_component_blocks.NotEditable, null, /* @__PURE__ */ (0, import_core13.jsx)(
+      "div",
+      {
+        css: {
+          backgroundImage: `url(${props.fields.imageSrc.value})`,
+          backgroundPosition: "center",
+          backgroundSize: "cover",
+          minHeight: 200,
+          width: "100%"
+        }
+      }
+    )), props.fields.caption.discriminant ? /* @__PURE__ */ (0, import_core13.jsx)("div", { css: { textAlign: "center" } }, props.fields.caption.value.element) : null);
+  }
+});
+
+// schemas/component-blocks/index.tsx
+var componentBlocks = {
+  hero
+};
+
 // src/custom-fields/persian-calander/index.ts
 var import_types = require("@keystone-6/core/types");
-var import_core13 = require("@keystone-6/core");
+var import_core14 = require("@keystone-6/core");
 var persianCalendar = ({
   isIndexed,
   Jcalandar = "2022-12-03",
@@ -685,7 +804,7 @@ var persianCalendar = ({
   },
   input: {
     create: {
-      arg: import_core13.graphql.arg({ type: import_core13.graphql.String }),
+      arg: import_core14.graphql.arg({ type: import_core14.graphql.String }),
       resolve(val, context) {
         if (val === null) {
           return null;
@@ -696,11 +815,11 @@ var persianCalendar = ({
         return val;
       }
     },
-    update: { arg: import_core13.graphql.arg({ type: import_core13.graphql.String }) },
-    orderBy: { arg: import_core13.graphql.arg({ type: import_types.orderDirectionEnum }) }
+    update: { arg: import_core14.graphql.arg({ type: import_core14.graphql.String }) },
+    orderBy: { arg: import_core14.graphql.arg({ type: import_types.orderDirectionEnum }) }
   },
-  output: import_core13.graphql.field({
-    type: import_core13.graphql.String,
+  output: import_core14.graphql.field({
+    type: import_core14.graphql.String,
     resolve({ value, item }, args, context, info) {
       return value;
     }
@@ -878,7 +997,7 @@ function wordifyMomentApprox(date, baseDate, suffixBefore = "\u067E\u06CC\u0634"
 
 // schemas/Event.ts
 var import_fields_document = require("@keystone-6/fields-document");
-var Event = (0, import_core14.list)({
+var Event = (0, import_core15.list)({
   access: import_access16.allowAll,
   fields: {
     name: (0, import_fields13.text)({
@@ -902,7 +1021,11 @@ var Event = (0, import_core14.list)({
           label: "Mention",
           selection: "id name"
         }
-      }
+      },
+      ui: {
+        views: "./schemas/component-blocks"
+      },
+      componentBlocks
     }),
     price: (0, import_fields13.integer)(),
     priceFa: (0, import_fields13.virtual)({
@@ -983,10 +1106,10 @@ var Event = (0, import_core14.list)({
 });
 
 // schemas/social/Comment.ts
-var import_core15 = require("@keystone-6/core");
+var import_core16 = require("@keystone-6/core");
 var import_fields14 = require("@keystone-6/core/fields");
 var defaultValidatedValue = true;
-var Comment = (0, import_core15.list)({
+var Comment = (0, import_core16.list)({
   access: {
     operation: {
       query: isLoggedIn,
@@ -1029,7 +1152,7 @@ var lists = {
   User,
   Coupon,
   Event,
-  Post: (0, import_core16.list)({
+  Post: (0, import_core17.list)({
     access: {
       filter: {
         query: ({ session: session2 }) => {
@@ -1115,76 +1238,6 @@ var lists = {
   Comment
 };
 
-// auth.ts
-var import_auth = require("@keystone-6/auth");
-var import_session = require("@keystone-6/core/session");
-
-// email/resetpassword.ts
-var import_nodemailer = __toESM(require("nodemailer"));
-var import_path = __toESM(require("path"));
-var import_nodemailer_express_handlebars = __toESM(require("nodemailer-express-handlebars"));
-async function sendResetPasswordEmail(ctx) {
-  let transporter = import_nodemailer.default.createTransport({
-    host: "mail.nikan-alumni.org",
-    port: 465,
-    secure: true,
-    auth: {
-      user: "nikpeyvand@nikan-alumni.org",
-      pass: "P@ssw0rd110121"
-    }
-  });
-  const options = {
-    extName: ".hbs",
-    viewPath: import_path.default.resolve(__dirname, "./email-templates"),
-    viewEngine: {
-      defaultLayout: false
-    }
-  };
-  transporter.use("compile", (0, import_nodemailer_express_handlebars.default)(options));
-  let info = await transporter.sendMail({
-    from: '"from nikan" <test@nikan-alumni.org>',
-    to: ctx.identity,
-    subject: "Hello \u2714 world",
-    text: "Hello world?",
-    template: "resetpassword",
-    context: {
-      ...ctx,
-      resetlink: `http://localhost:5173/reset-password?email=${encodeURIComponent(
-        ctx.identity
-      )}&token=${ctx.token}`
-    }
-  });
-  console.log("Message sent: %s", info.messageId);
-  console.log("Preview URL: %s", import_nodemailer.default.getTestMessageUrl(info));
-}
-
-// auth.ts
-var sessionSecret = "ABCDEFGH1234567887654321HGFEDCBA";
-var { withAuth } = (0, import_auth.createAuth)({
-  listKey: "User",
-  identityField: "email",
-  sessionData: "name role createdAt",
-  secretField: "password",
-  passwordResetLink: {
-    sendToken: async ({ identity, itemId, token }) => {
-      await sendResetPasswordEmail({
-        itemId,
-        identity,
-        token
-      });
-    },
-    tokensValidForMins: 60
-  },
-  initFirstItem: {
-    fields: ["name", "lastName", "email", "password"]
-  }
-});
-var sessionMaxAge = 60 * 60 * 24 * 30;
-var session = (0, import_session.statelessSessions)({
-  maxAge: sessionMaxAge,
-  secret: sessionSecret
-});
-
 // storage.ts
 var baseUrl = "http://localhost:3030";
 var storage = {
@@ -1200,13 +1253,12 @@ var storage = {
 };
 
 // keystone.ts
-var import_ws = __toESM(require("ws"));
-var import_body_parser = __toESM(require("body-parser"));
-var import_lodash = require("lodash");
+var import_axios2 = __toESM(require("axios"));
+var import_qs = __toESM(require("qs"));
 var Zibal = require("zibal");
 var wss;
 var keystone_default = withAuth(
-  (0, import_core17.config)({
+  (0, import_core18.config)({
     db: {
       provider: "sqlite",
       url: "file:./keystone.db"
@@ -1233,6 +1285,104 @@ var keystone_default = withAuth(
             console.log("WHAT THE FUCK?");
             console.log(error);
             res.send(String(error));
+          }
+        });
+        app.post("/signup", async (req, res) => {
+          const hcaptchaResponse = req.body.token;
+          const secret = process.env.NODE_ENV === "production" ? "0x724D577DcAB12A7C40baF7a310113A1e00eC1878" : "0x0000000000000000000000000000000000000000";
+          const url = "https://cors.nikan-alumni.com/https://hcaptcha.com/siteverify";
+          if (!req.body.firstname || !req.body.firstname.trim() || !req.body.lastname || !req.body.lastname.trim()) {
+            res.status(400).json({
+              message: "fa::firstname_or_lastname_is_empty",
+              ok: false
+            });
+            return;
+          }
+          if (!req.body.token || !req.body.token.trim()) {
+            res.status(400).json({
+              message: "fa::captcha_empty",
+              ok: false
+            });
+            return;
+          }
+          if (!req.body.email || !req.body.email.trim()) {
+            res.status(400).json({
+              message: "fa::email_empty",
+              ok: false
+            });
+            return;
+          }
+          if (!req.body.password || !req.body.password.trim()) {
+            res.status(400).json({
+              message: "fa::password_empty",
+              ok: false
+            });
+            return;
+          } else {
+            if (req.body.password !== req.body["re-password"]) {
+              res.status(400).json({
+                message: "fa::password_confirm_mismatch",
+                ok: false
+              });
+              return;
+            }
+          }
+          const headers = {
+            "Content-Type": "application/x-www-form-urlencoded"
+          };
+          const axiosData = {
+            secret,
+            response: hcaptchaResponse
+          };
+          console.log("here");
+          const response = await import_axios2.default.post(
+            url,
+            import_qs.default.stringify(axiosData),
+            {
+              headers
+            }
+          );
+          if (!response.data.success) {
+            res.status(400).json({
+              message: "fa::hcaptcha_validation_error",
+              ok: false
+            });
+            return;
+          }
+          const sudoContext = await ctx.sudo();
+          try {
+            const newuser = await sudoContext.query.User.createOne({
+              data: {
+                name: req.body.firstname,
+                lastName: req.body.lastname,
+                email: req.body.email,
+                password: req.body.password
+              },
+              query: "id name lastName email"
+            });
+            res.json({
+              message: "fa::user_created",
+              ok: true,
+              paylod: { newuser }
+            });
+          } catch (error) {
+            if (String(error).search(
+              "Unique constraint failed on the fields"
+            ) > -1) {
+              res.status(400).json({
+                message: "fa::duplicate_email",
+                ok: false
+              });
+              return;
+            }
+            console.log("error:");
+            console.log(error);
+            res.status(400).json({
+              message: "SOMTHING WENT WRON",
+              ok: false
+            });
+          } finally {
+            sudoContext.exitSudo();
           }
         });
         app.post("/auth-item", async (req, res) => {
@@ -1509,7 +1659,9 @@ var keystone_default = withAuth(
                   status: "2",
                   trackId: "0"
                 };
-                for (let [key, value] of Object.entries(zibalqueryParams))
+                for (let [key, value] of Object.entries(
+                  zibalqueryParams
+                ))
                   urlSearchParams.append(key, value);
                 const url = callbackUrl + "?" + urlSearchParams.toString();
                 res.redirect(url);
@@ -1566,7 +1718,9 @@ var keystone_default = withAuth(
                                     isCompleted`
             });
             if (isCompleted) {
-              res.status(400).send("fa:: purtes already compeleted");
+              res.status(400).send(
+                "fa:: purtes already compeleted"
+              );
               return;
             }
             const cartItem = items.map(
@@ -1596,7 +1750,11 @@ var keystone_default = withAuth(
                   create: cartItem.map((i) => {
                     return {
                       name: i.price === 0 ? "free event" : "hi there",
-                      [i.productType]: { connect: { id: i.productId } },
+                      [i.productType]: {
+                        connect: {
+                          id: i.productId
+                        }
+                      },
                       price: i.price
                     };
                   })

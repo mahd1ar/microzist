@@ -8,10 +8,11 @@ import {
     select,
     relationship,
 } from '@keystone-6/core/fields';
+import { componentBlocks } from './component-blocks';
 import { BaseKeystoneTypeInfo, KeystoneContext } from '@keystone-6/core/types';
 
 import { persianCalendar } from '../src/custom-fields/persian-calander';
-import { wordifyfa } from "../data/lib/wordifyfa"
+import { wordifyfa } from '../data/lib/wordifyfa';
 import { document } from '@keystone-6/fields-document';
 
 export const Event = list({
@@ -39,6 +40,10 @@ export const Event = list({
                     selection: 'id name',
                 },
             },
+            ui: {
+                views: './schemas/component-blocks',
+            },
+            componentBlocks,
         }),
         price: integer(),
         priceFa: virtual({
@@ -46,7 +51,9 @@ export const Event = list({
                 type: graphql.String,
                 async resolve(item) {
                     // @ts-ignore
-                    return item.price ? `${wordifyfa(item.price)} تومان ` : 'رایگان';
+                    return item.price
+                        ? `${wordifyfa(item.price)} تومان `
+                        : 'رایگان';
                 },
             }),
         }),
@@ -61,12 +68,9 @@ export const Event = list({
                     context: KeystoneContext<BaseKeystoneTypeInfo>
                 ) {
                     try {
-                        const currentlyInUse =
-                            await context.query.User.count({
-                                where: { events: { some: { id: { equals: id } } } }
-                            });
-
-
+                        const currentlyInUse = await context.query.User.count({
+                            where: { events: { some: { id: { equals: id } } } },
+                        });
 
                         return maxAmount - currentlyInUse;
                     } catch (error) {
