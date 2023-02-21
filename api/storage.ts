@@ -16,4 +16,14 @@ export const storage: Record<string, StorageConfig> = {
         },
         storagePath: 'public/files',
     },
+    images: {
+        kind: 'local',
+        type: 'image',
+        generateUrl: (path: string) => `${baseUrl}/images${path}`,
+        serverRoute: {
+            path: '/images',
+        },
+        storagePath: 'public/images',
+
+    }
 };

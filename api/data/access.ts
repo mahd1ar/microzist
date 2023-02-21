@@ -10,6 +10,7 @@ export function isLoggedIn(args: BaseAccessArgs<BaseListTypeInfo>) {
 }
 
 export function isAdmin(args: BaseAccessArgs<BaseListTypeInfo>) {
+    console.log(args.context.session!.data.role)
     return isLoggedIn(args) && args.context.session!.data.role === Roles.admin;
 }
 

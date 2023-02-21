@@ -5,7 +5,6 @@ export enum Roles {
 }
 
 export enum FileTypes {
-    image = 'image',
     video = "video",
     file = "file"
 }

@@ -8,9 +8,9 @@ export const File = list({
     ui: {
         label: 'media',
 
-        // listView : {
-        //   defaultFieldMode : 'hidden'
-        // }
+        listView: {
+            defaultFieldMode: 'hidden'
+        }
     },
     hooks: {
         async resolveInput({ resolvedData, operation }) {

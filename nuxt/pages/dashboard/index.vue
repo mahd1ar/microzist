@@ -1,12 +1,14 @@
 <template>
-  <div class="container mx-auto">
-    <div>hi dashboard</div>
+  <div>
+    <div class="container mx-auto">
+      <div>hi dashboard</div>
 
-    <div v-for="c in myCources.result.value?.user?.courses || []" :key="c.id">
-      <div class="w-1/6 border">
-        {{ c.name }}
-        <br /><br />
-        <nuxt-link :to="'/dashboard/course/' + c.id">VIEW</nuxt-link>
+      <div v-for="c in myCources.result.value?.user?.courses || []" :key="c.id">
+        <div class="w-1/6 border">
+          {{ c.name }}
+          <br /><br />
+          <nuxt-link :to="'/dashboard/course/' + c.id">VIEW</nuxt-link>
+        </div>
       </div>
     </div>
   </div>
@@ -19,8 +21,9 @@ import { defineComponent, useContext } from '@nuxtjs/composition-api'
 import { useQuery } from '@vue/apollo-composable/dist'
 
 export default defineComponent({
-  middleware: ['auth'],
-  setup () {
+  // middleware: ['auth'],
+  layout: 'dashboard',
+  setup() {
     const ctx = useContext()
     const myCources = useQuery<MyCoursesQuery, MyCoursesQueryVariables>(
       MYCOURSES,
@@ -28,6 +31,6 @@ export default defineComponent({
     )
 
     return { myCources }
-  }
+  },
 })
 </script>

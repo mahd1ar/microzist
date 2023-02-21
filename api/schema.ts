@@ -44,12 +44,14 @@ import {
     Coupon,
     Comment,
     Event,
+    Teacher
 } from './schemas';
 
 import { persianCalendar } from './src/custom-fields/persian-calander';
 
 export const lists: Lists = {
     User,
+    Teacher,
     Coupon,
     Event,
 

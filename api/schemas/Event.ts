@@ -18,6 +18,15 @@ import { document } from '@keystone-6/fields-document';
 export const Event = list({
     access: allowAll,
     fields: {
+        url: virtual({
+            field: graphql.field({
+                type: graphql.String,
+
+                async resolve(item) {
+                    return `${process.env.FRONTENDURL}/events/${item.id}`
+                },
+            }),
+        }),
         name: text({
             validation: { isRequired: true },
         }),

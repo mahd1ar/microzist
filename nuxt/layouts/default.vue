@@ -1,12 +1,11 @@
 <template>
   <main
     dir="rtl"
-    class="relative flex-col items-start justify-between min-h-screen bg-gray-100 sm:pt-0"
+    class="relative min-h-screen flex-col items-start justify-between bg-gray-100 sm:pt-0"
   >
     <div
       v-if="showDevBox"
-      :style="
-        `
+      :style="`
       position: fixed;
       top: 200px;
       left: 20px;
@@ -15,17 +14,16 @@
       direction: ltr;
       z-index : 200;
       opacity: 0.8;
-    `
-      "
+    `"
     >
       <div>quick navigatin for dev : for toggle press `m`</div>
-      <div style="background-color: red" class="text-white text-xs">
+      <div style="background-color: red" class="text-xs text-white">
         this will not show in production
       </div>
 
       <br />
       <div
-        class=" top-10 left-10 z-50 opacity-50 sm:bg-green-400 md:bg-red-500 lg:bg-blue-500 xl:bg-yellow-500"
+        class="top-10 left-10 z-50 opacity-50 sm:bg-green-400 md:bg-red-500 lg:bg-blue-500 xl:bg-yellow-500"
       >
         <span class="hidden sm:block">sm</span>
         <span class="hidden md:block">md</span>
@@ -37,7 +35,7 @@
     <div class="w-full flex-grow">
       <HeaderSection />
 
-      <div class="h-8" aria-hidden="true"></div>
+      <!-- <div class="h-8" aria-hidden="true"></div> -->
 
       <Nuxt ref="nuxt" />
 
@@ -52,7 +50,7 @@ import {
   ref,
   useContext,
   useMeta,
-  defineComponent
+  defineComponent,
 } from '@nuxtjs/composition-api'
 import { onKeyStroke } from '@vueuse/core'
 // import CommandPallete from '@/components/CommandPallete.vue'
@@ -62,12 +60,12 @@ export default defineComponent({
   components: {
     // CommandPallete
   },
-  setup () {
+  setup() {
     const { i18n } = useContext()
 
     const showDevBox = ref(false)
 
-    onKeyStroke('m', e => {
+    onKeyStroke('m', (e) => {
       e.preventDefault()
       showDevBox.value = !showDevBox.value
     })
@@ -76,8 +74,8 @@ export default defineComponent({
 
     return {
       locale,
-      showDevBox
+      showDevBox,
     }
-  }
+  },
 })
 </script>

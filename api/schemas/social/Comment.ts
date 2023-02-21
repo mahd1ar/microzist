@@ -1,6 +1,7 @@
 import { list } from '@keystone-6/core';
 import {
     checkbox,
+    integer,
     relationship,
     text,
     timestamp,
@@ -21,9 +22,9 @@ export const Comment = list({
     },
     hooks: {
         resolveInput: ({ resolvedData, context }) => {
-            
+
             if (
-                
+
                 (context.session as GeneralSession)?.data.role === Roles.admin
             ) {
                 if (!resolvedData.user)
@@ -46,8 +47,10 @@ export const Comment = list({
     fields: {
         comment: text({ validation: { isRequired: true } }),
         user: relationship({ ref: 'User.comments', many: false }),
+        course: relationship({ ref: 'Course.comments' }),
         courseItem: relationship({ ref: 'CourseItem.comments' }),
         isValidated: checkbox({ defaultValue: defaultValidatedValue }),
+        rate: integer({ defaultValue: -1, validation: { min: -1, max: 5 } }),
         createdAt: timestamp({
             defaultValue: { kind: 'now' },
             // ui: {

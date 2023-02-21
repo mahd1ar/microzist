@@ -20,7 +20,7 @@ model User {
   password                String
   cart                    Cart[]    @relation("Cart_user")
   orders                  Order[]   @relation("Order_user")
-  role                    String?
+  role                    String?   @default("100")
   courses                 Course[]  @relation("Course_users")
   events                  Event[]   @relation("Event_users")
   posts                   Post[]    @relation("Post_author")
@@ -29,6 +29,18 @@ model User {
   passwordResetToken      String?
   passwordResetIssuedAt   DateTime?
   passwordResetRedeemedAt DateTime?
+}
+
+model Teacher {
+  id              String   @id @default(cuid())
+  name            String   @default("")
+  description     String   @default("")
+  image_filesize  Int?
+  image_extension String?
+  image_width     Int?
+  image_height    Int?
+  image_id        String?
+  courses         Course[] @relation("Course_teacher")
 }
 
 model Coupon {
@@ -77,11 +89,22 @@ model Course {
   description           String       @default("")
   status                String?      @default("DRAFT")
   price                 Int?
+  teacher               Teacher?     @relation("Course_teacher", fields: [teacherId], references: [id])
+  teacherId             String?      @map("teacher")
+  rate                  Int?         @default(3)
+  image_filesize        Int?
+  image_extension       String?
+  image_width           Int?
+  image_height          Int?
+  image_id              String?
+  comments              Comment[]    @relation("Comment_course")
   users                 User[]       @relation("Course_users")
   courseItem            CourseItem[] @relation("CourseItem_course")
   from_Coupon_belongsTo Coupon[]     @relation("Coupon_belongsTo")
   from_CartItem_course  CartItem[]   @relation("CartItem_course")
   from_OrderItem_course OrderItem[]  @relation("OrderItem_course")
+
+  @@index([teacherId])
 }
 
 model CourseItem {
@@ -103,6 +126,7 @@ model Category {
   id                     String     @id @default(cuid())
   name                   String     @default("")
   description            String     @default("")
+  priority               Int?       @default(0)
   parentId               Category[] @relation("Category_parentId")
   from_Category_parentId Category[] @relation("Category_parentId")
 }
@@ -195,11 +219,15 @@ model Comment {
   comment      String      @default("")
   user         User?       @relation("Comment_user", fields: [userId], references: [id])
   userId       String?     @map("user")
+  course       Course?     @relation("Comment_course", fields: [courseId], references: [id])
+  courseId     String?     @map("course")
   courseItem   CourseItem? @relation("Comment_courseItem", fields: [courseItemId], references: [id])
   courseItemId String?     @map("courseItem")
   isValidated  Boolean     @default(true)
+  rate         Int?        @default(-1)
   createdAt    DateTime?   @default(now())
 
   @@index([userId])
+  @@index([courseId])
   @@index([courseItemId])
 }

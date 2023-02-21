@@ -11,9 +11,11 @@ import { isAdmin } from '../data/access';
 import { Roles } from '../data/enums';
 // import { permissions, rules } from "../access";
 
-const keys = Object.keys(Roles).filter((i) => Number(i) > -1);
-const values = Object.keys(Roles).filter((i) => Number(i) > -1 === false);
-const RolesItem = keys.map((key, inx) => ({ value: key, label: values[inx] }));
+const roleKeys = Object.keys(Roles)
+const roleValues = Object.values(Roles)
+const RolesItem = roleKeys.map((key, index) => ({ label: key, value: roleValues[index] }))
+
+console.log(RolesItem)
 
 export const User = list({
     access: {
@@ -51,6 +53,7 @@ export const User = list({
         orders: relationship({ ref: 'Order.user', many: true }),
         role: select({
             options: RolesItem,
+            defaultValue: '100'
         }),
         courses: relationship({
             ref: 'Course.users',

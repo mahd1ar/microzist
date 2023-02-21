@@ -202,6 +202,7 @@ export type Category = {
   name?: Maybe<Scalars['String']>;
   parentId?: Maybe<Array<Category>>;
   parentIdCount?: Maybe<Scalars['Int']>;
+  priority?: Maybe<Scalars['Int']>;
 };
 
 
@@ -221,6 +222,7 @@ export type CategoryCreateInput = {
   description?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
   parentId?: InputMaybe<CategoryRelateToManyForCreateInput>;
+  priority?: InputMaybe<Scalars['Int']>;
 };
 
 export type CategoryManyRelationFilter = {
@@ -233,6 +235,7 @@ export type CategoryOrderByInput = {
   description?: InputMaybe<OrderDirection>;
   id?: InputMaybe<OrderDirection>;
   name?: InputMaybe<OrderDirection>;
+  priority?: InputMaybe<OrderDirection>;
 };
 
 export type CategoryRelateToManyForCreateInput = {
@@ -256,6 +259,7 @@ export type CategoryUpdateInput = {
   description?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
   parentId?: InputMaybe<CategoryRelateToManyForUpdateInput>;
+  priority?: InputMaybe<Scalars['Int']>;
 };
 
 export type CategoryWhereInput = {
@@ -266,6 +270,7 @@ export type CategoryWhereInput = {
   id?: InputMaybe<IdFilter>;
   name?: InputMaybe<StringFilter>;
   parentId?: InputMaybe<CategoryManyRelationFilter>;
+  priority?: InputMaybe<IntNullableFilter>;
 };
 
 export type CategoryWhereUniqueInput = {
@@ -275,18 +280,22 @@ export type CategoryWhereUniqueInput = {
 export type Comment = {
   __typename?: 'Comment';
   comment?: Maybe<Scalars['String']>;
+  course?: Maybe<Course>;
   courseItem?: Maybe<CourseItem>;
   createdAt?: Maybe<Scalars['DateTime']>;
   id: Scalars['ID'];
   isValidated?: Maybe<Scalars['Boolean']>;
+  rate?: Maybe<Scalars['Int']>;
   user?: Maybe<User>;
 };
 
 export type CommentCreateInput = {
   comment?: InputMaybe<Scalars['String']>;
+  course?: InputMaybe<CourseRelateToOneForCreateInput>;
   courseItem?: InputMaybe<CourseItemRelateToOneForCreateInput>;
   createdAt?: InputMaybe<Scalars['DateTime']>;
   isValidated?: InputMaybe<Scalars['Boolean']>;
+  rate?: InputMaybe<Scalars['Int']>;
   user?: InputMaybe<UserRelateToOneForCreateInput>;
 };
 
@@ -301,6 +310,7 @@ export type CommentOrderByInput = {
   createdAt?: InputMaybe<OrderDirection>;
   id?: InputMaybe<OrderDirection>;
   isValidated?: InputMaybe<OrderDirection>;
+  rate?: InputMaybe<OrderDirection>;
 };
 
 export type CommentRelateToManyForCreateInput = {
@@ -322,9 +332,11 @@ export type CommentUpdateArgs = {
 
 export type CommentUpdateInput = {
   comment?: InputMaybe<Scalars['String']>;
+  course?: InputMaybe<CourseRelateToOneForUpdateInput>;
   courseItem?: InputMaybe<CourseItemRelateToOneForUpdateInput>;
   createdAt?: InputMaybe<Scalars['DateTime']>;
   isValidated?: InputMaybe<Scalars['Boolean']>;
+  rate?: InputMaybe<Scalars['Int']>;
   user?: InputMaybe<UserRelateToOneForUpdateInput>;
 };
 
@@ -333,10 +345,12 @@ export type CommentWhereInput = {
   NOT?: InputMaybe<Array<CommentWhereInput>>;
   OR?: InputMaybe<Array<CommentWhereInput>>;
   comment?: InputMaybe<StringFilter>;
+  course?: InputMaybe<CourseWhereInput>;
   courseItem?: InputMaybe<CourseItemWhereInput>;
   createdAt?: InputMaybe<DateTimeNullableFilter>;
   id?: InputMaybe<IdFilter>;
   isValidated?: InputMaybe<BooleanFilter>;
+  rate?: InputMaybe<IntNullableFilter>;
   user?: InputMaybe<UserWhereInput>;
 };
 
@@ -427,17 +441,35 @@ export type CouponWhereUniqueInput = {
 
 export type Course = {
   __typename?: 'Course';
+  comments?: Maybe<Array<Comment>>;
+  commentsCount?: Maybe<Scalars['Int']>;
   courseItem?: Maybe<Array<CourseItem>>;
   courseItemCount?: Maybe<Scalars['Int']>;
   description?: Maybe<Scalars['String']>;
   id: Scalars['ID'];
+  image?: Maybe<ImageFieldOutput>;
   isAccessible?: Maybe<Scalars['Boolean']>;
   name?: Maybe<Scalars['String']>;
   price?: Maybe<Scalars['Int']>;
   priceFa?: Maybe<Scalars['String']>;
+  rate?: Maybe<Scalars['Int']>;
   status?: Maybe<Scalars['String']>;
+  teacher?: Maybe<Teacher>;
   users?: Maybe<Array<User>>;
   usersCount?: Maybe<Scalars['Int']>;
+};
+
+
+export type CourseCommentsArgs = {
+  orderBy?: Array<CommentOrderByInput>;
+  skip?: Scalars['Int'];
+  take?: InputMaybe<Scalars['Int']>;
+  where?: CommentWhereInput;
+};
+
+
+export type CourseCommentsCountArgs = {
+  where?: CommentWhereInput;
 };
 
 
@@ -467,11 +499,15 @@ export type CourseUsersCountArgs = {
 };
 
 export type CourseCreateInput = {
+  comments?: InputMaybe<CommentRelateToManyForCreateInput>;
   courseItem?: InputMaybe<CourseItemRelateToManyForCreateInput>;
   description?: InputMaybe<Scalars['String']>;
+  image?: InputMaybe<ImageFieldInput>;
   name?: InputMaybe<Scalars['String']>;
   price?: InputMaybe<Scalars['Int']>;
+  rate?: InputMaybe<Scalars['Int']>;
   status?: InputMaybe<Scalars['String']>;
+  teacher?: InputMaybe<TeacherRelateToOneForCreateInput>;
   users?: InputMaybe<UserRelateToManyForCreateInput>;
 };
 
@@ -587,6 +623,7 @@ export type CourseOrderByInput = {
   id?: InputMaybe<OrderDirection>;
   name?: InputMaybe<OrderDirection>;
   price?: InputMaybe<OrderDirection>;
+  rate?: InputMaybe<OrderDirection>;
   status?: InputMaybe<OrderDirection>;
 };
 
@@ -619,11 +656,15 @@ export type CourseUpdateArgs = {
 };
 
 export type CourseUpdateInput = {
+  comments?: InputMaybe<CommentRelateToManyForUpdateInput>;
   courseItem?: InputMaybe<CourseItemRelateToManyForUpdateInput>;
   description?: InputMaybe<Scalars['String']>;
+  image?: InputMaybe<ImageFieldInput>;
   name?: InputMaybe<Scalars['String']>;
   price?: InputMaybe<Scalars['Int']>;
+  rate?: InputMaybe<Scalars['Int']>;
   status?: InputMaybe<Scalars['String']>;
+  teacher?: InputMaybe<TeacherRelateToOneForUpdateInput>;
   users?: InputMaybe<UserRelateToManyForUpdateInput>;
 };
 
@@ -631,12 +672,15 @@ export type CourseWhereInput = {
   AND?: InputMaybe<Array<CourseWhereInput>>;
   NOT?: InputMaybe<Array<CourseWhereInput>>;
   OR?: InputMaybe<Array<CourseWhereInput>>;
+  comments?: InputMaybe<CommentManyRelationFilter>;
   courseItem?: InputMaybe<CourseItemManyRelationFilter>;
   description?: InputMaybe<StringFilter>;
   id?: InputMaybe<IdFilter>;
   name?: InputMaybe<StringFilter>;
   price?: InputMaybe<IntNullableFilter>;
+  rate?: InputMaybe<IntNullableFilter>;
   status?: InputMaybe<StringNullableFilter>;
+  teacher?: InputMaybe<TeacherWhereInput>;
   users?: InputMaybe<UserManyRelationFilter>;
 };
 
@@ -677,6 +721,7 @@ export type Event = {
   remaining?: Maybe<Scalars['Int']>;
   status?: Maybe<Scalars['String']>;
   to?: Maybe<Scalars['String']>;
+  url?: Maybe<Scalars['String']>;
   users?: Maybe<Array<User>>;
   usersCount?: Maybe<Scalars['Int']>;
 };
@@ -887,6 +932,27 @@ export type IdFilter = {
   notIn?: InputMaybe<Array<Scalars['ID']>>;
 };
 
+export enum ImageExtension {
+  Gif = 'gif',
+  Jpg = 'jpg',
+  Png = 'png',
+  Webp = 'webp'
+}
+
+export type ImageFieldInput = {
+  upload: Scalars['Upload'];
+};
+
+export type ImageFieldOutput = {
+  __typename?: 'ImageFieldOutput';
+  extension: ImageExtension;
+  filesize: Scalars['Int'];
+  height: Scalars['Int'];
+  id: Scalars['ID'];
+  url: Scalars['String'];
+  width: Scalars['Int'];
+};
+
 export type IntFilter = {
   equals?: InputMaybe<Scalars['Int']>;
   gt?: InputMaybe<Scalars['Int']>;
@@ -1055,6 +1121,8 @@ export type Mutation = {
   createSettings?: Maybe<Settings>;
   createTag?: Maybe<Tag>;
   createTags?: Maybe<Array<Maybe<Tag>>>;
+  createTeacher?: Maybe<Teacher>;
+  createTeachers?: Maybe<Array<Maybe<Teacher>>>;
   createUser?: Maybe<User>;
   createUsers?: Maybe<Array<Maybe<User>>>;
   deleteCart?: Maybe<Cart>;
@@ -1085,6 +1153,8 @@ export type Mutation = {
   deleteSettings?: Maybe<Settings>;
   deleteTag?: Maybe<Tag>;
   deleteTags?: Maybe<Array<Maybe<Tag>>>;
+  deleteTeacher?: Maybe<Teacher>;
+  deleteTeachers?: Maybe<Array<Maybe<Teacher>>>;
   deleteUser?: Maybe<User>;
   deleteUsers?: Maybe<Array<Maybe<User>>>;
   endSession: Scalars['Boolean'];
@@ -1118,6 +1188,8 @@ export type Mutation = {
   updateSettings?: Maybe<Settings>;
   updateTag?: Maybe<Tag>;
   updateTags?: Maybe<Array<Maybe<Tag>>>;
+  updateTeacher?: Maybe<Teacher>;
+  updateTeachers?: Maybe<Array<Maybe<Teacher>>>;
   updateUser?: Maybe<User>;
   updateUsers?: Maybe<Array<Maybe<User>>>;
 };
@@ -1274,6 +1346,16 @@ export type MutationCreateTagsArgs = {
 };
 
 
+export type MutationCreateTeacherArgs = {
+  data: TeacherCreateInput;
+};
+
+
+export type MutationCreateTeachersArgs = {
+  data: Array<TeacherCreateInput>;
+};
+
+
 export type MutationCreateUserArgs = {
   data: UserCreateInput;
 };
@@ -1421,6 +1503,16 @@ export type MutationDeleteTagArgs = {
 
 export type MutationDeleteTagsArgs = {
   where: Array<TagWhereUniqueInput>;
+};
+
+
+export type MutationDeleteTeacherArgs = {
+  where: TeacherWhereUniqueInput;
+};
+
+
+export type MutationDeleteTeachersArgs = {
+  where: Array<TeacherWhereUniqueInput>;
 };
 
 
@@ -1597,6 +1689,17 @@ export type MutationUpdateTagArgs = {
 
 export type MutationUpdateTagsArgs = {
   data: Array<TagUpdateArgs>;
+};
+
+
+export type MutationUpdateTeacherArgs = {
+  data: TeacherUpdateInput;
+  where: TeacherWhereUniqueInput;
+};
+
+
+export type MutationUpdateTeachersArgs = {
+  data: Array<TeacherUpdateArgs>;
 };
 
 
@@ -1986,6 +2089,9 @@ export type Query = {
   tag?: Maybe<Tag>;
   tags?: Maybe<Array<Tag>>;
   tagsCount?: Maybe<Scalars['Int']>;
+  teacher?: Maybe<Teacher>;
+  teachers?: Maybe<Array<Teacher>>;
+  teachersCount?: Maybe<Scalars['Int']>;
   user?: Maybe<User>;
   users?: Maybe<Array<User>>;
   usersCount?: Maybe<Scalars['Int']>;
@@ -2245,6 +2351,24 @@ export type QueryTagsCountArgs = {
 };
 
 
+export type QueryTeacherArgs = {
+  where: TeacherWhereUniqueInput;
+};
+
+
+export type QueryTeachersArgs = {
+  orderBy?: Array<TeacherOrderByInput>;
+  skip?: Scalars['Int'];
+  take?: InputMaybe<Scalars['Int']>;
+  where?: TeacherWhereInput;
+};
+
+
+export type QueryTeachersCountArgs = {
+  where?: TeacherWhereInput;
+};
+
+
 export type QueryUserArgs = {
   where: UserWhereUniqueInput;
 };
@@ -2438,6 +2562,79 @@ export type TagWhereInput = {
 };
 
 export type TagWhereUniqueInput = {
+  id?: InputMaybe<Scalars['ID']>;
+};
+
+export type Teacher = {
+  __typename?: 'Teacher';
+  courses?: Maybe<Array<Course>>;
+  coursesCount?: Maybe<Scalars['Int']>;
+  description?: Maybe<Scalars['String']>;
+  id: Scalars['ID'];
+  image?: Maybe<ImageFieldOutput>;
+  name?: Maybe<Scalars['String']>;
+};
+
+
+export type TeacherCoursesArgs = {
+  orderBy?: Array<CourseOrderByInput>;
+  skip?: Scalars['Int'];
+  take?: InputMaybe<Scalars['Int']>;
+  where?: CourseWhereInput;
+};
+
+
+export type TeacherCoursesCountArgs = {
+  where?: CourseWhereInput;
+};
+
+export type TeacherCreateInput = {
+  courses?: InputMaybe<CourseRelateToManyForCreateInput>;
+  description?: InputMaybe<Scalars['String']>;
+  image?: InputMaybe<ImageFieldInput>;
+  name?: InputMaybe<Scalars['String']>;
+};
+
+export type TeacherOrderByInput = {
+  description?: InputMaybe<OrderDirection>;
+  id?: InputMaybe<OrderDirection>;
+  name?: InputMaybe<OrderDirection>;
+};
+
+export type TeacherRelateToOneForCreateInput = {
+  connect?: InputMaybe<TeacherWhereUniqueInput>;
+  create?: InputMaybe<TeacherCreateInput>;
+};
+
+export type TeacherRelateToOneForUpdateInput = {
+  connect?: InputMaybe<TeacherWhereUniqueInput>;
+  create?: InputMaybe<TeacherCreateInput>;
+  disconnect?: InputMaybe<Scalars['Boolean']>;
+};
+
+export type TeacherUpdateArgs = {
+  data: TeacherUpdateInput;
+  where: TeacherWhereUniqueInput;
+};
+
+export type TeacherUpdateInput = {
+  courses?: InputMaybe<CourseRelateToManyForUpdateInput>;
+  description?: InputMaybe<Scalars['String']>;
+  image?: InputMaybe<ImageFieldInput>;
+  name?: InputMaybe<Scalars['String']>;
+};
+
+export type TeacherWhereInput = {
+  AND?: InputMaybe<Array<TeacherWhereInput>>;
+  NOT?: InputMaybe<Array<TeacherWhereInput>>;
+  OR?: InputMaybe<Array<TeacherWhereInput>>;
+  courses?: InputMaybe<CourseManyRelationFilter>;
+  description?: InputMaybe<StringFilter>;
+  id?: InputMaybe<IdFilter>;
+  name?: InputMaybe<StringFilter>;
+};
+
+export type TeacherWhereUniqueInput = {
   id?: InputMaybe<Scalars['ID']>;
 };
 
@@ -2716,7 +2913,7 @@ export type CourseQueryVariables = Exact<{
 }>;
 
 
-export type CourseQuery = { __typename?: 'Query', course?: { __typename?: 'Course', id: string, name?: string | null, description?: string | null, courseItem?: Array<{ __typename?: 'CourseItem', id: string, no?: number | null, name?: string | null, description?: string | null }> | null } | null };
+export type CourseQuery = { __typename?: 'Query', course?: { __typename?: 'Course', id: string, name?: string | null, description?: string | null, rate?: number | null, commentsCount?: number | null, teacher?: { __typename?: 'Teacher', name?: string | null, description?: string | null, image?: { __typename?: 'ImageFieldOutput', id: string, url: string } | null } | null, image?: { __typename?: 'ImageFieldOutput', id: string, url: string } | null, courseItem?: Array<{ __typename?: 'CourseItem', id: string, no?: number | null, name?: string | null, description?: string | null }> | null } | null };
 
 export type CoursesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -2742,4 +2939,4 @@ export type MyCoursesQueryVariables = Exact<{
 }>;
 
 
-export type MyCoursesQuery = { __typename?: 'Query', user?: { __typename?: 'User', courses?: Array<{ __typename?: 'Course', id: string, name?: string | null }> | null } | null };
+export type MyCoursesQuery = { __typename?: 'Query', user?: { __typename?: 'User', courses?: Array<{ __typename?: 'Course', id: string, name?: string | null, rate?: number | null, commentsCount?: number | null, image?: { __typename?: 'ImageFieldOutput', url: string } | null, teacher?: { __typename?: 'Teacher', id: string, name?: string | null, image?: { __typename?: 'ImageFieldOutput', url: string } | null } | null }> | null } | null };

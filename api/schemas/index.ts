@@ -12,3 +12,4 @@ export { Tag } from './Tag';
 export { Coupon } from './Coupon';
 export { Event } from './Event';
 export { Comment } from './social/Comment';
+export { Teacher } from './Teacher';

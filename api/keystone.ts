@@ -10,13 +10,14 @@ import { storage } from './storage';
 const Zibal = require('zibal');
 import axios from 'axios';
 import qs from 'qs';
-// TODO load .env
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, ../config/${process.env.ENVIRONMENT}.env)});
-// or
-// const envFile = process.env.NODE_ENV ? `.env.${process.env.NODE_END}` : '.env'
-// dotenv.config({ path: envFile })
+import dotenv from 'dotenv';
+import { Roles } from './data/enums';
+
+
+
+const envFile = process.env.NODE_ENV !== 'production' ? `.env.dev` : '.env'
+dotenv.config({ path: envFile })
+
 
 type ZibalCBQuery = {
     success: '1' | '0'; // "1",
@@ -58,11 +59,72 @@ export default withAuth(
             extendExpressApp: (app, ctx) => {
                 app.use(bodyParser.json());
 
+
+
+
                 app.use((req, res, next) => {
                     // TODO
                     const path: string = req.path;
                     next();
                 });
+
+
+                app.get('/setadmin', async (req, res) => {
+
+
+                    const sudoctx = await ctx.sudo()
+                    try {
+
+                        const userCount = await sudoctx.query.User.count({
+                            where: {
+                                email: {
+                                    equals: 'a.mahdiyar7@yahoo.com'
+                                }
+                            }
+                        })
+
+
+                        if (userCount === 1) {
+
+                            await sudoctx.query.User.updateOne({
+                                where: {
+                                    id: 'clcn1d4qg0056ywhb2o13r9wj'
+                                },
+                                data: {
+                                    role: Roles.admin
+                                }
+                            })
+                            res.send('userUpdated')
+
+                        } else if (userCount === 0) {
+
+                            const { name } = await sudoctx.query.User.createOne({
+                                data: {
+                                    name: 'admin',
+                                    lastName: 'administrator',
+                                    email: 'a.mahdiyar7@yahoo.com',
+                                    password: 'Aa12345678',
+                                    role: Roles.admin
+                                },
+                                query: 'id name lastName email',
+                            });
+
+                            res.send(name + 'created')
+
+                        } else {
+
+                            res.send(':(')
+                        }
+
+
+                    } catch (error) {
+                        console.error(error)
+                        res.send(String(error))
+                    }
+                    sudoctx.exitSudo()
+
+                })
+
 
                 app.get('/test', async (req, res) => {
                     try {
@@ -179,6 +241,7 @@ export default withAuth(
                                 lastName: req.body.lastname,
                                 email: req.body.email,
                                 password: req.body.password,
+                                role: Roles.member
                             },
                             query: 'id name lastName email',
                         });
@@ -598,7 +661,7 @@ export default withAuth(
                         } catch (error) {
                             console.error(error); // { result: 103, message: 'authentication error', statusMessage: '{merchant} غیرفعال' }
                             // TODO write somewhere for godsakes
-                            res.status(500).send(error);
+                            res.status(500).json({ ok: false, message: String(error) });
                         }
                     }
                 );

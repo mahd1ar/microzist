@@ -3,6 +3,20 @@ query course($id: ID!) {
     id
     name
     description
+    teacher {
+      name
+      description
+      image {
+        id
+        url
+      }
+    }
+    image {
+      id
+      url
+    }
+    rate
+    commentsCount
     courseItem {
       id
       no

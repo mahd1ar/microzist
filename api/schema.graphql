@@ -305,6 +305,77 @@ input CommentRelateToManyForCreateInput {
   connect: [CommentWhereUniqueInput!]
 }
 
+type Teacher {
+  id: ID!
+  name: String
+  description: String
+  image: ImageFieldOutput
+  courses(where: CourseWhereInput! = {}, orderBy: [CourseOrderByInput!]! = [], take: Int, skip: Int! = 0): [Course!]
+  coursesCount(where: CourseWhereInput! = {}): Int
+}
+
+type ImageFieldOutput {
+  id: ID!
+  filesize: Int!
+  width: Int!
+  height: Int!
+  extension: ImageExtension!
+  url: String!
+}
+
+enum ImageExtension {
+  jpg
+  png
+  webp
+  gif
+}
+
+input TeacherWhereUniqueInput {
+  id: ID
+}
+
+input TeacherWhereInput {
+  AND: [TeacherWhereInput!]
+  OR: [TeacherWhereInput!]
+  NOT: [TeacherWhereInput!]
+  id: IDFilter
+  name: StringFilter
+  description: StringFilter
+  courses: CourseManyRelationFilter
+}
+
+input TeacherOrderByInput {
+  id: OrderDirection
+  name: OrderDirection
+  description: OrderDirection
+}
+
+input TeacherUpdateInput {
+  name: String
+  description: String
+  image: ImageFieldInput
+  courses: CourseRelateToManyForUpdateInput
+}
+
+input ImageFieldInput {
+  upload: Upload!
+}
+
+"""The `Upload` scalar type represents a file upload."""
+scalar Upload
+
+input TeacherUpdateArgs {
+  where: TeacherWhereUniqueInput!
+  data: TeacherUpdateInput!
+}
+
+input TeacherCreateInput {
+  name: String
+  description: String
+  image: ImageFieldInput
+  courses: CourseRelateToManyForCreateInput
+}
+
 type Coupon {
   id: ID!
   code: Int
@@ -385,6 +456,7 @@ input CouponCreateInput {
 
 type Event {
   id: ID!
+  url: String
   name: String
   description: String
   content: Event_content_Document
@@ -594,6 +666,11 @@ type Course {
   status: String
   price: Int
   priceFa: String
+  teacher: Teacher
+  rate: Int
+  image: ImageFieldOutput
+  comments(where: CommentWhereInput! = {}, orderBy: [CommentOrderByInput!]! = [], take: Int, skip: Int! = 0): [Comment!]
+  commentsCount(where: CommentWhereInput! = {}): Int
   users(where: UserWhereInput! = {}, orderBy: [UserOrderByInput!]! = [], take: Int, skip: Int! = 0): [User!]
   usersCount(where: UserWhereInput! = {}): Int
   courseItem(where: CourseItemWhereInput! = {}, orderBy: [CourseItemOrderByInput!]! = [], take: Int, skip: Int! = 0): [CourseItem!]
@@ -614,6 +691,9 @@ input CourseWhereInput {
   description: StringFilter
   status: StringNullableFilter
   price: IntNullableFilter
+  teacher: TeacherWhereInput
+  rate: IntNullableFilter
+  comments: CommentManyRelationFilter
   users: UserManyRelationFilter
   courseItem: CourseItemManyRelationFilter
 }
@@ -630,6 +710,7 @@ input CourseOrderByInput {
   description: OrderDirection
   status: OrderDirection
   price: OrderDirection
+  rate: OrderDirection
 }
 
 input CourseUpdateInput {
@@ -637,8 +718,18 @@ input CourseUpdateInput {
   description: String
   status: String
   price: Int
+  teacher: TeacherRelateToOneForUpdateInput
+  rate: Int
+  image: ImageFieldInput
+  comments: CommentRelateToManyForUpdateInput
   users: UserRelateToManyForUpdateInput
   courseItem: CourseItemRelateToManyForUpdateInput
+}
+
+input TeacherRelateToOneForUpdateInput {
+  create: TeacherCreateInput
+  connect: TeacherWhereUniqueInput
+  disconnect: Boolean
 }
 
 input CourseItemRelateToManyForUpdateInput {
@@ -658,8 +749,17 @@ input CourseCreateInput {
   description: String
   status: String
   price: Int
+  teacher: TeacherRelateToOneForCreateInput
+  rate: Int
+  image: ImageFieldInput
+  comments: CommentRelateToManyForCreateInput
   users: UserRelateToManyForCreateInput
   courseItem: CourseItemRelateToManyForCreateInput
+}
+
+input TeacherRelateToOneForCreateInput {
+  create: TeacherCreateInput
+  connect: TeacherWhereUniqueInput
 }
 
 input CourseItemRelateToManyForCreateInput {
@@ -751,6 +851,7 @@ type Category {
   id: ID!
   name: String
   description: String
+  priority: Int
   parentId(where: CategoryWhereInput! = {}, orderBy: [CategoryOrderByInput!]! = [], take: Int, skip: Int! = 0): [Category!]
   parentIdCount(where: CategoryWhereInput! = {}): Int
 }
@@ -766,6 +867,7 @@ input CategoryWhereInput {
   id: IDFilter
   name: StringFilter
   description: StringFilter
+  priority: IntNullableFilter
   parentId: CategoryManyRelationFilter
 }
 
@@ -779,11 +881,13 @@ input CategoryOrderByInput {
   id: OrderDirection
   name: OrderDirection
   description: OrderDirection
+  priority: OrderDirection
 }
 
 input CategoryUpdateInput {
   name: String
   description: String
+  priority: Int
   parentId: CategoryRelateToManyForUpdateInput
 }
 
@@ -802,6 +906,7 @@ input CategoryUpdateArgs {
 input CategoryCreateInput {
   name: String
   description: String
+  priority: Int
   parentId: CategoryRelateToManyForCreateInput
 }
 
@@ -895,9 +1000,6 @@ input FileUpdateInput {
 input FileFieldInput {
   upload: Upload!
 }
-
-"""The `Upload` scalar type represents a file upload."""
-scalar Upload
 
 input FileUpdateArgs {
   where: FileWhereUniqueInput!
@@ -1279,8 +1381,10 @@ type Comment {
   id: ID!
   comment: String
   user: User
+  course: Course
   courseItem: CourseItem
   isValidated: Boolean
+  rate: Int
   createdAt: DateTime
 }
 
@@ -1295,8 +1399,10 @@ input CommentWhereInput {
   id: IDFilter
   comment: StringFilter
   user: UserWhereInput
+  course: CourseWhereInput
   courseItem: CourseItemWhereInput
   isValidated: BooleanFilter
+  rate: IntNullableFilter
   createdAt: DateTimeNullableFilter
 }
 
@@ -1304,14 +1410,17 @@ input CommentOrderByInput {
   id: OrderDirection
   comment: OrderDirection
   isValidated: OrderDirection
+  rate: OrderDirection
   createdAt: OrderDirection
 }
 
 input CommentUpdateInput {
   comment: String
   user: UserRelateToOneForUpdateInput
+  course: CourseRelateToOneForUpdateInput
   courseItem: CourseItemRelateToOneForUpdateInput
   isValidated: Boolean
+  rate: Int
   createdAt: DateTime
 }
 
@@ -1329,8 +1438,10 @@ input CommentUpdateArgs {
 input CommentCreateInput {
   comment: String
   user: UserRelateToOneForCreateInput
+  course: CourseRelateToOneForCreateInput
   courseItem: CourseItemRelateToOneForCreateInput
   isValidated: Boolean
+  rate: Int
   createdAt: DateTime
 }
 
@@ -1351,6 +1462,12 @@ type Mutation {
   updateUsers(data: [UserUpdateArgs!]!): [User]
   deleteUser(where: UserWhereUniqueInput!): User
   deleteUsers(where: [UserWhereUniqueInput!]!): [User]
+  createTeacher(data: TeacherCreateInput!): Teacher
+  createTeachers(data: [TeacherCreateInput!]!): [Teacher]
+  updateTeacher(where: TeacherWhereUniqueInput!, data: TeacherUpdateInput!): Teacher
+  updateTeachers(data: [TeacherUpdateArgs!]!): [Teacher]
+  deleteTeacher(where: TeacherWhereUniqueInput!): Teacher
+  deleteTeachers(where: [TeacherWhereUniqueInput!]!): [Teacher]
   createCoupon(data: CouponCreateInput!): Coupon
   createCoupons(data: [CouponCreateInput!]!): [Coupon]
   updateCoupon(where: CouponWhereUniqueInput!, data: CouponUpdateInput!): Coupon
@@ -1475,6 +1592,9 @@ type Query {
   users(where: UserWhereInput! = {}, orderBy: [UserOrderByInput!]! = [], take: Int, skip: Int! = 0): [User!]
   user(where: UserWhereUniqueInput!): User
   usersCount(where: UserWhereInput! = {}): Int
+  teachers(where: TeacherWhereInput! = {}, orderBy: [TeacherOrderByInput!]! = [], take: Int, skip: Int! = 0): [Teacher!]
+  teacher(where: TeacherWhereUniqueInput!): Teacher
+  teachersCount(where: TeacherWhereInput! = {}): Int
   coupons(where: CouponWhereInput! = {}, orderBy: [CouponOrderByInput!]! = [], take: Int, skip: Int! = 0): [Coupon!]
   coupon(where: CouponWhereUniqueInput!): Coupon
   couponsCount(where: CouponWhereInput! = {}): Int

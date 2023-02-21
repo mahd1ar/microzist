@@ -4,6 +4,7 @@ import {
     text,
     relationship,
     virtual,
+    image,
 } from '@keystone-6/core/fields';
 import { list } from '@keystone-6/core';
 import { allOperations, allowAll } from '@keystone-6/core/access';
@@ -29,7 +30,7 @@ export const Course = list({
                 else
                     return {
                         status: {
-                            equals: 'DRAFT',
+                            equals: 'AVAILABLE',
                         },
                     };
             },
@@ -63,6 +64,18 @@ export const Course = list({
                     return `${formatMoney(item.price)}`;
                 },
             }),
+        }),
+        teacher: relationship({ ref: 'Teacher.courses', ui: { labelField: 'name' } }),
+        rate: integer({ defaultValue: 3 }),
+        image: image({
+            storage: 'images',
+        }),
+        comments: relationship({
+            ref: 'Comment.course',
+            many: true,
+            ui: {
+                // displayMode: 'count',
+            },
         }),
         users: relationship({
             ref: 'User.courses',

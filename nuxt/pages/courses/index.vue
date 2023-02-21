@@ -35,15 +35,9 @@ const courses = useQuery<CoursesQuery>(COURCES)
 
 async function addToCart(cid: string, cname: string) {
   if (store.getters.isLoggedIn) {
-    try {
-      const { data } = await ctx.$axios.post<GeneralApiResponse>('/cart-item', {
-        cid,
-      })
-
-      showGeneralApiMessage(data, ctx)
-    } catch (error) {
-      console.error(error)
-    }
+    await ctx.$axios.post<GeneralApiResponse>('/cart-item', {
+      cid,
+    })
   } else {
     // @ts-ignore
 
