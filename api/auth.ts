@@ -17,9 +17,10 @@
 
 import { randomBytes } from 'crypto';
 import { createAuth } from '@keystone-6/auth';
-
+import path from 'path';
+import fs from 'fs';
 // see https://keystonejs.com/docs/apis/session for the session docs
-import { statelessSessions } from '@keystone-6/core/session';
+import { statelessSessions, storedSessions } from '@keystone-6/core/session';
 import { sendResetPasswordEmail } from './email/resetpassword';
 
 // for a stateless session, a SESSION_SECRET should always be provided
@@ -32,6 +33,11 @@ if (!sessionSecret && process.env.NODE_ENV !== 'production') {
     sessionSecret = randomBytes(32).toString('hex');
 }
 
+const sessionDir = path.join(process.cwd(), 'sessions');
+
+if (fs.existsSync(sessionDir) === false) {
+    fs.mkdirSync(sessionDir);
+}
 // withAuth is a function we can use to wrap our base configuration
 const { withAuth } = createAuth({
     listKey: 'User',
@@ -73,8 +79,34 @@ const { withAuth } = createAuth({
 const sessionMaxAge = 60 * 60 * 24 * 30;
 
 // you can find out more at https://keystonejs.com/docs/apis/session#session-api
-const session = statelessSessions({
-    maxAge: sessionMaxAge,
+// const session = statelessSessions({
+//     maxAge: sessionMaxAge,
+//     secret: sessionSecret!,
+// });
+const session = storedSessions({
+    store: ({ maxAge }) => ({
+        async get(key) {
+            if (fs.existsSync(path.join(sessionDir, key + '.json'))) {
+                const filedata = JSON.parse(
+                    fs
+                        .readFileSync(path.join(sessionDir, key + '.json'))
+                        .toString()
+                );
+                return filedata.value;
+            } else console.log('session dose not exists');
+        },
+        async set(key, value) {
+            fs.writeFileSync(
+                path.join(sessionDir, key + '.json'),
+                JSON.stringify({ maxAge, value })
+            );
+        },
+        async delete(key) {
+            if (fs.existsSync(path.join(sessionDir, key + '.json'))) {
+                fs.unlinkSync(path.join(sessionDir, key + '.json'));
+            }
+        },
+    }),
     secret: sessionSecret!,
 });
 

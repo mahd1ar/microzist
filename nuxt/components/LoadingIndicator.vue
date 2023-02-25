@@ -1,7 +1,7 @@
 <template>
   <div>
     <transition name="fade" mode="out-in">
-      <MotionDNA class="h-96" v-if="loading" />
+      <MotionDNA :color="color" class="h-96" v-if="loading" />
       <div v-else>
         <slot />
       </div>
@@ -13,10 +13,14 @@
 import MotionDNA from '@/components/misc/MotionDNA.vue'
 import { PropType } from 'vue'
 
-const { loading } = defineProps({
+const { loading, color } = defineProps({
   loading: {
     type: Boolean as PropType<boolean>,
     required: true
+  },
+
+  color: {
+    type: String
   }
 })
 </script>

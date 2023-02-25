@@ -1,0 +1,17 @@
+query myProfile($id: ID!) {
+  user(where: { id: $id }) {
+    id
+    name
+    lastName
+    email
+    orders {
+      id
+      totalCost
+      paymentStatus
+      orderDate
+    }
+    coursesCount
+    commentsCount
+    eventsCount
+  }
+}

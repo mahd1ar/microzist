@@ -26,6 +26,15 @@ declare module '*/signin.gql' {
 }
     
 
+declare module '*/update-my-info.gql' {
+  import { DocumentNode } from 'graphql';
+  const defaultDocument: DocumentNode;
+  export const updateMyInfo: DocumentNode;
+
+  export default defaultDocument;
+}
+    
+
 declare module '*/authitem.gql' {
   import { DocumentNode } from 'graphql';
   const defaultDocument: DocumentNode;
@@ -48,6 +57,15 @@ declare module '*/course-item.gql' {
   import { DocumentNode } from 'graphql';
   const defaultDocument: DocumentNode;
   export const courseItem: DocumentNode;
+
+  export default defaultDocument;
+}
+    
+
+declare module '*/course-items.gql' {
+  import { DocumentNode } from 'graphql';
+  const defaultDocument: DocumentNode;
+  export const courseItems: DocumentNode;
 
   export default defaultDocument;
 }
@@ -93,6 +111,24 @@ declare module '*/my-courses.gql' {
   import { DocumentNode } from 'graphql';
   const defaultDocument: DocumentNode;
   export const myCourses: DocumentNode;
+
+  export default defaultDocument;
+}
+    
+
+declare module '*/my-profile.gql' {
+  import { DocumentNode } from 'graphql';
+  const defaultDocument: DocumentNode;
+  export const myProfile: DocumentNode;
+
+  export default defaultDocument;
+}
+    
+
+declare module '*/order.gql' {
+  import { DocumentNode } from 'graphql';
+  const defaultDocument: DocumentNode;
+  export const order: DocumentNode;
 
   export default defaultDocument;
 }

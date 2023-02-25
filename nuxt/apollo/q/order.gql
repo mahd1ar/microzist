@@ -1,0 +1,8 @@
+query order($id: ID!) {
+  order(where: { id: $id }) {
+    id
+    totalCost
+    trackId
+    orderDate
+  }
+}

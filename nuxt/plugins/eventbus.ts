@@ -19,7 +19,12 @@ declare module '@nuxt/types' {
 
 type Events = {
   languageSwitched: ['en' | 'fa', 'fa' | 'en']
+  tabItems: {
+    name: string
+    icon: string
+  }[]
 }
+
 const eventBus: Plugin = (context, inject) => {
   const emitter = mitt<Events>()
   //   const eb = new EventBus(context)

@@ -1,7 +1,5 @@
-mutation createComment($comment: String!, $courseItem: ID!) {
-  createComment(
-    data: { comment: $comment, courseItem: { connect: { id: $courseItem } } }
-  ) {
+mutation createComment($data: CommentCreateInput!) {
+  createComment(data: $data) {
     id
   }
 }

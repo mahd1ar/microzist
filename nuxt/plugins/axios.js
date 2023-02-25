@@ -4,8 +4,12 @@ export default function (context) {
 
     context.$axios.onResponse(res => {
 
+        try {
 
-        showGeneralApiMessage(res.data, context)
+            showGeneralApiMessage(res.data, context)
+        } catch (error) {
+            console.error(error)
+        }
     })
 
     context.$axios.onError(error => {
@@ -13,7 +17,12 @@ export default function (context) {
         //   if (code === 400) {
         //   }
 
-        showGeneralError(error, context)
+        try {
+
+            showGeneralError(error, context)
+        } catch (error) {
+            console.error(error)
+        }
 
         if (code === 401) {
             redirect('/login')

@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-1">
-    <div v-for="(_, index) in starFilled" :key="index">
+    <div v-for="i in starFilled" :key="i">
       <svg class="h-5 w-5" viewBox="0 0 24 24">
         <path
           fill="currentColor"
@@ -8,8 +8,8 @@
         />
       </svg>
     </div>
-
-    <div v-for="(_, index) in starOutline" :key="index">
+    <span></span>
+    <div v-for="j in starOutline" :key="j">
       <svg class="h-5 w-5" viewBox="0 0 24 24">
         <path
           fill="currentColor"
@@ -24,10 +24,17 @@
 const { rate = 3 } = defineProps({
   rate: {
     type: Number,
-    requied: true,
-  },
+    requied: true
+  }
 })
+let counter = 1
+const starFilled = Array(rate)
+  .fill(1)
+  .map(() => counter++)
 
-const starFilled: number[] = Array(rate).fill(1)
-const starOutline: number[] = Array(5 - rate).fill(1)
+const starOutline = Array(5 - rate)
+  .fill(1)
+  .map(() => counter++)
+
+console.log(starFilled)
 </script>

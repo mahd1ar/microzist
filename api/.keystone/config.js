@@ -37,6 +37,8 @@ var import_ws = __toESM(require("ws"));
 // auth.ts
 var import_crypto = require("crypto");
 var import_auth = require("@keystone-6/auth");
+var import_path2 = __toESM(require("path"));
+var import_fs = __toESM(require("fs"));
 var import_session = require("@keystone-6/core/session");
 
 // email/resetpassword.ts
@@ -83,6 +85,10 @@ var sessionSecret = "ABCDEFGH1234567887654321HGFEDCBZ";
 if (!sessionSecret && process.env.NODE_ENV !== "production") {
   sessionSecret = (0, import_crypto.randomBytes)(32).toString("hex");
 }
+var sessionDir = import_path2.default.join(process.cwd(), "sessions");
+if (import_fs.default.existsSync(sessionDir) === false) {
+  import_fs.default.mkdirSync(sessionDir);
+}
 var { withAuth } = (0, import_auth.createAuth)({
   listKey: "User",
   identityField: "email",
@@ -103,8 +109,29 @@ var { withAuth } = (0, import_auth.createAuth)({
   }
 });
 var sessionMaxAge = 60 * 60 * 24 * 30;
-var session = (0, import_session.statelessSessions)({
-  maxAge: sessionMaxAge,
+var session = (0, import_session.storedSessions)({
+  store: ({ maxAge }) => ({
+    async get(key) {
+      if (import_fs.default.existsSync(import_path2.default.join(sessionDir, key + ".json"))) {
+        const filedata = JSON.parse(
+          import_fs.default.readFileSync(import_path2.default.join(sessionDir, key + ".json")).toString()
+        );
+        return filedata.value;
+      } else
+        console.log("session dose not exists");
+    },
+    async set(key, value) {
+      import_fs.default.writeFileSync(
+        import_path2.default.join(sessionDir, key + ".json"),
+        JSON.stringify({ maxAge, value })
+      );
+    },
+    async delete(key) {
+      if (import_fs.default.existsSync(import_path2.default.join(sessionDir, key + ".json"))) {
+        import_fs.default.unlinkSync(import_path2.default.join(sessionDir, key + ".json"));
+      }
+    }
+  }),
   secret: sessionSecret
 });
 
@@ -126,7 +153,7 @@ function sendCommand(cmd) {
 
 // schema.ts
 var import_core18 = require("@keystone-6/core");
-var import_access20 = require("@keystone-6/core/access");
+var import_access21 = require("@keystone-6/core/access");
 var import_fields16 = require("@keystone-6/core/fields");
 var import_fields_document2 = require("@keystone-6/fields-document");
 
@@ -444,8 +471,25 @@ var Course = (0, import_core5.list)({
         }
       })
     }),
-    teacher: (0, import_fields5.relationship)({ ref: "Teacher.courses", ui: { labelField: "name" } }),
-    rate: (0, import_fields5.integer)({ defaultValue: 3 }),
+    rate: (0, import_fields5.virtual)({
+      field: import_schema3.graphql.field({
+        type: import_schema3.graphql.Float,
+        async resolve(item, _args, context) {
+          const query = await context.query.Comment.findMany({
+            where: {
+              course: { id: { equals: item.id.toString() } }
+            },
+            query: "rate"
+          });
+          const rates = query.filter((i) => i.rate !== -1).map((i) => i.rate);
+          return rates.length === 0 ? 3 : rates.reduce((total, item2) => total += item2, 0) / rates.length;
+        }
+      })
+    }),
+    teacher: (0, import_fields5.relationship)({
+      ref: "Teacher.courses",
+      ui: { labelField: "name" }
+    }),
     image: (0, import_fields5.image)({
       storage: "images"
     }),
@@ -549,13 +593,28 @@ var import_access9 = require("@keystone-6/core/access");
 var import_fields7 = require("@keystone-6/core/fields");
 var roleKeys = Object.keys(Roles);
 var roleValues = Object.values(Roles);
-var RolesItem = roleKeys.map((key, index) => ({ label: key, value: roleValues[index] }));
-console.log(RolesItem);
+var RolesItem = roleKeys.map((key, index) => ({
+  label: key,
+  value: roleValues[index]
+}));
 var User = (0, import_core7.list)({
   access: {
     operation: {
       ...(0, import_access9.allOperations)(isAdmin),
-      query: () => true
+      query: () => true,
+      update: () => true
+    },
+    filter: {
+      update: (args) => {
+        if (args.session && args.session?.data.role === "0")
+          return true;
+        else
+          return {
+            id: {
+              equals: args.session?.itemId
+            }
+          };
+      }
     }
   },
   ui: {},
@@ -743,7 +802,6 @@ var Coupon = (0, import_core12.list)({
 // schemas/Event.ts
 var import_schema5 = require("@graphql-ts/schema");
 var import_core15 = require("@keystone-6/core");
-var import_access16 = require("@keystone-6/core/access");
 var import_fields13 = require("@keystone-6/core/fields");
 
 // schemas/component-blocks/hero.tsx
@@ -1012,8 +1070,25 @@ function wordifyMomentApprox(date, baseDate, suffixBefore = "\u067E\u06CC\u0634"
 
 // schemas/Event.ts
 var import_fields_document = require("@keystone-6/fields-document");
+var import_access16 = require("@keystone-6/core/access");
 var Event = (0, import_core15.list)({
-  access: import_access16.allowAll,
+  access: {
+    operation: {
+      ...(0, import_access16.allOperations)(isAdmin),
+      query: () => true,
+      update: isLoggedIn
+    }
+  },
+  hooks: {
+    validateInput(args) {
+      console.log("args.resolvedData");
+      console.log(args.resolvedData);
+      console.log("args.item");
+      console.log(args.item);
+      console.log("args.inputData");
+      console.log(args.inputData);
+    }
+  },
   fields: {
     url: (0, import_fields13.virtual)({
       field: import_schema5.graphql.field({
@@ -1055,7 +1130,8 @@ var Event = (0, import_core15.list)({
       field: import_schema5.graphql.field({
         type: import_schema5.graphql.String,
         async resolve(item) {
-          return item.price ? `${wordifyfa(item.price)} \u062A\u0648\u0645\u0627\u0646 ` : "\u0631\u0627\u06CC\u06AF\u0627\u0646";
+          const { price } = item;
+          return price ? `${wordifyfa(price)} \u062A\u0648\u0645\u0627\u0646 ` : "\u0631\u0627\u06CC\u06AF\u0627\u0646";
         }
       })
     }),
@@ -1088,8 +1164,15 @@ var Event = (0, import_core15.list)({
         createView: { fieldMode: "hidden" }
       }
     }),
-    from: persianCalendar(),
-    to: persianCalendar(),
+    from: persianCalendar({
+      label: "starting date"
+    }),
+    to: persianCalendar({
+      label: "ending date"
+    }),
+    registrationDeadline: persianCalendar({
+      label: "\u0622\u062E\u0631\u06CC\u0646 \u0645\u0647\u0644\u062A \u062B\u0628\u062A \u0646\u0627\u0645"
+    }),
     location: (0, import_fields13.text)(),
     users: (0, import_fields13.relationship)({
       ref: "User.events",
@@ -1122,6 +1205,32 @@ var Event = (0, import_core15.list)({
           if (context.session.itemId === users[0].id)
             return true;
           return false;
+        }
+      })
+    }),
+    isUpcomming: (0, import_fields13.virtual)({
+      field: import_schema5.graphql.field({
+        type: import_schema5.graphql.Boolean,
+        async resolve(item, _) {
+          const { from } = item;
+          if (!from)
+            return false;
+          const todayEpoch = ~~(new Date().getTime() / 1e3);
+          const fromEpoch = new Date(from + "T06:00").getTime() / 1e3;
+          return todayEpoch < fromEpoch;
+        }
+      })
+    }),
+    isOpen: (0, import_fields13.virtual)({
+      field: import_schema5.graphql.field({
+        type: import_schema5.graphql.Boolean,
+        async resolve(item, _) {
+          const { registrationDeadline } = item;
+          if (!registrationDeadline)
+            return false;
+          const todayEpoch = ~~(new Date().getTime() / 1e3);
+          const deadlineDate = new Date(registrationDeadline + "T06:00").getTime() / 1e3;
+          return todayEpoch <= deadlineDate;
         }
       })
     })
@@ -1175,11 +1284,11 @@ var Comment = (0, import_core16.list)({
 // schemas/Teacher.ts
 var import_fields15 = require("@keystone-6/core/fields");
 var import_core17 = require("@keystone-6/core");
-var import_access18 = require("@keystone-6/core/access");
+var import_access19 = require("@keystone-6/core/access");
 var Teacher = (0, import_core17.list)({
   access: {
     operation: {
-      ...(0, import_access18.allOperations)(isAdmin),
+      ...(0, import_access19.allOperations)(isAdmin),
       query: () => true
     }
   },
@@ -1213,7 +1322,7 @@ var lists = {
         }
       },
       operation: {
-        ...(0, import_access20.allOperations)(import_access20.allowAll),
+        ...(0, import_access21.allOperations)(import_access21.allowAll),
         query: (args) => {
           return true;
         }
@@ -1291,7 +1400,7 @@ var storage = {
   local: {
     kind: "local",
     type: "file",
-    generateUrl: (path2) => `${baseUrl}/files${path2}`,
+    generateUrl: (path3) => `${baseUrl}/files${path3}`,
     serverRoute: {
       path: "/files"
     },
@@ -1300,7 +1409,7 @@ var storage = {
   images: {
     kind: "local",
     type: "image",
-    generateUrl: (path2) => `${baseUrl}/images${path2}`,
+    generateUrl: (path3) => `${baseUrl}/images${path3}`,
     serverRoute: {
       path: "/images"
     },
@@ -1329,12 +1438,15 @@ var keystone_default = withAuth(
       playground: true
     },
     server: {
-      cors: { origin: ["http://localhost:5173"], credentials: true },
+      cors: {
+        origin: ["http://localhost:5173", "http://localhost:5173/"],
+        credentials: true
+      },
       port: 3030,
       extendExpressApp: (app, ctx) => {
         app.use(import_body_parser.default.json());
         app.use((req, res, next) => {
-          const path2 = req.path;
+          const path3 = req.path;
           next();
         });
         app.get("/setadmin", async (req, res) => {
@@ -1358,16 +1470,18 @@ var keystone_default = withAuth(
               });
               res.send("userUpdated");
             } else if (userCount === 0) {
-              const { name } = await sudoctx.query.User.createOne({
-                data: {
-                  name: "admin",
-                  lastName: "administrator",
-                  email: "a.mahdiyar7@yahoo.com",
-                  password: "Aa12345678",
-                  role: "0" /* admin */
-                },
-                query: "id name lastName email"
-              });
+              const { name } = await sudoctx.query.User.createOne(
+                {
+                  data: {
+                    name: "admin",
+                    lastName: "administrator",
+                    email: "a.mahdiyar7@yahoo.com",
+                    password: "Aa12345678",
+                    role: "0" /* admin */
+                  },
+                  query: "id name lastName email"
+                }
+              );
               res.send(name + "created");
             } else {
               res.send(":(");
@@ -1487,6 +1601,7 @@ var keystone_default = withAuth(
           }
         });
         app.post("/auth-item", async (req, res) => {
+          console.log(await session.get({ context: ctx }));
           console.log(!!ctx.session ? "loggedin" : "not loggedin");
           if (ctx.session) {
             const session2 = ctx.session;
@@ -1500,11 +1615,11 @@ var keystone_default = withAuth(
               );
               res.json(user);
             } catch (error) {
-              res.send(void 0);
+              res.json({});
               console.error(error);
             }
           } else
-            res.send(void 0);
+            res.json({});
         });
         app.delete(
           "/cart-item",
@@ -1782,7 +1897,10 @@ var keystone_default = withAuth(
               res.redirect(response.paymentUrl);
             } catch (error) {
               console.error(error);
-              res.status(500).json({ ok: false, message: String(error) });
+              res.status(500).json({
+                ok: false,
+                message: String(error)
+              });
             }
           }
         );

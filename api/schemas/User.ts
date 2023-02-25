@@ -9,19 +9,37 @@ import {
 } from '@keystone-6/core/fields';
 import { isAdmin } from '../data/access';
 import { Roles } from '../data/enums';
+import { GeneralSession } from '../data/types';
 // import { permissions, rules } from "../access";
 
-const roleKeys = Object.keys(Roles)
-const roleValues = Object.values(Roles)
-const RolesItem = roleKeys.map((key, index) => ({ label: key, value: roleValues[index] }))
-
-console.log(RolesItem)
+const roleKeys = Object.keys(Roles);
+const roleValues = Object.values(Roles);
+const RolesItem = roleKeys.map((key, index) => ({
+    label: key,
+    value: roleValues[index],
+}));
 
 export const User = list({
     access: {
         operation: {
             ...allOperations(isAdmin),
             query: () => true,
+            update: () => true,
+        },
+        filter: {
+            update: (args) => {
+                if (
+                    args.session &&
+                    (args.session as GeneralSession)?.data.role === '0'
+                )
+                    return true;
+                else
+                    return {
+                        id: {
+                            equals: (args.session as GeneralSession)?.itemId,
+                        },
+                    };
+            },
         },
     },
     ui: {
@@ -53,7 +71,7 @@ export const User = list({
         orders: relationship({ ref: 'Order.user', many: true }),
         role: select({
             options: RolesItem,
-            defaultValue: '100'
+            defaultValue: '100',
         }),
         courses: relationship({
             ref: 'Course.users',

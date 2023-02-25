@@ -50,7 +50,7 @@ export default defineComponent({
     onMounted(async () => {
       // ctx.$axios.post('/signout', {}, { withCredentials: true })
       await mutate()
-      await mutate()
+      // await mutate()
     })
 
     return {

@@ -65,8 +65,38 @@ export const Course = list({
                 },
             }),
         }),
-        teacher: relationship({ ref: 'Teacher.courses', ui: { labelField: 'name' } }),
-        rate: integer({ defaultValue: 3 }),
+        rate: virtual({
+            field: graphql.field({
+                type: graphql.Float,
+                // @ts-ignore
+                async resolve(
+                    item,
+                    _args,
+                    context: KeystoneContext<BaseKeystoneTypeInfo>
+                ) {
+                    const query = await context.query.Comment.findMany({
+                        where: {
+                            course: { id: { equals: item.id.toString() } },
+                        },
+                        query: 'rate',
+                    });
+
+                    const rates: number[] = query
+                        .filter((i) => i.rate !== -1)
+                        .map((i) => i.rate);
+
+                    return rates.length === 0
+                        ? 3
+                        : rates.reduce((total, item) => (total += item), 0) /
+                              rates.length;
+                },
+            }),
+        }),
+        teacher: relationship({
+            ref: 'Teacher.courses',
+            ui: { labelField: 'name' },
+        }),
+        // rate: integer({ defaultValue: 3 }),
         image: image({
             storage: 'images',
         }),

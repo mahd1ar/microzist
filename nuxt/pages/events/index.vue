@@ -1,107 +1,110 @@
 <template>
-  <section class="body-font text-gray-600">
-    <div class="container mx-auto px-5 py-24">
-      <div
-        v-if="eventsquery.result && eventsquery.result?.value"
-        class="-m-4 flex flex-wrap"
-      >
+  <section class=" text-gray-600 ">
+    <div class="container mt-12">
+      <h2 class="text-3xl">fa::upcomming Events</h2>
+
+      <!-- <div class="bg-slate-900 text-slate-50 border rounded-xl p-6 relative">
+        <div class="flex justify-between">
+          <div>
+            <h1 class="text-4xl ">dorehami 2</h1>
+            <div>
+
+            </div>
+          </div>
+          <div>2</div>
+        </div>
+      </div> -->
+
+      <!-- component -->
+      <div class="mx-auto mt-10">
         <div
-          v-for="ev in eventsquery.result.value.events || []"
-          :key="ev.id"
-          class="p-4 md:w-1/3"
+          class="flex flex-col w-full bg-white rounded shadow-lg sm:w-3/4 md:w-1/2 lg:w-3/5"
         >
           <div
-            class="h-full overflow-hidden rounded-lg border-2 border-gray-200 border-opacity-60"
-          >
-            <img
-              class="w-full object-cover object-center md:h-36 lg:h-48"
-              src="https://dummyimage.com/720x400"
-              alt="blog"
-            />
-            <div class="p-6">
-              <h2
-                class="title-font mb-1 text-xs font-medium tracking-widest text-gray-400"
+            class="w-full h-64 bg-top bg-cover rounded-t"
+            style="background-image: url(https://images.unsplash.com/photo-1675747150294-0376b8c69e52?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1vZi10aGUtZGF5fHx8fGVufDB8fHx8&dpr=2&auto=format%2Ccompress&fit=crop&w=599&h=310)"
+          ></div>
+          <div class="flex flex-col w-full md:flex-row">
+            <div
+              class="flex flex-row justify-around p-4 font-bold leading-none text-slate-800 uppercase  rounded md:flex-col md:items-center md:justify-center md:w-1/4"
+            >
+              <div class="md:text-3xl">Jan</div>
+              <div class="md:text-6xl">13</div>
+              <div class="md:text-xl">7 pm</div>
+            </div>
+            <div class="p-4 font-normal text-slate-800 md:w-3/4">
+              <h1
+                class="mb-3 mt-2 text-4xl font-bold leading-none tracking-tight text-slate-800"
               >
-                CATEGORY
-              </h2>
-              <h1 class="title-font mb-3 text-lg font-medium text-gray-900">
-                {{ ev.name }}
+                2020 National Championship
               </h1>
-              <p class="mb-3 leading-relaxed">
-                Photo booth fam kinfolk cold-pressed sriracha leggings jianbing
-                microdosing tousled waistcoat.
+              <p class="leading-normal">
+                The College Football Playoff (CFP) determines the national
+                champion of the top division of college football. The format
+                fits within the academic calendar and preserves the sport’s
+                unique and compelling regular season.
               </p>
-              <!-- is accessable -->
-              <div>
-                <button
-                  @click="addToCart(ev.id, ev.name || '')"
-                  v-if="!ev.isAccessible && (ev.remaining || 0) > 0"
-                  class="rounded bg-green-100 px-2 py-1 font-bold text-green-600"
-                >
-                  add to cart
-                </button>
-                <div v-if="ev.remaining === 0">
-                  fa::zarfiyat class takmil shode
+              <div class="flex flex-row items-center mt-4 text-gray-700">
+                <div class="w-1/2 text-lg">
+                  هزینه :
+                  <strong>
+                    400000 تومان
+                  </strong>
                 </div>
-                <div v-if="ev.isAccessible">
-                  fa::u are participated in this event
+                <div class="w-1/2"></div>
+                <div class="w-1/2 flex justify-end">
+                  <nuxt-link
+                    class="flex gap-1 items-center bg-slate-100 rounded px-2 py-1 hover:bg-slate-200"
+                    to="/"
+                  >
+                    مشاهده رویداد
+                    <svg class="w-4 h-4" viewBox="0 0 24 24">
+                      <path
+                        fill="currentColor"
+                        d="M10 22L0 12L10 2l1.775 1.775L3.55 12l8.225 8.225Z"
+                      />
+                    </svg>
+                  </nuxt-link>
                 </div>
-              </div>
-              <div class="flex flex-wrap items-center">
-                <nuxt-link
-                  :to="'/events/' + ev.id"
-                  class="inline-flex items-center text-indigo-500 md:mb-2 lg:mb-0"
-                  >Learn More
-                  <svg
-                    class="ml-2 h-4 w-4"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    fill="none"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="M5 12h14"></path>
-                    <path d="M12 5l7 7-7 7"></path>
-                  </svg>
-                </nuxt-link>
-                <span
-                  class="mr-3 ml-auto inline-flex items-center border-r-2 border-gray-200 py-1 pr-3 text-sm leading-none text-gray-400 md:ml-0 lg:ml-auto"
-                >
-                  <svg
-                    class="mr-1 h-4 w-4"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    fill="none"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-                    ></path>
-                    <circle cx="12" cy="12" r="3"></circle></svg
-                  >1.2K
-                </span>
-                <span
-                  class="inline-flex items-center text-sm leading-none text-gray-400"
-                >
-                  <svg
-                    class="mr-1 h-4 w-4"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    fill="none"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"
-                    ></path></svg
-                  >6
-                </span>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <h2 class="text-3xl mt-16 mb-10 container">رویدادهای برگزار شده</h2>
+    <div class="container mx-auto ">
+      <div
+        v-if="eventsquery.result && eventsquery.result?.value"
+        class=" flex flex-wrap"
+      >
+        <div class="grid grid-cols-2 gap-2">
+          <div
+            v-for="ev in eventsquery.result.value.events || []"
+            :key="ev.id"
+            class=""
+          >
+            <a
+              href="#"
+              class="flex p-4 flex-col items-center gap-4 border  rounded-lg shadow md:flex-row md:max-w-xl  border-gray-700 bg-gray-800 hover:bg-gray-700"
+            >
+              <img
+                class="object-cover w-full rounded-t-lg h-96 md:h-auto md:w-48 md:rounded-none md:rounded-l-lg"
+                src="https://images.unsplash.com/photo-1675747150294-0376b8c69e52?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1vZi10aGUtZGF5fHx8fGVufDB8fHx8&dpr=2&auto=format%2Ccompress&fit=crop&w=599&h=310"
+                alt=""
+              />
+              <div class="flex flex-col justify-between  leading-normal">
+                <h5
+                  class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white"
+                >
+                  Noteworthy technology acquisitions 2021
+                </h5>
+                <p class="mb-3 font-normal  text-gray-400">
+                  Here are the biggest enterprise technology acquisitions of
+                  2021 so far, in reverse chronological order.
+                </p>
+              </div>
+            </a>
           </div>
         </div>
       </div>
@@ -123,15 +126,9 @@ const ctx = useContext()
 
 async function addToCart (eventid: string, eventname: string) {
   if (ctx.store.getters.isLoggedIn) {
-    try {
-      const { data } = await ctx.$axios.post<GeneralApiResponse>('/cart-item', {
-        eventid
-      })
-
-      showGeneralApiMessage(data, ctx)
-    } catch (error) {
-      console.error(error)
-    }
+    await ctx.$axios.post<GeneralApiResponse>('/cart-item', {
+      eventid
+    })
   } else {
     // @ts-ignore
 

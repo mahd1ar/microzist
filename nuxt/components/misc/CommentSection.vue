@@ -1,6 +1,11 @@
 <template>
   <div
-    class="rounded border border-yellow-500 bg-yellow-100 p-6 py-4 text-yellow-700"
+    id="comment-section"
+    class="rounded border p-6 py-4 "
+    :class="{
+      'border-yellow-500 bg-yellow-100 text-yellow-700': theme === 'gold',
+      'border-gray-300 bg-gray-100 text-gray-700': theme === 'gray'
+    }"
   >
     <div class="font-bol text-lg text-yellow-700">
       <span v-if="$store.getters.isLoggedIn"> دیدگاه من </span>
@@ -50,9 +55,14 @@
         id=""
         cols="30"
         rows="3"
+        v-model="comment"
       ></textarea>
 
-      <button class="flex items-center gap-4 bg-yellow-50 px-4 py-2">
+      <button
+        @click="submitComment"
+        class="flex items-center gap-4  px-4 py-2"
+        :class="{ 'bg-yellow-50': theme === 'gold' }"
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="1em"
@@ -71,11 +81,78 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from '@nuxtjs/composition-api'
+import { ref, PropType, useContext } from '@nuxtjs/composition-api'
+import CREATE_COMMENT from '@/apollo/m/create-comment.gql'
+import { useMutation } from '@vue/apollo-composable/dist'
+import {
+  CreateCommentMutation,
+  CreateCommentMutationVariables
+} from '@/types/types'
+
+const { theme = 'gold', widthStars = true, target, targetId } = defineProps({
+  theme: {
+    type: String as PropType<'gray' | 'gold'>
+  },
+  widthStars: { type: Boolean },
+  target: {
+    type: String as PropType<'course' | 'courseItem'>,
+    required: true
+  },
+  targetId: {
+    type: String,
+    required: true
+  }
+})
 
 const star = ref(3)
+const comment = ref('')
 
-function rate(i: number) {
+const ctx = useContext()
+
+const { onDone, mutate } = useMutation<
+  CreateCommentMutation,
+  CreateCommentMutationVariables
+>(CREATE_COMMENT)
+
+function rate (i: number) {
   star.value = i
+}
+
+onDone(() => {
+  // TODO toast
+  alert('fa:: Comment saved')
+  // reset comment
+  ;(comment.value = ''), (star.value = 3)
+})
+
+function submitComment () {
+  const commentInput: CreateCommentMutationVariables = {
+    data: {
+      comment: null,
+      user: {
+        connect: {
+          id: null
+        }
+      }
+    }
+  }
+
+  if (comment.value.trim() === '') {
+    // TODO
+    alert('empty comment')
+    return
+  }
+
+  commentInput.data.comment = comment.value.trim()
+  commentInput.data.user!.connect!.id = ctx.store.getters.user.id
+
+  if (target === 'course')
+    commentInput.data.course = { connect: { id: targetId } }
+  else if (target === 'courseItem')
+    commentInput.data.courseItem = { connect: { id: targetId } }
+  debugger
+  if (widthStars) commentInput.data.rate = star.value
+
+  mutate(commentInput)
 }
 </script>

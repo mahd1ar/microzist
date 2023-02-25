@@ -467,10 +467,13 @@ type Event {
   status: String
   from: String
   to: String
+  registrationDeadline: String
   location: String
   users(where: UserWhereInput! = {}, orderBy: [UserOrderByInput!]! = [], take: Int, skip: Int! = 0): [User!]
   usersCount(where: UserWhereInput! = {}): Int
   isAccessible: Boolean
+  isUpcomming: Boolean
+  isOpen: Boolean
 }
 
 type Event_content_Document {
@@ -510,6 +513,7 @@ input EventOrderByInput {
   status: OrderDirection
   from: OrderDirection
   to: OrderDirection
+  registrationDeadline: OrderDirection
   location: OrderDirection
 }
 
@@ -522,6 +526,7 @@ input EventUpdateInput {
   status: String
   from: String
   to: String
+  registrationDeadline: String
   location: String
   users: UserRelateToManyForUpdateInput
 }
@@ -547,6 +552,7 @@ input EventCreateInput {
   status: String
   from: String
   to: String
+  registrationDeadline: String
   location: String
   users: UserRelateToManyForCreateInput
 }
@@ -666,8 +672,8 @@ type Course {
   status: String
   price: Int
   priceFa: String
+  rate: Float
   teacher: Teacher
-  rate: Int
   image: ImageFieldOutput
   comments(where: CommentWhereInput! = {}, orderBy: [CommentOrderByInput!]! = [], take: Int, skip: Int! = 0): [Comment!]
   commentsCount(where: CommentWhereInput! = {}): Int
@@ -692,7 +698,6 @@ input CourseWhereInput {
   status: StringNullableFilter
   price: IntNullableFilter
   teacher: TeacherWhereInput
-  rate: IntNullableFilter
   comments: CommentManyRelationFilter
   users: UserManyRelationFilter
   courseItem: CourseItemManyRelationFilter
@@ -710,7 +715,6 @@ input CourseOrderByInput {
   description: OrderDirection
   status: OrderDirection
   price: OrderDirection
-  rate: OrderDirection
 }
 
 input CourseUpdateInput {
@@ -719,7 +723,6 @@ input CourseUpdateInput {
   status: String
   price: Int
   teacher: TeacherRelateToOneForUpdateInput
-  rate: Int
   image: ImageFieldInput
   comments: CommentRelateToManyForUpdateInput
   users: UserRelateToManyForUpdateInput
@@ -750,7 +753,6 @@ input CourseCreateInput {
   status: String
   price: Int
   teacher: TeacherRelateToOneForCreateInput
-  rate: Int
   image: ImageFieldInput
   comments: CommentRelateToManyForCreateInput
   users: UserRelateToManyForCreateInput

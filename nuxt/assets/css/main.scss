@@ -2,14 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-// @layer base {
-// html {
-//   @apply ltr:font-lato rtl:font-yekan;
-// }
-// img:not(div.content img) {
-//   @apply w-full h-full object-cover;
-// }
-// }
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+  // img:not(div.content img) {
+  //   @apply w-full h-full object-cover;
+  // }
+}
 
 @layer components {
   .flex-center {

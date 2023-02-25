@@ -63,6 +63,7 @@ model Event {
   status               String?     @default("DRAFT")
   from                 String?
   to                   String?
+  registrationDeadline String?
   location             String      @default("")
   users                User[]      @relation("Event_users")
   from_CartItem_event  CartItem[]  @relation("CartItem_event")
@@ -91,7 +92,6 @@ model Course {
   price                 Int?
   teacher               Teacher?     @relation("Course_teacher", fields: [teacherId], references: [id])
   teacherId             String?      @map("teacher")
-  rate                  Int?         @default(3)
   image_filesize        Int?
   image_extension       String?
   image_width           Int?

@@ -54,32 +54,26 @@ export const mutations: MutationTree<RootState> = {
 }
 
 export const actions: ActionTree<RootState, RootState> = {
-  async nuxtServerInit({ commit, dispatch }, ctx: Context) {
-    // if (
-    //   ctx.route.path === '/en/pich-gostar/index2' ||
-    //   ctx.route.path === '/pich-gostar/index2'
-    // ) {
-    //   await dispatch('toggleNav', false)
+  async nuxtServerInit({ dispatch }, ctx: Context) {
+    
+    if (ctx.route.path !== '/auth-item')
+      ctx.redirect('/auth-item?go=' + encodeURIComponent(ctx.route.path))
+    // const { data } = await ctx.app.$axios.post('/auth-item', {
+    //   withCredentials: true,
+    // })
+    // console.log({ data })
+    // if (data) {
+    //   // user is logged in
+    //   const user: RootState['user'] = {
+    //     id: data.id,
+    //     email: data.email || '',
+    //     name: data.name || '',
+    //     lastName: data.lastName || '',
+    //   }
+    //   await dispatch('toggleUser', user)
+    // } else {
+    //   await dispatch('toggleUser', false)
     // }
-
-    const { data } = await ctx.app.$axios.post(
-      'http://localhost:3030/auth-item',
-      { withCredentials: true }
-    )
-    console.log({ data })
-    if (data) {
-      // user is logged in
-      const user: RootState['user'] = {
-        id: data.id,
-        email: data.email || '',
-        name: data.name || '',
-        lastName: data.lastName || '',
-      }
-      await dispatch('toggleUser', user)
-    } else {
-      await dispatch('toggleUser', false)
-    }
-
     // const data = res.data as MainNavQuery
     // const navItem: NavItem[] = data
     //   .menus!.edges!.map((e) =>
@@ -91,7 +85,6 @@ export const actions: ActionTree<RootState, RootState> = {
     //     }))
     //   )
     //   .flat()
-
     // commit('ADD_NAV', navItem)
   },
   async addNav({ commit }, newlang: NavItem[]) {

@@ -1,5 +1,11 @@
 <template>
-  <div class="relative flex  items-center justify-center bg-[#161616]">
+  <!-- bg-[#161616] -->
+  <div
+    :style="{
+      '--strand-color-alt': props.color || '#059669'
+    }"
+    class="relative flex  items-center justify-center "
+  >
     <div class="dna" style="--strands: 16">
       <div class="strand" style="--s: 0"></div>
       <div class="strand" style="--s: 1"></div>
@@ -20,12 +26,18 @@
     </div>
   </div>
 </template>
-
+<script lang="ts" setup>
+const props = defineProps({
+  color: {
+    type: String
+  }
+})
+</script>
 <style lang="scss">
 :root {
   //   --background-color: #161616;
   --strand-color: #e6e6e6;
-  --strand-color-alt: #059669;
+  // --strand-color-alt: #059669;
   --strand-width: 2.5rem;
   --strand-height: 0.5rem;
   --strand-line: 0.125rem;

@@ -70,7 +70,7 @@ import {
   useRouter,
   ref,
   useStore,
-  useRoute,
+  useRoute
 } from '@nuxtjs/composition-api'
 import LOGIN from '@/apollo/m/signin.gql'
 import { SigninMutation, SigninMutationVariables } from '@/types/types'
@@ -82,7 +82,7 @@ import { FetchResult } from 'apollo-link'
 let prvPage: string
 
 export default defineComponent({
-  beforeRouteEnter(to, from, next) {
+  beforeRouteEnter (to, from, next) {
     prvPage = from.fullPath
 
     if (['/login', '/signup'].includes(prvPage)) {
@@ -90,7 +90,7 @@ export default defineComponent({
     }
     // if(prvPage)
 
-    next((vm) => {
+    next(vm => {
       if (vm.$store.getters.isLoggedIn) {
         // TODO defualt determain defualt route
         if (to.query.redirect === 'no') {
@@ -103,17 +103,15 @@ export default defineComponent({
       }
     })
   },
-  setup() {
+  setup () {
     const ctx = useContext()
     const route = useRoute()
     const router = useRouter()
     const store = useStore()
 
-    const {
-      mutate: loginMutation,
-      onDone,
-      onError,
-    } = useMutation<SigninMutation>(LOGIN)
+    const { mutate: loginMutation, onDone, onError } = useMutation<
+      SigninMutation
+    >(LOGIN)
 
     const onDoneLoginCallbackDebouncedFn = useDebounceFn(
       async (
@@ -152,21 +150,21 @@ export default defineComponent({
     const email = ref(ctx.isDev ? 'mahdiyaranari@gmail.com' : '')
     const password = ref(ctx.isDev ? 'Aa12345678' : '')
 
-    async function login() {
+    async function login () {
       const variables: SigninMutationVariables = {
         email: email.value,
-        password: password.value,
+        password: password.value
       }
 
       await loginMutation(variables)
-      await loginMutation(variables)
+      // await loginMutation(variables)
       // store.dispatch('toggleUser')
     }
     return {
       email,
       password,
-      login,
+      login
     }
-  },
+  }
 })
 </script>

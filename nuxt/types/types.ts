@@ -452,7 +452,7 @@ export type Course = {
   name?: Maybe<Scalars['String']>;
   price?: Maybe<Scalars['Int']>;
   priceFa?: Maybe<Scalars['String']>;
-  rate?: Maybe<Scalars['Int']>;
+  rate?: Maybe<Scalars['Float']>;
   status?: Maybe<Scalars['String']>;
   teacher?: Maybe<Teacher>;
   users?: Maybe<Array<User>>;
@@ -505,7 +505,6 @@ export type CourseCreateInput = {
   image?: InputMaybe<ImageFieldInput>;
   name?: InputMaybe<Scalars['String']>;
   price?: InputMaybe<Scalars['Int']>;
-  rate?: InputMaybe<Scalars['Int']>;
   status?: InputMaybe<Scalars['String']>;
   teacher?: InputMaybe<TeacherRelateToOneForCreateInput>;
   users?: InputMaybe<UserRelateToManyForCreateInput>;
@@ -623,7 +622,6 @@ export type CourseOrderByInput = {
   id?: InputMaybe<OrderDirection>;
   name?: InputMaybe<OrderDirection>;
   price?: InputMaybe<OrderDirection>;
-  rate?: InputMaybe<OrderDirection>;
   status?: InputMaybe<OrderDirection>;
 };
 
@@ -662,7 +660,6 @@ export type CourseUpdateInput = {
   image?: InputMaybe<ImageFieldInput>;
   name?: InputMaybe<Scalars['String']>;
   price?: InputMaybe<Scalars['Int']>;
-  rate?: InputMaybe<Scalars['Int']>;
   status?: InputMaybe<Scalars['String']>;
   teacher?: InputMaybe<TeacherRelateToOneForUpdateInput>;
   users?: InputMaybe<UserRelateToManyForUpdateInput>;
@@ -678,7 +675,6 @@ export type CourseWhereInput = {
   id?: InputMaybe<IdFilter>;
   name?: InputMaybe<StringFilter>;
   price?: InputMaybe<IntNullableFilter>;
-  rate?: InputMaybe<IntNullableFilter>;
   status?: InputMaybe<StringNullableFilter>;
   teacher?: InputMaybe<TeacherWhereInput>;
   users?: InputMaybe<UserManyRelationFilter>;
@@ -2869,8 +2865,7 @@ export type ValidateUserPasswordResetTokenResult = {
 };
 
 export type CreateCommentMutationVariables = Exact<{
-  comment: Scalars['String'];
-  courseItem: Scalars['ID'];
+  data: CommentCreateInput;
 }>;
 
 
@@ -2888,6 +2883,15 @@ export type SigninMutationVariables = Exact<{
 
 
 export type SigninMutation = { __typename?: 'Mutation', authenticateUserWithPassword?: { __typename?: 'UserAuthenticationWithPasswordFailure', message: string } | { __typename?: 'UserAuthenticationWithPasswordSuccess', sessionToken: string, item: { __typename?: 'User', id: string, lastName?: string | null, name?: string | null, email?: string | null } } | null };
+
+export type UpdateMyInfoMutationVariables = Exact<{
+  id: Scalars['ID'];
+  name: Scalars['String'];
+  lastName: Scalars['String'];
+}>;
+
+
+export type UpdateMyInfoMutation = { __typename?: 'Mutation', updateUser?: { __typename?: 'User', id: string } | null };
 
 export type AuthitemQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -2907,6 +2911,13 @@ export type CourseItemQueryVariables = Exact<{
 
 
 export type CourseItemQuery = { __typename?: 'Query', courseItem?: { __typename?: 'CourseItem', id: string, no?: number | null, name?: string | null, description?: string | null, commentsCount?: number | null, comments?: Array<{ __typename?: 'Comment', id: string, comment?: string | null, user?: { __typename?: 'User', name?: string | null } | null }> | null, video?: { __typename?: 'File', id: string, video?: { __typename?: 'FileFieldOutput', filename: string, url: string } | null } | null } | null };
+
+export type CourseItemsQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type CourseItemsQuery = { __typename?: 'Query', courseItems?: Array<{ __typename?: 'CourseItem', id: string, no?: number | null, name?: string | null }> | null };
 
 export type CourseQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -2940,3 +2951,17 @@ export type MyCoursesQueryVariables = Exact<{
 
 
 export type MyCoursesQuery = { __typename?: 'Query', user?: { __typename?: 'User', courses?: Array<{ __typename?: 'Course', id: string, name?: string | null, rate?: number | null, commentsCount?: number | null, image?: { __typename?: 'ImageFieldOutput', url: string } | null, teacher?: { __typename?: 'Teacher', id: string, name?: string | null, image?: { __typename?: 'ImageFieldOutput', url: string } | null } | null }> | null } | null };
+
+export type MyProfileQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type MyProfileQuery = { __typename?: 'Query', user?: { __typename?: 'User', id: string, name?: string | null, lastName?: string | null, email?: string | null, coursesCount?: number | null, commentsCount?: number | null, eventsCount?: number | null, orders?: Array<{ __typename?: 'Order', id: string, totalCost?: number | null, paymentStatus?: number | null, orderDate?: any | null }> | null } | null };
+
+export type OrderQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type OrderQuery = { __typename?: 'Query', order?: { __typename?: 'Order', id: string, totalCost?: number | null, trackId?: string | null, orderDate?: any | null } | null };

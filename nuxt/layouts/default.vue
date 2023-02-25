@@ -5,7 +5,8 @@
   >
     <div
       v-if="showDevBox"
-      :style="`
+      :style="
+        `
       position: fixed;
       top: 200px;
       left: 20px;
@@ -14,8 +15,11 @@
       direction: ltr;
       z-index : 200;
       opacity: 0.8;
-    `"
+    `
+      "
     >
+      <button @click="authItem">AXIOS</button>
+      <button @click="authItemgql">GQL</button>
       <div>quick navigatin for dev : for toggle press `m`</div>
       <div style="background-color: red" class="text-xs text-white">
         this will not show in production
@@ -50,32 +54,58 @@ import {
   ref,
   useContext,
   useMeta,
-  defineComponent,
+  defineComponent
 } from '@nuxtjs/composition-api'
 import { onKeyStroke } from '@vueuse/core'
+import { useLazyQuery } from '@vue/apollo-composable/dist'
+import AUTHITEM from '@/apollo/q/authitem.gql'
 // import CommandPallete from '@/components/CommandPallete.vue'
-
+import axios from 'axios'
 export default defineComponent({
   head: {},
   components: {
     // CommandPallete
   },
-  setup() {
-    const { i18n } = useContext()
-
+  setup () {
+    const { i18n, $axios } = useContext()
+    const { load, onResult, onError } = useLazyQuery(AUTHITEM)
     const showDevBox = ref(false)
 
-    onKeyStroke('m', (e) => {
+    onResult(res => {
+      console.log(res)
+    })
+    onError(res => {
+      console.log(res)
+    })
+    function authItemgql () {
+      load(AUTHITEM, {}, { fetchPolicy: 'no-cache' })
+    }
+
+    onKeyStroke('m', e => {
       e.preventDefault()
       showDevBox.value = !showDevBox.value
     })
 
     const locale = ref(i18n.locale)
 
+    const authItem = async () => {
+      try {
+        const { data } = await axios.post(
+          'http://localhost:3030/auth-item',
+          {},
+          { withCredentials: true }
+        )
+        console.log(data)
+      } catch (error) {
+        console.log(error)
+      }
+    }
     return {
       locale,
       showDevBox,
+      authItem,
+      authItemgql
     }
-  },
+  }
 })
 </script>

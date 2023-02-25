@@ -34,8 +34,13 @@ export default {
     { src: '~/plugins/eventbus.ts' },
     { src: '~/plugins/snip.js' },
     { src: '~/plugins/general.client.js', mode: 'client' },
+    { src: '~/plugins/general.js', mode: 'client' },
     { src: '~/plugins/axios.js' },
   ],
+
+  router: {
+    middleware: []
+  },
 
   serverMiddleware: [
     { path: '/api', handler: '~/server-middleware/backend.ts' },

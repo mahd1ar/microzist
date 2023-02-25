@@ -13,11 +13,8 @@ import qs from 'qs';
 import dotenv from 'dotenv';
 import { Roles } from './data/enums';
 
-
-
-const envFile = process.env.NODE_ENV !== 'production' ? `.env.dev` : '.env'
-dotenv.config({ path: envFile })
-
+const envFile = process.env.NODE_ENV !== 'production' ? `.env.dev` : '.env';
+dotenv.config({ path: envFile });
 
 type ZibalCBQuery = {
     success: '1' | '0'; // "1",
@@ -54,13 +51,13 @@ export default withAuth(
             playground: true,
         },
         server: {
-            cors: { origin: ['http://localhost:5173'], credentials: true },
+            cors: {
+                origin: ['http://localhost:5173', 'http://localhost:5173/'],
+                credentials: true,
+            },
             port: 3030,
             extendExpressApp: (app, ctx) => {
                 app.use(bodyParser.json());
-
-
-
 
                 app.use((req, res, next) => {
                     // TODO
@@ -68,63 +65,51 @@ export default withAuth(
                     next();
                 });
 
-
                 app.get('/setadmin', async (req, res) => {
-
-
-                    const sudoctx = await ctx.sudo()
+                    const sudoctx = await ctx.sudo();
                     try {
-
                         const userCount = await sudoctx.query.User.count({
                             where: {
                                 email: {
-                                    equals: 'a.mahdiyar7@yahoo.com'
-                                }
-                            }
-                        })
-
+                                    equals: 'a.mahdiyar7@yahoo.com',
+                                },
+                            },
+                        });
 
                         if (userCount === 1) {
-
                             await sudoctx.query.User.updateOne({
                                 where: {
-                                    id: 'clcn1d4qg0056ywhb2o13r9wj'
+                                    id: 'clcn1d4qg0056ywhb2o13r9wj',
                                 },
                                 data: {
-                                    role: Roles.admin
-                                }
-                            })
-                            res.send('userUpdated')
-
-                        } else if (userCount === 0) {
-
-                            const { name } = await sudoctx.query.User.createOne({
-                                data: {
-                                    name: 'admin',
-                                    lastName: 'administrator',
-                                    email: 'a.mahdiyar7@yahoo.com',
-                                    password: 'Aa12345678',
-                                    role: Roles.admin
+                                    role: Roles.admin,
                                 },
-                                query: 'id name lastName email',
                             });
+                            res.send('userUpdated');
+                        } else if (userCount === 0) {
+                            const { name } = await sudoctx.query.User.createOne(
+                                {
+                                    data: {
+                                        name: 'admin',
+                                        lastName: 'administrator',
+                                        email: 'a.mahdiyar7@yahoo.com',
+                                        password: 'Aa12345678',
+                                        role: Roles.admin,
+                                    },
+                                    query: 'id name lastName email',
+                                }
+                            );
 
-                            res.send(name + 'created')
-
+                            res.send(name + 'created');
                         } else {
-
-                            res.send(':(')
+                            res.send(':(');
                         }
-
-
                     } catch (error) {
-                        console.error(error)
-                        res.send(String(error))
+                        console.error(error);
+                        res.send(String(error));
                     }
-                    sudoctx.exitSudo()
-
-                })
-
+                    sudoctx.exitSudo();
+                });
 
                 app.get('/test', async (req, res) => {
                     try {
@@ -241,7 +226,7 @@ export default withAuth(
                                 lastName: req.body.lastname,
                                 email: req.body.email,
                                 password: req.body.password,
-                                role: Roles.member
+                                role: Roles.member,
                             },
                             query: 'id name lastName email',
                         });
@@ -279,6 +264,8 @@ export default withAuth(
 
                 // auth item
                 app.post('/auth-item', async (req, res) => {
+                    // console.log(req.headers.cookie);
+                    console.log(await session.get({ context: ctx }));
                     console.log(!!ctx.session ? 'loggedin' : 'not loggedin');
                     if (ctx.session) {
                         const session: GeneralSession = ctx.session;
@@ -293,10 +280,10 @@ export default withAuth(
 
                             res.json(user);
                         } catch (error) {
-                            res.send(undefined);
+                            res.json({});
                             console.error(error);
                         }
-                    } else res.send(undefined);
+                    } else res.json({});
                 });
 
                 // delete from cart
@@ -661,7 +648,10 @@ export default withAuth(
                         } catch (error) {
                             console.error(error); // { result: 103, message: 'authentication error', statusMessage: '{merchant} غیرفعال' }
                             // TODO write somewhere for godsakes
-                            res.status(500).json({ ok: false, message: String(error) });
+                            res.status(500).json({
+                                ok: false,
+                                message: String(error),
+                            });
                         }
                     }
                 );

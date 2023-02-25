@@ -14,16 +14,37 @@ import { BaseKeystoneTypeInfo, KeystoneContext } from '@keystone-6/core/types';
 import { persianCalendar } from '../src/custom-fields/persian-calander';
 import { wordifyfa } from '../data/lib/wordifyfa';
 import { document } from '@keystone-6/fields-document';
-
+import { allOperations } from '@keystone-6/core/access';
+import { isAdmin, isLoggedIn } from '../data/access';
 export const Event = list({
-    access: allowAll,
+    access: {
+        operation: {
+            ...allOperations(isAdmin),
+            query: () => true,
+            update: isLoggedIn,
+        },
+    },
+
+    hooks: {
+        validateInput(args) {
+            // TODO deadline must not after starting event
+            console.log('args.resolvedData');
+            console.log(args.resolvedData);
+
+            console.log('args.item');
+            console.log(args.item);
+            console.log('args.inputData');
+            console.log(args.inputData);
+        },
+    },
+
     fields: {
         url: virtual({
             field: graphql.field({
                 type: graphql.String,
 
                 async resolve(item) {
-                    return `${process.env.FRONTENDURL}/events/${item.id}`
+                    return `${process.env.FRONTENDURL}/events/${item.id}`;
                 },
             }),
         }),
@@ -59,10 +80,8 @@ export const Event = list({
             field: graphql.field({
                 type: graphql.String,
                 async resolve(item) {
-                    // @ts-ignore
-                    return item.price
-                        ? `${wordifyfa(item.price)} تومان `
-                        : 'رایگان';
+                    const { price } = item as { price: number };
+                    return price ? `${wordifyfa(price)} تومان ` : 'رایگان';
                 },
             }),
         }),
@@ -103,8 +122,15 @@ export const Event = list({
             },
         }),
 
-        from: persianCalendar(),
-        to: persianCalendar(),
+        from: persianCalendar({
+            label: 'starting date',
+        }),
+        to: persianCalendar({
+            label: 'ending date',
+        }),
+        registrationDeadline: persianCalendar({
+            label: 'آخرین مهلت ثبت نام',
+        }),
         location: text(),
         users: relationship({
             ref: 'User.events',
@@ -155,6 +181,59 @@ export const Event = list({
                     if (context.session.itemId === users[0].id) return true;
 
                     return false;
+                },
+            }),
+            // graphQLReturnType: "String",
+        }),
+        isUpcomming: virtual({
+            field: graphql.field({
+                type: graphql.Boolean,
+
+                async resolve(item, _) {
+                    const { from } = item as { from: string };
+
+                    if (!from) return false;
+                    // const fromArr = from.split('-').map((i) => +i);
+                    // const [today_m, today_d, today_y] = new Intl.DateTimeFormat(
+                    //     'en-US'
+                    // )
+                    //     .format(new Date())
+                    //     .split('/')
+                    //     .map((i) => +i);
+
+                    // const todayEpoch =
+                    //     new Date(today_y, today_m, today_d).getTime() / 1000;
+                    const todayEpoch = ~~(new Date().getTime() / 1000);
+
+                    // const fromEpoch =
+                    //     new Date(fromArr[0], fromArr[1], fromArr[2]).getTime() /
+                    //     1000;
+                    const fromEpoch =
+                        new Date(from + 'T06:00').getTime() / 1000;
+
+                    return todayEpoch < fromEpoch;
+                },
+            }),
+            // graphQLReturnType: "String",
+        }),
+        isOpen: virtual({
+            field: graphql.field({
+                type: graphql.Boolean,
+
+                async resolve(item, _) {
+                    const { registrationDeadline } = item as {
+                        registrationDeadline: string;
+                    };
+
+                    if (!registrationDeadline) return false;
+
+                    const todayEpoch = ~~(new Date().getTime() / 1000);
+
+                    const deadlineDate =
+                        new Date(registrationDeadline + 'T06:00').getTime() /
+                        1000;
+
+                    return todayEpoch <= deadlineDate;
                 },
             }),
             // graphQLReturnType: "String",

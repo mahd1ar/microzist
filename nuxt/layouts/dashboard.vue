@@ -1,5 +1,5 @@
 <template>
-  <div class="flex min-h-screen">
+  <div dir="rtl" class="flex min-h-screen">
     <div class="flex w-full flex-col items-stretch">
       <div class="relative flex-shrink-0 border-b-2 bg-slate-200">
         <div
@@ -51,26 +51,25 @@
                 <div class="text-xs">
                   {{
                     $store.getters.user.name +
-                    ' ' +
-                    $store.getters.user.lastName
+                      ' ' +
+                      $store.getters.user.lastName
                   }}
                 </div>
               </div>
             </div>
             <ul class="flex items-center gap-2 text-sm">
               <li>
-                <a
-                  href="/user/userprofile"
-                  aria-current="page"
-                  class="flex rounded-md px-2 py-2 text-gray-800 hover:bg-gray-200 xl:px-4"
+                <nuxt-link
+                  to="/dashboard"
+                  class="flex rounded-md px-2 py-2 text-gray-800 xl:px-4"
                 >
                   اطلاعات کاربر
-                </a>
+                </nuxt-link>
               </li>
               <li>
                 <a
                   href="/user/events"
-                  class="rounded-md px-2 py-2 text-gray-800 hover:bg-gray-200 xl:px-4"
+                  class="rounded-md px-2 py-2 text-gray-800 xl:px-4"
                 >
                   رویداد ها
                 </a>
@@ -78,7 +77,7 @@
               <li>
                 <nuxt-link
                   to="/dashboard/course/list"
-                  class="rounded-md px-2 py-2 text-gray-800 hover:bg-gray-200 xl:px-4"
+                  class="rounded-md px-2 py-2 text-gray-800 xl:px-4"
                 >
                   courses
                 </nuxt-link>
@@ -171,8 +170,8 @@
                   <div class="text-xs">
                     {{
                       $store.getters.user.name +
-                      ' ' +
-                      $store.getters.user.lastName
+                        ' ' +
+                        $store.getters.user.lastName
                     }}
                   </div>
                 </div>
@@ -219,122 +218,77 @@
         <div class="container relative mx-auto pt-5">
           <!-- courses -->
 
-          <template v-if="page === 'course'">
-            <div class="relative flex flex-wrap">
+          <div class=" relative flex flex-wrap">
+            <button
+              v-for="(i, idx) in tabItems"
+              :key="idx"
+              @click="switchTab(idx)"
+              class="title-font inline-flex w-1/2  items-center transition-all duration-300 justify-center border-b-2 py-3 font-medium bg-opacity-30 leading-none tracking-wider sm:w-auto sm:justify-start sm:px-6"
+              :class="{
+                'text-sky-500 backdrop-blur border-sky-500  py-3 font-medium leading-none tracking-wider ':
+                  +tabIndex === idx,
+                'cursor-pointer rounded-t border-gray-200  hover:text-gray-900':
+                  +tabIndex !== idx
+              }"
+            >
               <div
-                class="title-font inline-flex w-1/2 cursor-pointer items-center justify-center rounded-t border-b-2 border-sky-500 bg-gray-100 bg-opacity-30 py-3 font-medium leading-none tracking-wider text-sky-500 backdrop-blur sm:w-auto sm:justify-start sm:px-6"
-              >
-                <svg class="ml-3 h-5 w-5" viewBox="0 0 48 48">
-                  <path
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="4"
-                    d="M5 6h34s4 2 4 7s-4 7-4 7H5s4-2 4-7s-4-7-4-7Zm38 22H9s-4 2-4 7s4 7 4 7h34s-4-2-4-7s4-7 4-7Z"
-                  />
-                </svg>
-                دوره های آموزشی من
-              </div>
-              <div
-                class="title-font inline-flex w-1/2 cursor-pointer items-center justify-center border-b-2 border-gray-200 py-3 font-medium leading-none tracking-wider hover:text-gray-900 sm:w-auto sm:justify-start sm:px-6"
-              >
-                <svg class="ml-3 h-5 w-5" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M20.3 20.3L18 18H4q-.825 0-1.413-.588T2 16V4q0-.825.588-1.413T4 2h16q.825 0 1.413.588T22 4v15.575q0 .675-.613.938T20.3 20.3ZM4 4v12h14.825L20 17.175V4H4Zm0 0v13.175V4Z"
-                  />
-                </svg>
-                نظرات من
-              </div>
-            </div>
-          </template>
-          <div class="relative flex flex-wrap" v-else-if="!page">
-            <div
-              class="title-font inline-flex w-1/2 cursor-pointer items-center justify-center rounded-t border-b-2 border-sky-500 bg-gray-100 bg-opacity-30 py-3 font-medium leading-none tracking-wider text-sky-500 backdrop-blur sm:w-auto sm:justify-start sm:px-6"
-            >
-              <svg
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-                class="ml-3 h-5 w-5"
-              >
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-              </svg>
-              پروفایل کاربر
-            </div>
-            <div
-              class="title-font inline-flex w-1/2 cursor-pointer items-center justify-center border-b-2 border-gray-200 py-3 font-medium leading-none tracking-wider hover:text-gray-900 sm:w-auto sm:justify-start sm:px-6"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-                class="ml-3 h-5 w-5"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                ></path>
-              </svg>
-              ویرایش اطلاعات
-            </div>
-            <div
-              class="title-font inline-flex w-1/2 cursor-pointer items-center justify-center border-b-2 border-gray-200 py-3 font-medium leading-none tracking-wider hover:text-gray-900 sm:w-auto sm:justify-start sm:px-6"
-            >
-              <svg class="ml-3 h-5 w-5" viewBox="0 2.4 24 24">
-                <path
-                  fill="currentColor"
-                  d="M2 21.4v-2h20v2H2Zm1.15-6.05l-1.3-.75l.85-1.5H1v-1.5h1.7l-.85-1.45l1.3-.75l.85 1.45l.85-1.45l1.3.75l-.85 1.45H7v1.5H5.3l.85 1.5l-1.3.75l-.85-1.5l-.85 1.5Zm8 0l-1.3-.75l.85-1.5H9v-1.5h1.7l-.85-1.45l1.3-.75l.85 1.45l.85-1.45l1.3.75l-.85 1.45H15v1.5h-1.7l.85 1.5l-1.3.75l-.85-1.5l-.85 1.5Zm8 0l-1.3-.75l.85-1.5H17v-1.5h1.7l-.85-1.45l1.3-.75l.85 1.45l.85-1.45l1.3.75l-.85 1.45H23v1.5h-1.7l.85 1.5l-1.3.75l-.85-1.5l-.85 1.5Z"
-                />
-              </svg>
-              تعویض پسورد
-            </div>
-            <div
-              class="title-font inline-flex w-1/2 cursor-pointer items-center justify-center border-b-2 border-gray-200 py-3 font-medium leading-none tracking-wider hover:text-gray-900 sm:w-auto sm:justify-start sm:px-6"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-                role="img"
-                preserveAspectRatio="xMidYMid meet"
-                viewBox="0 0 1024 1024"
-                class="ml-3 h-5 w-5"
-              >
-                <path
-                  fill="currentColor"
-                  d="M600.704 64a32 32 0 0 1 30.464 22.208l35.2 109.376c14.784 7.232 28.928 15.36 42.432 24.512l112.384-24.192a32 32 0 0 1 34.432 15.36L944.32 364.8a32 32 0 0 1-4.032 37.504l-77.12 85.12a357.12 357.12 0 0 1 0 49.024l77.12 85.248a32 32 0 0 1 4.032 37.504l-88.704 153.6a32 32 0 0 1-34.432 15.296L708.8 803.904c-13.44 9.088-27.648 17.28-42.368 24.512l-35.264 109.376A32 32 0 0 1 600.704 960H423.296a32 32 0 0 1-30.464-22.208L357.696 828.48a351.616 351.616 0 0 1-42.56-24.64l-112.32 24.256a32 32 0 0 1-34.432-15.36L79.68 659.2a32 32 0 0 1 4.032-37.504l77.12-85.248a357.12 357.12 0 0 1 0-48.896l-77.12-85.248A32 32 0 0 1 79.68 364.8l88.704-153.6a32 32 0 0 1 34.432-15.296l112.32 24.256c13.568-9.152 27.776-17.408 42.56-24.64l35.2-109.312A32 32 0 0 1 423.232 64H600.64zm-23.424 64H446.72l-36.352 113.088l-24.512 11.968a294.113 294.113 0 0 0-34.816 20.096l-22.656 15.36l-116.224-25.088l-65.28 113.152l79.68 88.192l-1.92 27.136a293.12 293.12 0 0 0 0 40.192l1.92 27.136l-79.808 88.192l65.344 113.152l116.224-25.024l22.656 15.296a294.113 294.113 0 0 0 34.816 20.096l24.512 11.968L446.72 896h130.688l36.48-113.152l24.448-11.904a288.282 288.282 0 0 0 34.752-20.096l22.592-15.296l116.288 25.024l65.28-113.152l-79.744-88.192l1.92-27.136a293.12 293.12 0 0 0 0-40.256l-1.92-27.136l79.808-88.128l-65.344-113.152l-116.288 24.96l-22.592-15.232a287.616 287.616 0 0 0-34.752-20.096l-24.448-11.904L577.344 128zM512 320a192 192 0 1 1 0 384a192 192 0 0 1 0-384zm0 64a128 128 0 1 0 0 256a128 128 0 0 0 0-256z"
-                ></path>
-              </svg>
-              تنظیمات
-            </div>
+                class="icons flex justify-center items-center"
+                v-html="i.icon"
+              ></div>
+              <div v-text="i.name"></div>
+            </button>
           </div>
         </div>
       </div>
+
       <nuxt class="h-full bg-white" />
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { useContext, useRouter, computed } from '@nuxtjs/composition-api'
+import {
+  useContext,
+  useRouter,
+  computed,
+  ref,
+  reactive
+} from '@nuxtjs/composition-api'
 
 const ctx = useContext()
 const router = useRouter()
+const tabItems = ref<{ name: string; icon: string }[]>([])
 
 if (!ctx.store.getters.isLoggedIn) router.push('/login')
 
 const page = computed(() => ctx.route.value.path.split('/')[2])
 const fullpath = computed(() => ctx.route.value.path)
+
+const tabIndex = computed(() =>
+  typeof ctx.route.value.query.tabIndex === 'string'
+    ? ctx.route.value.query.tabIndex
+    : '0'
+)
+
+function switchTab (index: number) {
+  router.push({ path: fullpath.value, query: { tabIndex: String(index) } })
+}
+
+ctx.$mitt.on('tabItems', tb => {
+  tabItems.value.splice(0, tabItems.value.length)
+  tb.forEach(element => {
+    tabItems.value.push(element)
+  })
+})
 </script>
 
 <style lang="scss" scoped>
+.icons {
+  @apply h-5 w-5 ml-3;
+  svg {
+    @apply h-5 w-5;
+  }
+}
 .nuxt-link-exact-active {
   @apply relative flex flex-row-reverse items-center gap-1 font-bold;
 
