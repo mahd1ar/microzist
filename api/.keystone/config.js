@@ -132,7 +132,8 @@ var session = (0, import_session.storedSessions)({
       }
     }
   }),
-  secret: sessionSecret
+  secret: sessionSecret,
+  maxAge: sessionMaxAge
 });
 
 // data/utils.ts
@@ -1081,12 +1082,6 @@ var Event = (0, import_core15.list)({
   },
   hooks: {
     validateInput(args) {
-      console.log("args.resolvedData");
-      console.log(args.resolvedData);
-      console.log("args.item");
-      console.log(args.item);
-      console.log("args.inputData");
-      console.log(args.inputData);
     }
   },
   fields: {
@@ -1101,6 +1096,7 @@ var Event = (0, import_core15.list)({
     name: (0, import_fields13.text)({
       validation: { isRequired: true }
     }),
+    image: (0, import_fields13.image)({ storage: "images" }),
     description: (0, import_fields13.text)({ ui: { displayMode: "textarea" } }),
     content: (0, import_fields_document.document)({
       formatting: true,
@@ -1131,7 +1127,18 @@ var Event = (0, import_core15.list)({
         type: import_schema5.graphql.String,
         async resolve(item) {
           const { price } = item;
-          return price ? `${wordifyfa(price)} \u062A\u0648\u0645\u0627\u0646 ` : "\u0631\u0627\u06CC\u06AF\u0627\u0646";
+          console.log(price);
+          if (price) {
+            switch (price) {
+              case 0:
+                return "\u0631\u0627\u06CC\u06AF\u0627\u0646";
+              case -1:
+                return "\u0627\u06CC\u0646 \u0631\u0648\u06CC\u062F\u0627\u062F \u0642\u0627\u0628\u0644 \u062B\u0628\u062A \u0646\u0627\u0645 \u0646\u06CC\u0633\u062A";
+              default:
+                return `${wordifyfa(price)} \u062A\u0648\u0645\u0627\u0646 `;
+            }
+          } else
+            return "\u0631\u0627\u06CC\u06AF\u0627\u0646";
         }
       })
     }),
@@ -1601,10 +1608,9 @@ var keystone_default = withAuth(
           }
         });
         app.post("/auth-item", async (req, res) => {
-          console.log(await session.get({ context: ctx }));
-          console.log(!!ctx.session ? "loggedin" : "not loggedin");
+          const context = await ctx.withRequest(req, res);
           if (ctx.session) {
-            const session2 = ctx.session;
+            const session2 = context.session;
             try {
               const user = await ctx.prisma.User.findUnique(
                 {
@@ -1670,6 +1676,14 @@ var keystone_default = withAuth(
         app.post(
           "/cart-item",
           async (req, res) => {
+            const { uuid } = req.body;
+            if (!uuid || typeof uuid !== "string") {
+              res.status(401).json({
+                ok: false,
+                message: "login first"
+              });
+              return;
+            }
             const courseId = req.body.cid;
             const eventId = req.body.eventid;
             const productType = eventId ? "event" : "course";
@@ -1689,21 +1703,18 @@ var keystone_default = withAuth(
               });
               return;
             }
-            if (!ctx.session) {
-              res.status(400).send({
+            const { session: session2 } = await ctx.withRequest(req, res);
+            if (!session2) {
+              res.status(401).send({
                 ok: false,
                 message: "you dont have proper access"
               });
-              sendCommand({
-                action: "logout",
-                message: "session expoire"
-              });
               return;
             }
-            const session2 = ctx.session;
+            const sudoContext = ctx.sudo();
             try {
               let cartId;
-              const [cart] = await ctx.query.Cart.findMany({
+              const [cart] = await sudoContext.query.Cart.findMany({
                 where: {
                   user: {
                     id: {
@@ -1734,7 +1745,7 @@ var keystone_default = withAuth(
                   });
                   return;
                 }
-                const newCartItem = await ctx.prisma.CartItem.create({
+                const { id } = await sudoContext.query.CartItem.createOne({
                   data: {
                     [productType]: {
                       connect: {
@@ -1746,10 +1757,11 @@ var keystone_default = withAuth(
                         id: cartId
                       }
                     }
-                  }
+                  },
+                  query: " id "
                 });
               } else {
-                const newCart = await ctx.prisma.Cart.create({
+                const { id } = await sudoContext.query.Cart.createOne({
                   data: {
                     user: {
                       connect: {
@@ -1765,9 +1777,9 @@ var keystone_default = withAuth(
                         }
                       }
                     }
-                  }
+                  },
+                  query: "id"
                 });
-                cartId = newCart.id;
               }
             } catch (error) {
               console.error(error);
@@ -1777,6 +1789,7 @@ var keystone_default = withAuth(
               });
               return;
             }
+            sudoContext.exitSudo();
             res.status(201).json({ ok: true, message: "created" });
           }
         );
@@ -1791,7 +1804,7 @@ var keystone_default = withAuth(
               return;
             }
             if (!req.query.cartitem || typeof req.query.cartitem !== "string") {
-              res.status(403).json({
+              res.status(400).json({
                 ok: false,
                 message: "bad request"
               });
@@ -1806,8 +1819,9 @@ var keystone_default = withAuth(
               });
               return;
             }
+            const sudoContex = await ctx.sudo();
             try {
-              const [coupon] = await ctx.query.Coupon.findMany({
+              const [coupon] = await sudoContex.query.Coupon.findMany({
                 where: {
                   code: { equals: couponCode }
                 },
@@ -1820,7 +1834,7 @@ var keystone_default = withAuth(
                 });
                 return;
               }
-              await ctx.db.CartItem.updateOne({
+              await sudoContex.query.CartItem.updateOne({
                 where: {
                   id: cartitem
                 },
@@ -1832,20 +1846,23 @@ var keystone_default = withAuth(
                   }
                 }
               });
-              res.json({ ok: true, message: "success full" });
+              res.json({ ok: true, message: "fa::success full" });
             } catch (error) {
               res.json({
                 ok: false,
-                message: "operation not successfull"
+                message: "fa::operation not successfull"
               });
             }
+            sudoContex.exitSudo();
           }
         );
         app.get(
           "/checkout",
           async (req, res) => {
-            if (!ctx.session) {
-              res.status(400).json({
+            const { session: session2 } = await ctx.withRequest(req, res);
+            const sudoContext = await ctx.sudo();
+            if (!session2 || session2.itemId) {
+              res.status(401).json({
                 ok: false,
                 message: "fa:: session expires login agin"
               });
@@ -1857,11 +1874,11 @@ var keystone_default = withAuth(
               callbackUrl
             });
             try {
-              const [{ totalPrice, id: cartid }] = await ctx.query.Cart.findMany({
+              const [{ totalPrice, id: cartid }] = await sudoContext.query.Cart.findMany({
                 where: {
                   user: {
                     id: {
-                      equals: ctx.session?.itemId
+                      equals: session2.itemId
                     }
                   }
                 },
@@ -1884,10 +1901,9 @@ var keystone_default = withAuth(
                 return;
               }
               const response = await zibal.request({
-                amount: totalPrice,
+                amount: totalPrice * 10,
                 orderId: cartid,
-                merchant: "zibal",
-                callbackUrl: "http://localhost:3030/ipg/cb",
+                merchant: process.env.MERCHANT,
                 mobile: "09102124368",
                 description: "THIS IS MY DESCRIPTION",
                 allowedCards: ["5022291092719457"],
@@ -1902,6 +1918,7 @@ var keystone_default = withAuth(
                 message: String(error)
               });
             }
+            sudoContext.exitSudo();
           }
         );
         app.get("/ipg/cb", async (req, res) => {

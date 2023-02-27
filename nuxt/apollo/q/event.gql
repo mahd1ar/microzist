@@ -5,11 +5,20 @@ query event($id: ID!) {
     content {
       document
     }
-    location
     from
     to
-    isAccessible
+    description
+    location
     price
     priceFa
+    status
+    isAccessible
+    isUpcomming
+    isOpen
+    remaining
+    image {
+      id
+      url
+    }
   }
 }

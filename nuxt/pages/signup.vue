@@ -2,101 +2,101 @@
   <div class="py-6">
     <client-only>
       <div
-        class="flex bg-white rounded-lg shadow-lg overflow-hidden mx-auto max-w-sm lg:max-w-4xl"
+        class="mx-auto flex max-w-sm overflow-hidden rounded-lg bg-white shadow-lg lg:max-w-4xl"
       >
         <div
-          class="hidden lg:block lg:w-1/2 bg-cover bg-right"
-          style="background-image:url('/signup.jpg')"
+          class="hidden bg-cover bg-right lg:block lg:w-1/2"
+          style="background-image: url('/signup.jpg')"
         ></div>
 
-        <form @submit.prevent="submit" class="w-full p-8 lg:w-1/2 relative">
+        <form @submit.prevent="submit" class="relative w-full p-8 lg:w-1/2">
           <transition name="login">
             <div
               v-if="loading"
               style="background-color: #161616"
-              class="absolute bg-white inset-0 w-full h-full flex justify-center items-center"
+              class="absolute inset-0 flex h-full w-full items-center justify-center bg-white"
             >
               <div class="w-24">
                 <motion-dna
-                  class="p-4 rounded-md "
+                  class="rounded-md p-4"
                   style="background-color: #161616"
                 />
               </div>
             </div>
           </transition>
 
-          <h2 class="text-2xl font-semibold text-gray-700 text-center">
+          <h2 class="text-center text-2xl font-semibold text-gray-700">
             Microzist
           </h2>
-          <p class="text-xl text-gray-600 text-center">Welcome back!</p>
+          <p class="text-center text-xl text-gray-600">Welcome back!</p>
 
           <div class="mt-4 flex items-center justify-between">
-            <span class="border-b w-1/5 lg:w-1/4"></span>
-            <div class="text-xs text-center text-gray-500 uppercase">
+            <span class="w-1/5 border-b lg:w-1/4"></span>
+            <div class="text-center text-xs uppercase text-gray-500">
               با ایمیل خود ثبت نام کنید
             </div>
-            <span class="border-b w-1/5 lg:w-1/4"></span>
+            <span class="w-1/5 border-b lg:w-1/4"></span>
           </div>
           <div class="mt-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2"
+            <label class="mb-2 block text-sm font-bold text-gray-700"
               >Email Address</label
             >
             <input
               v-model="email"
-              class="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+              class="focus:shadow-outline block w-full appearance-none rounded border border-gray-300 bg-gray-200 py-2 px-4 text-gray-700 focus:outline-none"
               type="email"
             />
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 mt-4 gap-4">
+          <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <div class="flex justify-between">
-                <label class="block text-gray-700 text-sm font-bold mb-2"
+                <label class="mb-2 block text-sm font-bold text-gray-700"
                   >firstname</label
                 >
               </div>
               <input
                 v-model="firstname"
-                class="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                class="focus:shadow-outline block w-full appearance-none rounded border border-gray-300 bg-gray-200 py-2 px-4 text-gray-700 focus:outline-none"
                 type="text"
               />
             </div>
             <div>
               <div class="flex justify-between">
-                <label class="block text-gray-700 text-sm font-bold mb-2"
+                <label class="mb-2 block text-sm font-bold text-gray-700"
                   >last name</label
                 >
               </div>
               <input
                 v-model="lastname"
-                class="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                class="focus:shadow-outline block w-full appearance-none rounded border border-gray-300 bg-gray-200 py-2 px-4 text-gray-700 focus:outline-none"
                 type="text"
               />
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 mt-4 gap-4">
+          <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <div class="flex justify-between">
-                <label class="block text-gray-700 text-sm font-bold mb-2"
+                <label class="mb-2 block text-sm font-bold text-gray-700"
                   >Password</label
                 >
               </div>
               <input
                 v-model="password"
-                class="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                class="focus:shadow-outline block w-full appearance-none rounded border border-gray-300 bg-gray-200 py-2 px-4 text-gray-700 focus:outline-none"
                 type="password"
               />
             </div>
             <div>
               <div class="flex justify-between">
-                <label class="block text-gray-700 text-sm font-bold mb-2"
+                <label class="mb-2 block text-sm font-bold text-gray-700"
                   >Confirm Password</label
                 >
               </div>
               <input
                 v-model="re_password"
-                class="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                class="focus:shadow-outline block w-full appearance-none rounded border border-gray-300 bg-gray-200 py-2 px-4 text-gray-700 focus:outline-none"
                 type="password"
               />
             </div>
@@ -104,15 +104,15 @@
           <div class="mt-8">
             <button
               type="submit"
-              class="bg-gray-900 text-white font-bold py-2 px-4 w-full rounded hover:bg-gray-800 flex justify-center items-center"
+              class="flex w-full items-center justify-center rounded bg-gray-900 py-2 px-4 font-bold text-white hover:bg-gray-800"
             >
               ثبت نام
             </button>
           </div>
           <div class="mt-4 flex items-center justify-between">
-            <span class="border-b w-1/5 md:w-1/4"></span>
-            <a href="#" class="text-xs text-gray-500 uppercase">or sign up</a>
-            <span class="border-b w-1/5 md:w-1/4"></span>
+            <span class="w-1/5 border-b md:w-1/4"></span>
+            <a href="#" class="text-xs uppercase text-gray-500">or sign up</a>
+            <span class="w-1/5 border-b md:w-1/4"></span>
           </div>
           <div>
             <vue-hcaptcha
@@ -127,7 +127,7 @@
         </form>
       </div>
     </client-only>
-    <div class="w-24 container mx-auto" @click="loading = !loading">
+    <div class="container mx-auto w-24" @click="loading = !loading">
       alsdolansdo;ans
     </div>
   </div>
@@ -144,14 +144,14 @@ import MotionDna from '@/components/misc/MotionDNA.vue'
 let prvPage: string
 
 export default defineComponent({
-  beforeRouteEnter (to, from, next) {
+  beforeRouteEnter(to, from, next) {
     prvPage = from.fullPath
 
-    if (['/login', '/signup'].includes(prvPage)) {
+    if (['/login', '/signup', '/auth-item'].includes(prvPage)) {
       prvPage = '/'
     }
 
-    next(vm => {
+    next((vm) => {
       if (vm.$store.getters.isLoggedIn) {
         // TODO defualt determain defualt route
         if (to.query.redirect === 'no') {
@@ -166,9 +166,9 @@ export default defineComponent({
   },
   components: {
     VueHcaptcha,
-    MotionDna
+    MotionDna,
   },
-  setup () {
+  setup() {
     const ctx = useContext()
     const router = useRouter()
     const firstname = ref(ctx.isDev ? 'sara' : '')
@@ -179,12 +179,12 @@ export default defineComponent({
     const loading = ref(false)
     let hCaptchTocken = ''
 
-    function hCaptchTockenVerify (token: string) {
+    function hCaptchTockenVerify(token: string) {
       console.log(token)
       hCaptchTocken = token
     }
 
-    function submit () {
+    function submit() {
       loading.value = true
 
       ctx.$axios
@@ -194,9 +194,9 @@ export default defineComponent({
           email: email.value,
           password: password.value,
           're-password': re_password.value,
-          token: hCaptchTocken
+          token: hCaptchTocken,
         })
-        .then(async res => {
+        .then(async (res) => {
           router.push('/login')
         })
 
@@ -213,9 +213,9 @@ export default defineComponent({
       re_password,
       hCaptchTockenVerify,
       submit,
-      loading
+      loading,
     }
-  }
+  },
 })
 </script>
 

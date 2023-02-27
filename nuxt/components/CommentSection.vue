@@ -1,10 +1,10 @@
 <template>
   <div
     id="comment-section"
-    class="rounded border p-6 py-4 "
+    class="rounded border p-6 py-4"
     :class="{
       'border-yellow-500 bg-yellow-100 text-yellow-700': theme === 'gold',
-      'border-gray-300 bg-gray-100 text-gray-700': theme === 'gray'
+      'border-gray-300 bg-gray-100 text-gray-700': theme === 'gray',
     }"
   >
     <div class="font-bol text-lg text-yellow-700">
@@ -60,7 +60,7 @@
 
       <button
         @click="submitComment"
-        class="flex items-center gap-4  px-4 py-2"
+        class="flex items-center gap-4 px-4 py-2"
         :class="{ 'bg-yellow-50': theme === 'gold' }"
       >
         <svg
@@ -86,22 +86,28 @@ import CREATE_COMMENT from '@/apollo/m/create-comment.gql'
 import { useMutation } from '@vue/apollo-composable/dist'
 import {
   CreateCommentMutation,
-  CreateCommentMutationVariables
+  CreateCommentMutationVariables,
 } from '@/types/types'
 
-const { theme = 'gold', widthStars = true, target, targetId } = defineProps({
+const {
+  theme = 'gold',
+  widthStars = true,
+  target,
+  targetId,
+} = defineProps({
   theme: {
-    type: String as PropType<'gray' | 'gold'>
+    type: String as PropType<'gray' | 'gold'>,
+    default: () => 'gold',
   },
   widthStars: { type: Boolean },
   target: {
     type: String as PropType<'course' | 'courseItem'>,
-    required: true
+    required: true,
   },
   targetId: {
     type: String,
-    required: true
-  }
+    required: true,
+  },
 })
 
 const star = ref(3)
@@ -114,7 +120,7 @@ const { onDone, mutate } = useMutation<
   CreateCommentMutationVariables
 >(CREATE_COMMENT)
 
-function rate (i: number) {
+function rate(i: number) {
   star.value = i
 }
 
@@ -125,16 +131,16 @@ onDone(() => {
   ;(comment.value = ''), (star.value = 3)
 })
 
-function submitComment () {
+function submitComment() {
   const commentInput: CreateCommentMutationVariables = {
     data: {
       comment: null,
       user: {
         connect: {
-          id: null
-        }
-      }
-    }
+          id: null,
+        },
+      },
+    },
   }
 
   if (comment.value.trim() === '') {

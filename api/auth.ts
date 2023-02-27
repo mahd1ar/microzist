@@ -108,6 +108,7 @@ const session = storedSessions({
         },
     }),
     secret: sessionSecret!,
+    maxAge: sessionMaxAge,
 });
 
 export { withAuth, session };

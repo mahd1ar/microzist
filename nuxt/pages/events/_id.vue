@@ -1,15 +1,53 @@
 <template>
   <div>
-    <LoadingIndicator :loading="eventq.loading.value">
-      <div class="container mx-auto flex flex-col gap-6">
-        <div class="h-96">
+    <LoadingIndicator :loading="loading">
+      <div class="container mx-auto mt-2 flex flex-col gap-6">
+        <div class="relative h-96 overflow-hidden rounded-xl border">
           <img
-            src="https://eduvibe.react.devsvibe.com/images/event/event-details/event-01.jpg"
-            class="h-full w-full object-cover"
+            :src="result?.event?.image?.url"
+            class="relative h-full w-full object-cover"
             alt=""
           />
+          <div
+            class="absolute bottom-0 right-0 flex h-full w-2/3 flex-col items-start justify-between p-4"
+          >
+            <span
+              v-if="result?.event?.isUpcomming"
+              class="mt-5 inline-flex items-center justify-end gap-2 rounded bg-green-600 px-2 text-lg text-white"
+            >
+              <svg class="h-5 w-5" viewBox="0 0 48 48">
+                <g fill="none">
+                  <path
+                    stroke="currentColor"
+                    stroke-linejoin="round"
+                    stroke-width="4"
+                    d="M24 44a19.937 19.937 0 0 0 14.142-5.858A19.937 19.937 0 0 0 44 24a19.938 19.938 0 0 0-5.858-14.142A19.937 19.937 0 0 0 24 4A19.938 19.938 0 0 0 9.858 9.858A19.938 19.938 0 0 0 4 24a19.937 19.937 0 0 0 5.858 14.142A19.938 19.938 0 0 0 24 44Z"
+                  />
+                  <path
+                    fill="currentColor"
+                    fill-rule="evenodd"
+                    d="M24 37a2.5 2.5 0 1 0 0-5a2.5 2.5 0 0 0 0 5Z"
+                    clip-rule="evenodd"
+                  />
+                  <path
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="4"
+                    d="M24 12v16"
+                  />
+                </g>
+              </svg>
+              رویداد پیش رو
+            </span>
+            <div
+              class="relative mt-auto inline-block min-h-fit rounded bg-white bg-opacity-40 p-2 text-4xl font-bold text-black backdrop-blur"
+            >
+              {{ result?.event?.name }}
+            </div>
+          </div>
         </div>
-        <div class="flex gap-4">
+        <div class="flex flex-row-reverse gap-4">
           <aside class="w-full">
             <div
               class="transition-transform duration-300 ease-out will-change-transform hover:scale-105"
@@ -33,7 +71,7 @@
                     <div>تاریخ شروع</div>
                   </div>
                   <div>
-                    {{ convertDate(eventq.result.value?.event?.from || '') }}
+                    {{ convertDate(result?.event?.from || '') }}
                   </div>
                 </div>
 
@@ -52,7 +90,7 @@
                     <div>تاریخ پایان</div>
                   </div>
                   <div>
-                    {{ convertDate(eventq.result.value?.event?.to || '') }}
+                    {{ convertDate(result?.event?.to || '') }}
                   </div>
                 </div>
 
@@ -71,11 +109,11 @@
                     <div>محل برگزاری</div>
                   </div>
                   <div>
-                    {{ eventq.result.value?.event?.location }}
+                    {{ result?.event?.location }}
                   </div>
                 </div>
-
                 <div
+                  v-if="result?.event?.price !== -1"
                   class="flex h-8 items-center justify-between border-b text-sm"
                 >
                   <div class="flex items-center gap-2">
@@ -90,38 +128,58 @@
                     <div>هزینه</div>
                   </div>
                   <div class="text-base">
-                    {{ eventq.result.value?.event?.priceFa }}
+                    {{ result?.event?.priceFa }}
                   </div>
                 </div>
 
-                <button
-                  v-if="!eventq.result.value?.event?.isAccessible"
-                  class=" h-12 w-full border-b bg-emerald-600 py-2 text-center font-bold text-white hover:bg-emerald-500 "
-                >
-                  ثبت نام در این رویداد
-                </button>
-                <div
-                  v-else
-                  class="flex items-center justify-center h-12 w-full border-b bg-green-600 py-2 text-center font-bold text-white  "
-                >
-                  <svg class="w-6 aspect-square" viewBox="0 0 24 24">
-                    <path
-                      fill="currentColor"
-                      d="m10 16.4l-4-4L7.4 11l2.6 2.6L16.6 7L18 8.4Z"
-                    />
-                  </svg>
-                  <div>
-                    شما در این رویداد ثبت نام کردید
+                <template v-if="result?.event?.isUpcomming">
+                  <!-- cannot reg -->
+                  <div
+                    class="text-center text-gray-300"
+                    v-if="result?.event?.price === -1"
+                  >
+                    {{ result?.event?.priceFa }}
                   </div>
-                </div>
+                  <!-- reg event -->
+                  <button
+                    @click="
+                      registerEvent(
+                        result?.event?.id || '',
+                        result?.event?.name || ''
+                      )
+                    "
+                    v-else-if="!result?.event?.isAccessible"
+                    class="h-12 w-full border-b bg-emerald-600 py-2 text-center font-bold text-white hover:bg-emerald-500"
+                  >
+                    ثبت نام در این رویداد
+                  </button>
+                  <!-- already reg -->
+                  <div
+                    v-else
+                    class="flex h-12 w-full items-center justify-center border-b bg-green-600 py-2 text-center font-bold text-white"
+                  >
+                    <svg class="aspect-square w-6" viewBox="0 0 24 24">
+                      <path
+                        fill="currentColor"
+                        d="m10 16.4l-4-4L7.4 11l2.6 2.6L16.6 7L18 8.4Z"
+                      />
+                    </svg>
+                    <div>شما در این رویداد ثبت نام کردید</div>
+                  </div>
+                </template>
               </div>
             </div>
           </aside>
           <div class="w-2/3 flex-shrink-0">
-            <h1>Innovation & Technological Entrepreneurship Team</h1>
             <json-content
-              :content="eventq.result.value?.event?.content?.document"
+              v-if="result?.event?.isUpcomming"
+              :content="result?.event?.content?.document"
             />
+            <div v-else>
+              <p class="text-lg text-black">
+                {{ result?.event?.description }}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -139,22 +197,37 @@ import { PersianCalander } from '@/data/utils'
 
 export default defineComponent({
   name: 'EventPage',
-  setup () {
+  setup() {
     const ctx = useContext()
 
-    const eventq = useQuery<EventQuery, EventQueryVariables>(EVENTQ, {
-      id: ctx.route.value.params.id
-    })
+    const { result, loading } = useQuery<EventQuery, EventQueryVariables>(
+      EVENTQ,
+      {
+        id: ctx.route.value.params.id,
+      }
+    )
 
-    const show = ref(false)
+    async function registerEvent(eventid: string, eventname: string) {
+      if (ctx.store.getters.isLoggedIn) {
+        await ctx.$axios.post('/cart-item', {
+          eventid,
+        })
+      } else {
+        // @ts-ignore
+        ctx.$izitoast.error({
+          title: 'fa:: first login to register => ' + eventname,
+        })
+      }
+    }
 
     return {
-      eventq,
-      show,
+      loading,
+      result,
+      registerEvent,
       convertDate: (input: string) =>
-        input ? new PersianCalander(input).toLetterMounth().join(' ') : ''
+        input ? new PersianCalander(input).toLetterMounth().join(' ') : '',
     }
-  }
+  },
 })
 </script>
 
@@ -171,10 +244,10 @@ export default defineComponent({
 @keyframes move-up {
   from {
     /* @apply translate-y-16 -translate-x-2; */
-    transform: translate(-8px, 46px);
+    transform: translate(8px, 46px);
   }
   to {
-    transform: translate(-8px, -64px);
+    transform: translate(8px, -64px);
     /* @apply -translate-y-16 -translate-x-2; */
   }
 }

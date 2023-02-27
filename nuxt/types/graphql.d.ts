@@ -133,3 +133,12 @@ declare module '*/order.gql' {
   export default defaultDocument;
 }
     
+
+declare module '*/user-comment-and-rate.gql' {
+  import { DocumentNode } from 'graphql';
+  const defaultDocument: DocumentNode;
+  export const userCommentAndRate: DocumentNode;
+
+  export default defaultDocument;
+}
+    

@@ -458,6 +458,7 @@ type Event {
   id: ID!
   url: String
   name: String
+  image: ImageFieldOutput
   description: String
   content: Event_content_Document
   price: Int
@@ -519,6 +520,7 @@ input EventOrderByInput {
 
 input EventUpdateInput {
   name: String
+  image: ImageFieldInput
   description: String
   content: JSON
   price: Int
@@ -545,6 +547,7 @@ input EventUpdateArgs {
 
 input EventCreateInput {
   name: String
+  image: ImageFieldInput
   description: String
   content: JSON
   price: Int

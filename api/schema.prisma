@@ -56,6 +56,11 @@ model Coupon {
 model Event {
   id                   String      @id @default(cuid())
   name                 String      @default("")
+  image_filesize       Int?
+  image_extension      String?
+  image_width          Int?
+  image_height         Int?
+  image_id             String?
   description          String      @default("")
   content              String      @default("[{\"type\":\"paragraph\",\"children\":[{\"text\":\"\"}]}]")
   price                Int?

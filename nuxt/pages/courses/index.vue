@@ -14,6 +14,8 @@
         <button @click="addToCart(c.id, c.name || '')" v-else>
           add to cart
         </button>
+        <br />
+        <nuxt-link :to="'/courses/' + c.id">view course</nuxt-link>
       </div>
     </div>
   </div>

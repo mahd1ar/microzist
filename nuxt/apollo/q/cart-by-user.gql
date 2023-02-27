@@ -19,12 +19,22 @@ query CartByUser($user: ID!) {
       course {
         id
         name
+        priceFa
         price
+        image{
+          id
+          url
+        }
       }
       event {
         id
         name
         price
+        priceFa
+        image{
+          id
+          url
+        }
       }
     }
   }

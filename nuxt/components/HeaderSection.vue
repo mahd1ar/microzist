@@ -19,8 +19,7 @@
         <nuxt-link to="/dashboard">dashboards</nuxt-link>
         <nuxt-link to="/logout">logout</nuxt-link>
         <div class="relative">
-          <button @click="cart = !cart">V</button>
-          <cart-box v-if="cart" class="absolute left-0 w-44 bg-lime-600" />
+          <nuxt-link to="/cart">go to cart</nuxt-link>
         </div>
       </div>
       <div v-else>
@@ -39,6 +38,4 @@
 
 <script lang="ts" setup>
 import { ref } from '@nuxtjs/composition-api'
-
-const cart = ref(false)
 </script>

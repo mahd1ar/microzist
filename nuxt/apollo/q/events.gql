@@ -1,12 +1,20 @@
-query events($status: String = "AVAILABLE") {
-  events(where: { status: { equals: $status } }) {
+query events {
+  events {
     id
     name
     from
     to
+    description
     price
+    priceFa
     status
     isAccessible
+    isUpcomming
+    isOpen
     remaining
+    image {
+      id
+      url
+    }
   }
 }
