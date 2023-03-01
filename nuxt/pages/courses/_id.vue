@@ -382,7 +382,6 @@
 
 <script lang="ts" setup>
 import { useContext } from '@nuxtjs/composition-api'
-import CommentSection from '~/components/CommentSection.vue'
 
 const ctx = useContext()
 

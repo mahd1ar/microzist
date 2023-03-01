@@ -5,7 +5,7 @@
     >
       <div class="rounded overflow-hidden relative  duration-500">
         <img
-          class="w-full h-36 object-cover rounded  group-hover:scale-110 duration-1000 transition-transform ease-out "
+          class="w-full h-56 object-cover rounded  group-hover:scale-110 duration-1000 transition-transform ease-out "
           alt=""
           :src="props.image"
         />

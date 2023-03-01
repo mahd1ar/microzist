@@ -1676,14 +1676,6 @@ var keystone_default = withAuth(
         app.post(
           "/cart-item",
           async (req, res) => {
-            const { uuid } = req.body;
-            if (!uuid || typeof uuid !== "string") {
-              res.status(401).json({
-                ok: false,
-                message: "login first"
-              });
-              return;
-            }
             const courseId = req.body.cid;
             const eventId = req.body.eventid;
             const productType = eventId ? "event" : "course";

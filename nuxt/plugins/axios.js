@@ -25,7 +25,7 @@ export default function (context) {
         }
 
         if (code === 401) {
-            redirect('/login')
+            context.redirect('/login')
 
         }
     })

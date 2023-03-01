@@ -51,8 +51,8 @@
                 <div class="text-xs">
                   {{
                     $store.getters.user.name +
-                    ' ' +
-                    $store.getters.user.lastName
+                      ' ' +
+                      $store.getters.user.lastName
                   }}
                 </div>
               </div>
@@ -93,7 +93,7 @@
                 viewBox="0 0 24 24"
                 stroke="currentColor"
                 stroke-width="2"
-                class="h-4 w-4 text-sky-400"
+                class="h-4 w-4 "
               >
                 <path
                   stroke-linecap="round"
@@ -171,8 +171,8 @@
                   <div class="text-xs">
                     {{
                       $store.getters.user.name +
-                      ' ' +
-                      $store.getters.user.lastName
+                        ' ' +
+                        $store.getters.user.lastName
                     }}
                   </div>
                 </div>
@@ -229,7 +229,7 @@
                 'border-sky-500 py-3 font-medium  leading-none tracking-wider text-sky-500 backdrop-blur ':
                   +tabIndex === idx,
                 'cursor-pointer rounded-t border-gray-200  hover:text-gray-900':
-                  +tabIndex !== idx,
+                  +tabIndex !== idx
               }"
             >
               <div
@@ -253,7 +253,7 @@ import {
   useRouter,
   computed,
   ref,
-  reactive,
+  reactive
 } from '@nuxtjs/composition-api'
 
 const ctx = useContext()
@@ -271,13 +271,13 @@ const tabIndex = computed(() =>
     : '0'
 )
 
-function switchTab(index: number) {
+function switchTab (index: number) {
   router.push({ path: fullpath.value, query: { tabIndex: String(index) } })
 }
 
-ctx.$mitt.on('tabItems', (tb) => {
+ctx.$mitt.on('tabItems', tb => {
   tabItems.value.splice(0, tabItems.value.length)
-  tb.forEach((element) => {
+  tb.forEach(element => {
     tabItems.value.push(element)
   })
 })

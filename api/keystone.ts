@@ -348,15 +348,6 @@ export default withAuth(
                 app.post<{ cid: string; eventid: string }, GeneralApiResponse>(
                     '/cart-item',
                     async (req, res) => {
-                        const { uuid } = req.body;
-                        if (!uuid || typeof uuid !== 'string') {
-                            res.status(401).json({
-                                ok: false,
-                                message: 'login first',
-                            });
-                            return;
-                        }
-
                         const courseId = req.body.cid;
                         const eventId = req.body.eventid;
 

@@ -238,9 +238,11 @@
       </div>
       <div v-else-if="tabIndex === 1">
         <div class="container mx-auto">
+          {{ userCommentAndRate?.comments }}
           <div class="text-center mt-8">
             <div
-              class="inline-flex mx-auto rounded bg-gradient-to-tr from-yellow-200 to-yellow-100 border-yellow-600  px-6 py-4 flex-col"
+              v-if="userRateThisCourse"
+              class="inline-flex mx-auto rounded bg-gradient-to-tr from-yellow-200 to-yellow-100 border border-yellow-300  px-6 py-4 flex-col"
             >
               <h2 class="text-2xl mb-4 px-6">به این آموزش امتیاز دهید</h2>
               <StarsGiver
@@ -249,9 +251,9 @@
                 v-slot="{ hasChanged }"
               >
                 <button
-                  class="text-center w-full text-yellow-500 py-2 mt-2 bg-white rounded bg-opacity-60 hover:bg-opacity-70"
-                  v-if="hasChanged"
+                  class="text-center w-full disabled:bg-gray-300/40 disabled:text-gray-400 text-yellow-500 py-2 mt-2 bg-white rounded bg-opacity-60 hover:bg-opacity-70"
                   @click="setRate"
+                  :disabled="!hasChanged"
                 >
                   ثبت نظر
                 </button>
@@ -378,8 +380,8 @@ export default defineComponent({
       // @ts-ignore
       ctx.$izitoast.success({
         icon: 'icon-person',
-        title: 'Hey',
-        message: 'Welcome!',
+        title: 'Fa:: tanks',
+        message: 'fa:: your rate is successfully saved',
         position: 'center',
         onOpening: function () {
           console.info('callback abriu!')
@@ -393,11 +395,12 @@ export default defineComponent({
 
     return {
       result,
+      tabIndex,
       loading,
       userRateThisCourse,
       goToTabIndex,
-      tabIndex,
       rate,
+      userCommentAndRate,
       setRate
     }
   }

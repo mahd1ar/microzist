@@ -55,9 +55,8 @@ export const mutations: MutationTree<RootState> = {
 
 export const actions: ActionTree<RootState, RootState> = {
   async nuxtServerInit({ dispatch }, ctx: Context) {
-    
     if (ctx.route.path !== '/auth-item')
-      ctx.redirect('/auth-item?go=' + encodeURIComponent(ctx.route.path))
+      ctx.redirect('/auth-item?go=' + encodeURIComponent(ctx.route.fullPath))
     // const { data } = await ctx.app.$axios.post('/auth-item', {
     //   withCredentials: true,
     // })
