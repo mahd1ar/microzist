@@ -108,7 +108,9 @@
             </div>
             <div
               v-if="userRateThisCourse === false"
-              class="relative h-12 overflow-hidden rounded border border-yellow-500 bg-yellow-400 p-2 text-xl text-yellow-50 cursor-pointer"
+              class="relative h-12 overflow-hidden rounded border
+              border-yellow-500 bg-yellow-400 p-2 text-xl text-yellow-50
+              cursor-pointer"
               @click="goToTabIndex(1)"
             >
               <div
@@ -365,6 +367,15 @@ export default defineComponent({
     }
 
     function setRate () {
+      runSetRate({
+        comment: 'my rating is ' + rate.value,
+        rate: rate.value,
+        courseId: ctx.route.value.params.courseid
+      })
+    }
+
+    setRateDone(() => {
+      // @ts-ignore
       ctx.$izitoast.success({
         icon: 'icon-person',
         title: 'Hey',
@@ -377,15 +388,6 @@ export default defineComponent({
           console.info('callback abriu!')
         }
       })
-      // runSetRate({
-      //   comment: 'my rating is ' + rate.value,
-      //   rate: rate.value,
-      //   courseId: ctx.route.value.params.courseid
-      // })
-    }
-
-    setRateDone(() => {
-      alert('done')
       refetch()
     })
 
