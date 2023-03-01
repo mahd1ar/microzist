@@ -1,7 +1,7 @@
 <template>
   <div
     id="comment-section"
-    class="rounded border p-6 py-4 "
+    class="rounded border p-6 py-4"
     :class="{
       'border-yellow-500 bg-yellow-100 text-yellow-700': theme === 'gold',
       'border-gray-300 bg-gray-100 text-gray-700': theme === 'gray'
@@ -24,7 +24,7 @@
         کنید
       </div>
     </div>
-    <dir v-if="$store.getters.isLoggedIn" class="p-0">
+    <div v-if="$store.getters.isLoggedIn" class="p-0">
       <div
         class="mb-4 inline-flex cursor-pointer items-center gap-4 bg-yellow-50 px-4 py-2 text-yellow-500"
       >
@@ -60,7 +60,7 @@
 
       <button
         @click="submitComment"
-        class="flex items-center gap-4  px-4 py-2"
+        class="flex items-center gap-4 px-4 py-2"
         :class="{ 'bg-yellow-50': theme === 'gold' }"
       >
         <svg
@@ -76,7 +76,7 @@
         </svg>
         ارسال نظر
       </button>
-    </dir>
+    </div>
   </div>
 </template>
 
@@ -91,7 +91,8 @@ import {
 
 const { theme = 'gold', widthStars = true, target, targetId } = defineProps({
   theme: {
-    type: String as PropType<'gray' | 'gold'>
+    type: String as PropType<'gray' | 'gold'>,
+    default: () => 'gold'
   },
   widthStars: { type: Boolean },
   target: {
@@ -150,7 +151,7 @@ function submitComment () {
     commentInput.data.course = { connect: { id: targetId } }
   else if (target === 'courseItem')
     commentInput.data.courseItem = { connect: { id: targetId } }
-  debugger
+
   if (widthStars) commentInput.data.rate = star.value
 
   mutate(commentInput)

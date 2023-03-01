@@ -708,12 +708,16 @@ export type Event = {
   description?: Maybe<Scalars['String']>;
   from?: Maybe<Scalars['String']>;
   id: Scalars['ID'];
+  image?: Maybe<ImageFieldOutput>;
   isAccessible?: Maybe<Scalars['Boolean']>;
+  isOpen?: Maybe<Scalars['Boolean']>;
+  isUpcomming?: Maybe<Scalars['Boolean']>;
   location?: Maybe<Scalars['String']>;
   maxAmount?: Maybe<Scalars['Int']>;
   name?: Maybe<Scalars['String']>;
   price?: Maybe<Scalars['Int']>;
   priceFa?: Maybe<Scalars['String']>;
+  registrationDeadline?: Maybe<Scalars['String']>;
   remaining?: Maybe<Scalars['Int']>;
   status?: Maybe<Scalars['String']>;
   to?: Maybe<Scalars['String']>;
@@ -739,10 +743,12 @@ export type EventCreateInput = {
   content?: InputMaybe<Scalars['JSON']>;
   description?: InputMaybe<Scalars['String']>;
   from?: InputMaybe<Scalars['String']>;
+  image?: InputMaybe<ImageFieldInput>;
   location?: InputMaybe<Scalars['String']>;
   maxAmount?: InputMaybe<Scalars['Int']>;
   name?: InputMaybe<Scalars['String']>;
   price?: InputMaybe<Scalars['Int']>;
+  registrationDeadline?: InputMaybe<Scalars['String']>;
   status?: InputMaybe<Scalars['String']>;
   to?: InputMaybe<Scalars['String']>;
   users?: InputMaybe<UserRelateToManyForCreateInput>;
@@ -762,6 +768,7 @@ export type EventOrderByInput = {
   maxAmount?: InputMaybe<OrderDirection>;
   name?: InputMaybe<OrderDirection>;
   price?: InputMaybe<OrderDirection>;
+  registrationDeadline?: InputMaybe<OrderDirection>;
   status?: InputMaybe<OrderDirection>;
   to?: InputMaybe<OrderDirection>;
 };
@@ -798,10 +805,12 @@ export type EventUpdateInput = {
   content?: InputMaybe<Scalars['JSON']>;
   description?: InputMaybe<Scalars['String']>;
   from?: InputMaybe<Scalars['String']>;
+  image?: InputMaybe<ImageFieldInput>;
   location?: InputMaybe<Scalars['String']>;
   maxAmount?: InputMaybe<Scalars['Int']>;
   name?: InputMaybe<Scalars['String']>;
   price?: InputMaybe<Scalars['Int']>;
+  registrationDeadline?: InputMaybe<Scalars['String']>;
   status?: InputMaybe<Scalars['String']>;
   to?: InputMaybe<Scalars['String']>;
   users?: InputMaybe<UserRelateToManyForUpdateInput>;
@@ -2876,6 +2885,15 @@ export type LogoutMutationVariables = Exact<{ [key: string]: never; }>;
 
 export type LogoutMutation = { __typename?: 'Mutation', endSession: boolean };
 
+export type SetRateMutationVariables = Exact<{
+  courseId: Scalars['ID'];
+  rate: Scalars['Int'];
+  comment: Scalars['String'];
+}>;
+
+
+export type SetRateMutation = { __typename?: 'Mutation', createComment?: { __typename?: 'Comment', id: string } | null };
+
 export type SigninMutationVariables = Exact<{
   email: Scalars['String'];
   password: Scalars['String'];
@@ -2903,7 +2921,7 @@ export type CartByUserQueryVariables = Exact<{
 }>;
 
 
-export type CartByUserQuery = { __typename?: 'Query', carts?: Array<{ __typename?: 'Cart', id: string, totalPrice?: number | null, items?: Array<{ __typename?: 'CartItem', id: string, priceWithDiscount?: number | null, type?: string | null, coupon?: { __typename?: 'Coupon', id: string, code?: number | null, discount?: number | null } | null, course?: { __typename?: 'Course', id: string, name?: string | null, price?: number | null } | null, event?: { __typename?: 'Event', id: string, name?: string | null, price?: number | null } | null }> | null }> | null };
+export type CartByUserQuery = { __typename?: 'Query', carts?: Array<{ __typename?: 'Cart', id: string, totalPrice?: number | null, items?: Array<{ __typename?: 'CartItem', id: string, priceWithDiscount?: number | null, type?: string | null, coupon?: { __typename?: 'Coupon', id: string, code?: number | null, discount?: number | null } | null, course?: { __typename?: 'Course', id: string, name?: string | null, priceFa?: string | null, price?: number | null, image?: { __typename?: 'ImageFieldOutput', id: string, url: string } | null } | null, event?: { __typename?: 'Event', id: string, name?: string | null, price?: number | null, priceFa?: string | null, image?: { __typename?: 'ImageFieldOutput', id: string, url: string } | null } | null }> | null }> | null };
 
 export type CourseItemQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -2929,21 +2947,19 @@ export type CourseQuery = { __typename?: 'Query', course?: { __typename?: 'Cours
 export type CoursesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type CoursesQuery = { __typename?: 'Query', courses?: Array<{ __typename?: 'Course', id: string, name?: string | null, description?: string | null, isAccessible?: boolean | null }> | null };
+export type CoursesQuery = { __typename?: 'Query', courses?: Array<{ __typename?: 'Course', id: string, name?: string | null, description?: string | null, isAccessible?: boolean | null, price?: number | null, image?: { __typename?: 'ImageFieldOutput', id: string, url: string } | null, teacher?: { __typename?: 'Teacher', name?: string | null, id: string, image?: { __typename?: 'ImageFieldOutput', id: string, url: string } | null } | null }> | null };
 
 export type EventQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
-export type EventQuery = { __typename?: 'Query', event?: { __typename?: 'Event', id: string, name?: string | null, location?: string | null, from?: string | null, to?: string | null, isAccessible?: boolean | null, price?: number | null, priceFa?: string | null, content?: { __typename?: 'Event_content_Document', document: any } | null } | null };
+export type EventQuery = { __typename?: 'Query', event?: { __typename?: 'Event', id: string, name?: string | null, from?: string | null, to?: string | null, description?: string | null, location?: string | null, price?: number | null, priceFa?: string | null, status?: string | null, isAccessible?: boolean | null, isUpcomming?: boolean | null, isOpen?: boolean | null, remaining?: number | null, content?: { __typename?: 'Event_content_Document', document: any } | null, image?: { __typename?: 'ImageFieldOutput', id: string, url: string } | null } | null };
 
-export type EventsQueryVariables = Exact<{
-  status?: InputMaybe<Scalars['String']>;
-}>;
+export type EventsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type EventsQuery = { __typename?: 'Query', events?: Array<{ __typename?: 'Event', id: string, name?: string | null, from?: string | null, to?: string | null, price?: number | null, status?: string | null, isAccessible?: boolean | null, remaining?: number | null }> | null };
+export type EventsQuery = { __typename?: 'Query', events?: Array<{ __typename?: 'Event', id: string, name?: string | null, from?: string | null, to?: string | null, description?: string | null, price?: number | null, priceFa?: string | null, status?: string | null, isAccessible?: boolean | null, isUpcomming?: boolean | null, isOpen?: boolean | null, remaining?: number | null, image?: { __typename?: 'ImageFieldOutput', id: string, url: string } | null }> | null };
 
 export type MyCoursesQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -2965,3 +2981,11 @@ export type OrderQueryVariables = Exact<{
 
 
 export type OrderQuery = { __typename?: 'Query', order?: { __typename?: 'Order', id: string, totalCost?: number | null, trackId?: string | null, orderDate?: any | null } | null };
+
+export type UserCommentAndRateQueryVariables = Exact<{
+  userId: Scalars['ID'];
+  courseId: Scalars['ID'];
+}>;
+
+
+export type UserCommentAndRateQuery = { __typename?: 'Query', comments?: Array<{ __typename?: 'Comment', rate?: number | null, comment?: string | null }> | null };

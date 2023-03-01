@@ -1,10 +1,10 @@
 <template>
   <div class="">
     <div class="container">
-      <h1 class="text-xl mt-12">دوره های آموزشی من</h1>
+      <h1 class="mt-12 text-xl">دوره های آموزشی من</h1>
 
       <hr class="mx-28 mt-6 mb-6" />
-      <loading-indicator :loading="loading" color="#406b8f">
+      <loading-indicator kind="spinner" :loading="loading" color="#406b8f">
         <div class="">
           <section class="body-font overflow-hidden text-gray-600">
             <div
@@ -14,7 +14,7 @@
             >
               <div class="ml-auto flex flex-wrap">
                 <img
-                  class="h-64 w-full rounded object-cover object-center lg:h-auto lg:w-1/2"
+                  class="h-64 w-full overflow-hidden rounded object-cover object-center lg:w-1/2"
                   :src="course.image?.url"
                 />
                 <div class="w-full lg:w-1/2 lg:pr-10">
@@ -162,7 +162,7 @@
 </template>
 
 <script lang="ts">
-import { useQuery } from '@vue/apollo-composable/dist'
+import { useLazyQuery, useQuery } from '@vue/apollo-composable/dist'
 import MYCOURSESQUery from '@/apollo/q/my-courses.gql'
 import { MyCoursesQuery, MyCoursesQueryVariables } from '~/types/types'
 import {
@@ -170,15 +170,14 @@ import {
   defineComponent,
   computed,
   watch,
-  onMounted
+  onMounted,
 } from '@nuxtjs/composition-api'
 
 export default defineComponent({
   layout: 'dashboard',
-  setup () {
+  setup() {
     const ctx = useContext()
     const userID = ctx.store.getters.user.id
-
     const { result: myCourses, loading } = useQuery<
       MyCoursesQuery,
       MyCoursesQueryVariables
@@ -186,8 +185,8 @@ export default defineComponent({
 
     return {
       myCourses,
-      loading
+      loading,
     }
-  }
+  },
 })
 </script>

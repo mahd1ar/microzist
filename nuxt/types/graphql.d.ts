@@ -17,6 +17,15 @@ declare module '*/logout.gql' {
 }
     
 
+declare module '*/set-rate.gql' {
+  import { DocumentNode } from 'graphql';
+  const defaultDocument: DocumentNode;
+  export const setRate: DocumentNode;
+
+  export default defaultDocument;
+}
+    
+
 declare module '*/signin.gql' {
   import { DocumentNode } from 'graphql';
   const defaultDocument: DocumentNode;
@@ -129,6 +138,15 @@ declare module '*/order.gql' {
   import { DocumentNode } from 'graphql';
   const defaultDocument: DocumentNode;
   export const order: DocumentNode;
+
+  export default defaultDocument;
+}
+    
+
+declare module '*/user-comment-and-rate.gql' {
+  import { DocumentNode } from 'graphql';
+  const defaultDocument: DocumentNode;
+  export const userCommentAndRate: DocumentNode;
 
   export default defaultDocument;
 }

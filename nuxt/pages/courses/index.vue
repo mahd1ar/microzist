@@ -1,19 +1,20 @@
 <template>
   <div>
-    <h1>we doo</h1>
-    <div class="container mx-auto" v-if="courses.result">
-      <div
-        class="border"
-        v-for="c in courses.result.value?.courses"
-        :key="c.id"
-      >
-        <h2>
-          {{ c.name }}
-        </h2>
-        <div v-if="c.isAccessible" class="bg-green-400">tick</div>
-        <button @click="addToCart(c.id, c.name || '')" v-else>
-          add to cart
-        </button>
+    <h1>Courses</h1>
+    <div class="container mx-auto" v-if="courses?.courses">
+      <div class="grid grid-cols-3 gap-2">
+        <CourseCart
+          v-for="ci in courses?.courses"
+          :key="ci.id"
+          :id="ci.id"
+          :image="ci.image?.url"
+          :price="ci.price || 0"
+          :sessions-count="12"
+          :teacher-name="ci.teacher?.name || ''"
+          :title="ci.name || ''"
+          :teacher-picture="ci.teacher?.image?.id || ''"
+          :url="'/courses/' + ci.id"
+        />
       </div>
     </div>
   </div>
@@ -25,18 +26,17 @@ import COURCES from '@/apollo/q/courses.gql'
 import { CoursesQuery } from '@/types/types'
 import { useQuery } from '@vue/apollo-composable/dist'
 import { GeneralApiResponse } from '../../../api/data/types'
-import { showGeneralApiMessage } from '~/data/utils'
 
 let prvPage: string
 const ctx = useContext()
 const store = useStore()
 
-const courses = useQuery<CoursesQuery>(COURCES)
+const { result: courses } = useQuery<CoursesQuery>(COURCES)
 
-async function addToCart(cid: string, cname: string) {
+async function addToCart (cid: string, cname: string) {
   if (store.getters.isLoggedIn) {
     await ctx.$axios.post<GeneralApiResponse>('/cart-item', {
-      cid,
+      cid
     })
   } else {
     // @ts-ignore

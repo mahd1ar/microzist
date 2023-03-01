@@ -4,5 +4,18 @@ query courses {
     name
     description
     isAccessible
+    image {
+      id
+      url
+    }
+    price
+    teacher {
+      name
+      image {
+        id
+        url
+      }
+      id
+    }
   }
 }

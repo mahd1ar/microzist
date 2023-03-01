@@ -133,7 +133,7 @@
             </div>
           </div>
         </div>
-        <CommentSection class="mt-8" />
+
         <div class="mt-8 mb-8 rounded-lg border bg-white">
           <div class="flex items-center justify-between px-6 pt-6">
             <h2 class="text-lg font-bold text-indigo-500">دیدگاه</h2>
@@ -258,6 +258,7 @@
               asdasd
             </div> -->
             <button
+              @click="addToCart('id', 'exemple')"
               class="relative flex w-full items-center justify-center gap-2 rounded-sm bg-green-500 py-2 text-white shadow-lg shadow-green-500/50 hover:bg-green-400"
             >
               <span>
@@ -380,9 +381,24 @@
 </template>
 
 <script lang="ts" setup>
-import CommentSection from '@/components/misc/CommentSection.vue'
+import { useContext } from '@nuxtjs/composition-api'
+import CommentSection from '~/components/CommentSection.vue'
 
-function share(social: 'telegram' | 'instagram' | 'linkedin' | 'whatsapp') {
+const ctx = useContext()
+
+function share (social: 'telegram' | 'instagram' | 'linkedin' | 'whatsapp') {
   console.log(social)
+}
+
+async function addToCart (cid: string, cname: string) {
+  if (ctx.store.getters.isLoggedIn) {
+    await ctx.$axios.post('/cart-item', {
+      cid: ctx.route.value.params.id
+    })
+  } else {
+    // @ts-ignore
+
+    ctx.$izitoast.error({ title: 'fa:: first login to watch => ' + cname })
+  }
 }
 </script>

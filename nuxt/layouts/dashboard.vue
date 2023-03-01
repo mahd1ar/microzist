@@ -51,8 +51,8 @@
                 <div class="text-xs">
                   {{
                     $store.getters.user.name +
-                      ' ' +
-                      $store.getters.user.lastName
+                    ' ' +
+                    $store.getters.user.lastName
                   }}
                 </div>
               </div>
@@ -106,8 +106,9 @@
             <ul class="flex items-center gap-6">
               <li>
                 <div title="exit">
-                  <div
-                    class="flex cursor-pointer gap-2 overflow-hidden rounded-md bg-sky-50 p-1 px-3 text-sky-400 hover:bg-white"
+                  <nuxt-link
+                    to="/logout"
+                    class="flex cursor-pointer items-center gap-2 overflow-hidden rounded-md p-1 px-3 text-red-500 hover:bg-white/20"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -115,7 +116,7 @@
                       role="img"
                       preserveAspectRatio="xMidYMid meet"
                       viewBox="0 0 24 24"
-                      class="h-6 w-6"
+                      class="h-5 w-5"
                     >
                       <path
                         fill="currentColor"
@@ -124,7 +125,7 @@
                     </svg>
 
                     خروج
-                  </div>
+                  </nuxt-link>
                 </div>
               </li>
             </ul>
@@ -170,8 +171,8 @@
                   <div class="text-xs">
                     {{
                       $store.getters.user.name +
-                        ' ' +
-                        $store.getters.user.lastName
+                      ' ' +
+                      $store.getters.user.lastName
                     }}
                   </div>
                 </div>
@@ -218,21 +219,21 @@
         <div class="container relative mx-auto pt-5">
           <!-- courses -->
 
-          <div class=" relative flex flex-wrap">
+          <div class="relative flex flex-wrap">
             <button
               v-for="(i, idx) in tabItems"
               :key="idx"
               @click="switchTab(idx)"
-              class="title-font inline-flex w-1/2  items-center transition-all duration-300 justify-center border-b-2 py-3 font-medium bg-opacity-30 leading-none tracking-wider sm:w-auto sm:justify-start sm:px-6"
+              class="title-font inline-flex w-1/2 items-center justify-center border-b-2 bg-opacity-30 py-3 font-medium leading-none tracking-wider transition-all duration-300 sm:w-auto sm:justify-start sm:px-6"
               :class="{
-                'text-sky-500 backdrop-blur border-sky-500  py-3 font-medium leading-none tracking-wider ':
+                'border-sky-500 py-3 font-medium  leading-none tracking-wider text-sky-500 backdrop-blur ':
                   +tabIndex === idx,
                 'cursor-pointer rounded-t border-gray-200  hover:text-gray-900':
-                  +tabIndex !== idx
+                  +tabIndex !== idx,
               }"
             >
               <div
-                class="icons flex justify-center items-center"
+                class="icons flex items-center justify-center"
                 v-html="i.icon"
               ></div>
               <div v-text="i.name"></div>
@@ -252,7 +253,7 @@ import {
   useRouter,
   computed,
   ref,
-  reactive
+  reactive,
 } from '@nuxtjs/composition-api'
 
 const ctx = useContext()
@@ -270,13 +271,13 @@ const tabIndex = computed(() =>
     : '0'
 )
 
-function switchTab (index: number) {
+function switchTab(index: number) {
   router.push({ path: fullpath.value, query: { tabIndex: String(index) } })
 }
 
-ctx.$mitt.on('tabItems', tb => {
+ctx.$mitt.on('tabItems', (tb) => {
   tabItems.value.splice(0, tabItems.value.length)
-  tb.forEach(element => {
+  tb.forEach((element) => {
     tabItems.value.push(element)
   })
 })
@@ -284,7 +285,7 @@ ctx.$mitt.on('tabItems', tb => {
 
 <style lang="scss" scoped>
 .icons {
-  @apply h-5 w-5 ml-3;
+  @apply ml-3 h-5 w-5;
   svg {
     @apply h-5 w-5;
   }

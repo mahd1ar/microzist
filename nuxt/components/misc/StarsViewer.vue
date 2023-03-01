@@ -35,6 +35,4 @@ const starFilled = Array(rate)
 const starOutline = Array(5 - rate)
   .fill(1)
   .map(() => counter++)
-
-console.log(starFilled)
 </script>

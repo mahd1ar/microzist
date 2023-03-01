@@ -1,12 +1,11 @@
 import { graphql } from '@graphql-ts/schema';
 import { list } from '@keystone-6/core';
-import { allowAll } from '@keystone-6/core/access';
 import {
     text,
     integer,
     virtual,
     select,
-    relationship,
+    relationship, image
 } from '@keystone-6/core/fields';
 import { componentBlocks } from './component-blocks';
 import { BaseKeystoneTypeInfo, KeystoneContext } from '@keystone-6/core/types';
@@ -28,13 +27,7 @@ export const Event = list({
     hooks: {
         validateInput(args) {
             // TODO deadline must not after starting event
-            console.log('args.resolvedData');
-            console.log(args.resolvedData);
 
-            console.log('args.item');
-            console.log(args.item);
-            console.log('args.inputData');
-            console.log(args.inputData);
         },
     },
 
@@ -51,6 +44,7 @@ export const Event = list({
         name: text({
             validation: { isRequired: true },
         }),
+        image: image({ storage: 'images' }),
         description: text({ ui: { displayMode: 'textarea' } }),
         content: document({
             formatting: true,
@@ -80,8 +74,20 @@ export const Event = list({
             field: graphql.field({
                 type: graphql.String,
                 async resolve(item) {
-                    const { price } = item as { price: number };
-                    return price ? `${wordifyfa(price)} تومان ` : 'رایگان';
+                    const { price } = item as unknown as { price: number };
+                    console.log(price)
+                    if (price) {
+                        switch (price) {
+                            case 0:
+                                return 'رایگان'
+
+                            case -1:
+                                return 'این رویداد قابل ثبت نام نیست'
+                            default:
+                                return `${wordifyfa(price)} تومان `
+                        }
+                    } else
+                        return 'رایگان';
                 },
             }),
         }),
@@ -91,7 +97,7 @@ export const Event = list({
                 type: graphql.Int,
                 // @ts-ignore
                 async resolve(
-                    { id, maxAmount },
+                    { id, maxAmount }: { id: string, maxAmount: number },
                     _,
                     context: KeystoneContext<BaseKeystoneTypeInfo>
                 ) {
@@ -159,6 +165,7 @@ export const Event = list({
             //         fieldMode: 'hidden',
             //     },
             // },
+
             field: graphql.field({
                 type: graphql.Boolean,
                 // @ts-ignore
@@ -182,6 +189,7 @@ export const Event = list({
 
                     return false;
                 },
+
             }),
             // graphQLReturnType: "String",
         }),
@@ -190,7 +198,7 @@ export const Event = list({
                 type: graphql.Boolean,
 
                 async resolve(item, _) {
-                    const { from } = item as { from: string };
+                    const { from } = item as unknown as { from: string };
 
                     if (!from) return false;
                     // const fromArr = from.split('-').map((i) => +i);
@@ -221,7 +229,7 @@ export const Event = list({
                 type: graphql.Boolean,
 
                 async resolve(item, _) {
-                    const { registrationDeadline } = item as {
+                    const { registrationDeadline } = item as unknown as {
                         registrationDeadline: string;
                     };
 

@@ -1,6 +1,6 @@
 import { config } from '@keystone-6/core';
 import bodyParser from 'body-parser';
-import { get } from 'lodash';
+import { capitalize, get } from 'lodash';
 import WebSocket from 'ws';
 import { session, withAuth } from './auth';
 import { GeneralApiResponse, GeneralSession } from './data/types';
@@ -52,7 +52,7 @@ export default withAuth(
         },
         server: {
             cors: {
-                origin: ['http://localhost:5173', 'http://localhost:5173/'],
+                origin: ['http://localhost:5173'],
                 credentials: true,
             },
             port: 3030,
@@ -79,6 +79,7 @@ export default withAuth(
                         if (userCount === 1) {
                             await sudoctx.query.User.updateOne({
                                 where: {
+                                    // TODO fix it
                                     id: 'clcn1d4qg0056ywhb2o13r9wj',
                                 },
                                 data: {
@@ -264,11 +265,10 @@ export default withAuth(
 
                 // auth item
                 app.post('/auth-item', async (req, res) => {
-                    // console.log(req.headers.cookie);
-                    console.log(await session.get({ context: ctx }));
-                    console.log(!!ctx.session ? 'loggedin' : 'not loggedin');
+                    const context = await ctx.withRequest(req, res);
+
                     if (ctx.session) {
-                        const session: GeneralSession = ctx.session;
+                        const session: GeneralSession = context.session;
                         try {
                             const user: User = await ctx.prisma.User.findUnique(
                                 {
@@ -348,6 +348,15 @@ export default withAuth(
                 app.post<{ cid: string; eventid: string }, GeneralApiResponse>(
                     '/cart-item',
                     async (req, res) => {
+                        const { uuid } = req.body;
+                        if (!uuid || typeof uuid !== 'string') {
+                            res.status(401).json({
+                                ok: false,
+                                message: 'login first',
+                            });
+                            return;
+                        }
+
                         const courseId = req.body.cid;
                         const eventId = req.body.eventid;
 
@@ -377,49 +386,59 @@ export default withAuth(
                         }
 
                         // make sure user is logged in
-                        if (!ctx.session) {
-                            res.status(400).send({
+                        const {
+                            session,
+                        }: Partial<{ session?: GeneralSession }> =
+                            await ctx.withRequest(req, res);
+
+                        if (!session) {
+                            res.status(401).send({
                                 ok: false,
                                 message: 'you dont have proper access',
                             });
-                            sendCommand({
-                                action: 'logout',
-                                message: 'session expoire',
+
+                            return;
+                        }
+
+                        const sudoContext = ctx.sudo();
+
+                        const exists = await sudoContext.query[
+                            capitalize(productType)
+                        ].count({
+                            where: { id: { equals: productID } },
+                        });
+                        console.log({ exists });
+                        if (exists === 0) {
+                            res.status(400).json({
+                                message: 'product dose not exists',
+                                ok: false,
                             });
                             return;
                         }
 
-                        // TODO check and make sure that the curse existed
-                        type Cart = {
-                            id: string;
-                            userId: string;
-                            isCompleted: boolean;
-                        };
-
-                        const session: GeneralSession = ctx.session;
-
                         try {
                             let cartId: string;
-                            const [cart] = await ctx.query.Cart.findMany({
-                                where: {
-                                    user: {
-                                        id: {
-                                            equals: session?.itemId,
+                            const [cart] =
+                                await sudoContext.query.Cart.findMany({
+                                    where: {
+                                        user: {
+                                            id: {
+                                                equals: session?.itemId,
+                                            },
+                                        },
+                                        AND: {
+                                            isCompleted: {
+                                                equals: false,
+                                            },
                                         },
                                     },
-                                    AND: {
-                                        isCompleted: {
-                                            equals: false,
-                                        },
-                                    },
-                                },
-                                query: `id
+                                    query: `id
                                         items {
                                             ${productType} {
                                                 id
                                             }
                                         }`,
-                            });
+                                });
 
                             if (cart) {
                                 cartId = cart.id;
@@ -439,8 +458,8 @@ export default withAuth(
                                     return;
                                 }
 
-                                const newCartItem: Cart =
-                                    await ctx.prisma.CartItem.create({
+                                const { id } =
+                                    await sudoContext.query.CartItem.createOne({
                                         data: {
                                             [productType]: {
                                                 connect: {
@@ -453,10 +472,11 @@ export default withAuth(
                                                 },
                                             },
                                         },
+                                        query: ' id ',
                                     });
                             } else {
-                                const newCart: Cart =
-                                    await ctx.prisma.Cart.create({
+                                const { id } =
+                                    await sudoContext.query.Cart.createOne({
                                         data: {
                                             user: {
                                                 connect: {
@@ -473,9 +493,8 @@ export default withAuth(
                                                 },
                                             },
                                         },
+                                        query: 'id',
                                     });
-
-                                cartId = newCart.id;
                             }
                         } catch (error) {
                             console.error(error);
@@ -486,6 +505,7 @@ export default withAuth(
                             return;
                         }
 
+                        sudoContext.exitSudo();
                         res.status(201).json({ ok: true, message: 'created' });
                     }
                 );
@@ -494,13 +514,13 @@ export default withAuth(
                 app.get<{ id: string; cartitem: string }, GeneralApiResponse>(
                     '/coupon',
                     async (req, res) => {
-                        type Coupon = {
-                            id: string;
-                            code: string;
-                            description: string;
-                            maxAmount: number;
-                            discount: number;
-                        };
+                        // type Coupon = {
+                        //     id: string;
+                        //     code: string;
+                        //     description: string;
+                        //     maxAmount: number;
+                        //     discount: number;
+                        // };
 
                         if (!req.query.id || typeof req.query.id !== 'string') {
                             res.status(403).json({
@@ -514,7 +534,7 @@ export default withAuth(
                             !req.query.cartitem ||
                             typeof req.query.cartitem !== 'string'
                         ) {
-                            res.status(403).json({
+                            res.status(400).json({
                                 ok: false,
                                 message: 'bad request',
                             });
@@ -531,14 +551,15 @@ export default withAuth(
                             });
                             return;
                         }
+                        const sudoContex = await ctx.sudo();
                         try {
-                            // console.log(Object.keys(ctx.prisma.Coupon));
-                            const [coupon] = await ctx.query.Coupon.findMany({
-                                where: {
-                                    code: { equals: couponCode },
-                                },
-                                query: 'id code remaining',
-                            });
+                            const [coupon] =
+                                await sudoContex.query.Coupon.findMany({
+                                    where: {
+                                        code: { equals: couponCode },
+                                    },
+                                    query: 'id code remaining',
+                                });
 
                             if (!coupon || !coupon.id) {
                                 res.status(403).json({
@@ -548,7 +569,7 @@ export default withAuth(
                                 return;
                             }
 
-                            await ctx.db.CartItem.updateOne({
+                            await sudoContex.query.CartItem.updateOne({
                                 where: {
                                     id: cartitem,
                                 },
@@ -561,16 +582,18 @@ export default withAuth(
                                 },
                             });
 
-                            res.json({ ok: true, message: 'success full' });
+                            res.json({ ok: true, message: 'fa::success full' });
                         } catch (error) {
                             // console.error(String('======'));
                             // console.error(String(error));
                             // console.error(error);
                             res.json({
                                 ok: false,
-                                message: 'operation not successfull',
+                                message: 'fa::operation not successfull',
                             });
                         }
+
+                        sudoContex.exitSudo();
                     }
                 );
 
@@ -578,8 +601,14 @@ export default withAuth(
                 app.get<{}, GeneralApiResponse>(
                     '/checkout',
                     async (req, res) => {
-                        if (!ctx.session) {
-                            res.status(400).json({
+                        const {
+                            session,
+                        }: Partial<{ session: GeneralSession }> =
+                            await ctx.withRequest(req, res);
+                        const sudoContext = await ctx.sudo();
+
+                        if (!session || session.itemId) {
+                            res.status(401).json({
                                 ok: false,
                                 message: 'fa:: session expires login agin',
                             });
@@ -595,13 +624,11 @@ export default withAuth(
 
                         try {
                             const [{ totalPrice, id: cartid }] =
-                                await ctx.query.Cart.findMany({
+                                await sudoContext.query.Cart.findMany({
                                     where: {
                                         user: {
                                             id: {
-                                                equals: (
-                                                    ctx.session as GeneralSession
-                                                )?.itemId,
+                                                equals: session.itemId,
                                             },
                                         },
                                     },
@@ -633,10 +660,9 @@ export default withAuth(
 
                             // Payment Request
                             const response = await zibal.request({
-                                amount: totalPrice, // Required - In Rials
+                                amount: totalPrice * 10, // Required - In Rials
                                 orderId: cartid, // Optional
-                                merchant: 'zibal', // As Said Above, You can Specify merchant for Each Transaction too.
-                                callbackUrl: 'http://localhost:3030/ipg/cb', // As Said Above, You can Specify merchant for Each Transaction too.
+                                merchant: process.env.MERCHANT, // As Said Above, You can Specify merchant for Each Transaction too.
                                 mobile: '09102124368', // Optional - User's Card Numbers will Show inf Dropdown in Shaparak Page if you Send User's Mobile
                                 description: 'THIS IS MY DESCRIPTION', // Optional
                                 allowedCards: ['5022291092719457'], // Optional - Any Transaction with a Card Number which is not Present in this Array will be Unsuccessful
@@ -653,6 +679,8 @@ export default withAuth(
                                 message: String(error),
                             });
                         }
+
+                        sudoContext.exitSudo();
                     }
                 );
 

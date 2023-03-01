@@ -1,0 +1,11 @@
+mutation setRate($courseId: ID!, $rate: Int!, $comment: String!) {
+  createComment(
+    data: {
+      comment: $comment
+      rate: $rate
+      course: { connect: { id: $courseId } }
+    }
+  ) {
+    id
+  }
+}
