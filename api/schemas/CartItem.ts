@@ -38,7 +38,12 @@ export const CartItem = list({
     },
     hooks: {
         async validateInput(args) {
-            console.log(args.resolvedData);
+            // if(args.operation==='create'){
+
+            // }
+            // const x = args.context.query.CartItem.findOne({
+            //     where: {id:}
+            // })
             if (args.operation === 'update') {
                 return;
             }

@@ -16,6 +16,17 @@ query course($id: ID!) {
       url
     }
     rate
+    comments(orderBy: { createdAt: desc }) {
+      id
+      user {
+        id
+        name
+        lastName
+      }
+      comment
+      rate
+      createdAt
+    }
     commentsCount
     courseItem {
       id

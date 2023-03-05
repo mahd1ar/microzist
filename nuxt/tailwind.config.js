@@ -20,9 +20,7 @@ module.exports = {
       },
     },
     extend: {
-      backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--gradient-color-stops))',
-      },
+
       colors: {
         primary: { DEFAULT: '#FFC800', dark: '#67540a', light: "#f7de85" },
         tm: {
@@ -31,14 +29,12 @@ module.exports = {
         },
       },
       fontFamily: {
-        yekan: 'Yekan Bakh',
+        noto: ["IRANSansX", "sans-serif"],
         lato: ['Lato', 'sans-serif']
       },
-      backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--gradient-color-stops))',
-      }
+
 
     },
   },
-  plugins: [],
+  plugins: [require('@tailwindcss/line-clamp')]
 }

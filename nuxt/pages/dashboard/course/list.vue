@@ -170,12 +170,14 @@ import {
   defineComponent,
   computed,
   watch,
-  onMounted,
+  onMounted
 } from '@nuxtjs/composition-api'
 
 export default defineComponent({
+  middleware: ['auth'],
   layout: 'dashboard',
-  setup() {
+  transition: 'dashboard',
+  setup () {
     const ctx = useContext()
     const userID = ctx.store.getters.user.id
     const { result: myCourses, loading } = useQuery<
@@ -185,8 +187,8 @@ export default defineComponent({
 
     return {
       myCourses,
-      loading,
+      loading
     }
-  },
+  }
 })
 </script>

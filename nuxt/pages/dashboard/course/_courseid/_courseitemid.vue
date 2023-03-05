@@ -32,7 +32,7 @@
             <div class="text-whit w-72 shrink-0 overflow-hidden p-2 text-white">
               <div
                 id="playlist"
-                class="flex h-full flex-col gap-1 overflow-auto"
+                class="flex h-full flex-col gap-1 overflow-auto mz-scrollbar-dark"
               >
                 <div
                   class="relative flex items-center justify-between rounded border border-white/20 p-2 py-4 hover:bg-white/20"
@@ -149,19 +149,19 @@ import {
   CourseItemQuery,
   CourseItemQueryVariables,
   CourseItemsQuery,
-  CourseItemsQueryVariables,
+  CourseItemsQueryVariables
 } from '@/types/types'
 import {
   defineComponent,
   useContext,
   ref,
   onMounted,
-  computed,
+  computed
 } from '@nuxtjs/composition-api'
 import {
   useQuery,
   useMutation,
-  useLazyQuery,
+  useLazyQuery
 } from '@vue/apollo-composable/dist'
 import useTabIndex from '~/components/useTabIndex'
 import CommentSection from '~/components/CommentSection.vue'
@@ -171,8 +171,9 @@ import { whenever } from '@vueuse/core'
 export default defineComponent({
   middleware: ['auth'],
   layout: 'dashboard',
+  transition: 'dashboard',
   components: { CommentSection },
-  setup() {
+  setup () {
     const ctx = useContext()
     const videoContainer = ref<HTMLDivElement>()
     const plyr = ref<HTMLDivElement>()
@@ -182,16 +183,16 @@ export default defineComponent({
     const {
       result: courseItemResult,
       onResult: courseItemOnResult,
-      loading,
+      loading
     } = useQuery<CourseItemQuery, CourseItemQueryVariables>(COU_ITEM, {
-      id: ctx.route.value.params.courseitemid,
+      id: ctx.route.value.params.courseitemid
     })
 
     const { result: courseItemsResult, load: courseItemsLoad } = useLazyQuery<
       CourseItemsQuery,
       CourseItemsQueryVariables
     >(COU_ITEMS, {
-      id: ctx.route.value.params.courseid,
+      id: ctx.route.value.params.courseid
     })
 
     const playerOptions = {
@@ -204,8 +205,8 @@ export default defineComponent({
         'volume',
         'pip',
         'airplay',
-        'fullscreen',
-      ],
+        'fullscreen'
+      ]
     }
 
     onMounted(() => {
@@ -219,9 +220,9 @@ export default defineComponent({
         plyr.value.player.on('loadeddata', () => {
           if (ctx.$device.isDesktop === true) {
             const h = videoContainer.value?.clientHeight || 0
-            ;(
-              document.querySelector('#playlist') as HTMLDivElement
-            ).style.height = h + 'px'
+            ;(document.querySelector(
+              '#playlist'
+            ) as HTMLDivElement).style.height = h + 'px'
           }
         })
       }, 0)
@@ -229,17 +230,17 @@ export default defineComponent({
 
     const comments = computed(() => {
       return courseItemResult.value?.courseItem?.comments
-        ? courseItemResult.value?.courseItem?.comments.map((comment) => {
+        ? courseItemResult.value?.courseItem?.comments.map(comment => {
             return {
               id: comment.id,
               username: comment.user?.name,
-              comment: comment.comment,
+              comment: comment.comment
             }
           })
         : []
     })
 
-    courseItemOnResult((res) => {
+    courseItemOnResult(res => {
       const booksIcon = `<svg viewBox="0 0 48 48"> <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 6h34s4 2 4 7s-4 7-4 7H5s4-2 4-7s-4-7-4-7Zm38 22H9s-4 2-4 7s4 7 4 7h34s-4-2-4-7s4-7 4-7Z"/></svg>`
 
       const commentIcon = `<svg viewBox="0 0 24 24" ><path data-v-4dd8a7f0="" fill="currentColor" d="M20.3 20.3L18 18H4q-.825 0-1.413-.588T2 16V4q0-.825.588-1.413T4 2h16q.825 0 1.413.588T22 4v15.575q0 .675-.613.938T20.3 20.3ZM4 4v12h14.825L20 17.175V4H4Zm0 0v13.175V4Z"></path></svg>`
@@ -247,7 +248,7 @@ export default defineComponent({
       contentIsFatched.value = true
       ctx.$mitt.emit('tabItems', [
         { name: res.data.courseItem?.name || '', icon: booksIcon },
-        { name: 'نظرات' || '', icon: commentIcon },
+        { name: 'نظرات' || '', icon: commentIcon }
       ])
     })
 
@@ -269,8 +270,8 @@ export default defineComponent({
       playerOptions,
       videoContainer,
       plyr,
-      comments,
+      comments
     }
-  },
+  }
 })
 </script>

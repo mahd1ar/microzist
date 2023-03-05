@@ -110,7 +110,7 @@
               v-if="userRateThisCourse === false"
               class="relative h-12 overflow-hidden rounded border
               border-yellow-500 bg-yellow-400 p-2 text-xl text-yellow-50
-              cursor-pointer"
+              cursor-pointer shadow-lg shadow-yellow-500/50"
               @click="goToTabIndex(1)"
             >
               <div
@@ -135,7 +135,7 @@
               </div>
 
               <div
-                class="relative flex items-center gap-2 text-xl font-bold text-[#664800]"
+                class="relative flex items-center gap-2 text-xl font-semibold text-[#664800]"
               >
                 به این آموزش امتیاز دهید
 
@@ -237,21 +237,22 @@
         </div>
       </div>
       <div v-else-if="tabIndex === 1">
-        <div class="container mx-auto">
-          {{ userCommentAndRate?.comments }}
+        <div id="tab2" class="container mx-auto transition-opacity">
           <div class="text-center mt-8">
             <div
-              v-if="userRateThisCourse"
+              v-if="!userRateThisCourse"
               class="inline-flex mx-auto rounded bg-gradient-to-tr from-yellow-200 to-yellow-100 border border-yellow-300  px-6 py-4 flex-col"
             >
-              <h2 class="text-2xl mb-4 px-6">به این آموزش امتیاز دهید</h2>
+              <h2 class="text-2xl mb-4 px-6 text-[#986429]">
+                به این آموزش امتیاز دهید
+              </h2>
               <StarsGiver
                 class="flex flex-col items-center gap-2"
                 :rate.sync="rate"
                 v-slot="{ hasChanged }"
               >
                 <button
-                  class="text-center w-full disabled:bg-gray-300/40 disabled:text-gray-400 text-yellow-500 py-2 mt-2 bg-white rounded bg-opacity-60 hover:bg-opacity-70"
+                  class="text-center w-full disabled:opacity-60 text-yellow-500 py-2 mt-2 bg-white rounded bg-opacity-60 hover:bg-opacity-70"
                   @click="setRate"
                   :disabled="!hasChanged"
                 >
@@ -260,7 +261,17 @@
               </StarsGiver>
             </div>
           </div>
+          <CommentsViewer :items="comments" />
+          <CommentSection
+            :widthStars="false"
+            @onDone="refetch"
+            target="course"
+            :targetId="$route.params.courseid"
+          />
         </div>
+      </div>
+      <div v-else-if="tabIndex === 2">
+        <InstructorProfile class="container mx-auto my-10" />
       </div>
     </loading-indicator>
   </div>
@@ -294,11 +305,13 @@ import useTabIndex from '~/components/useTabIndex'
 import USERHASRATED from '@/apollo/q/user-comment-and-rate.gql'
 import SETRATE from '@/apollo/m/set-rate.gql'
 import StarsGiver from '~/components/misc/StarsGiver.vue'
+import InstructorProfile from '~/components/InstructorProfile.vue'
 
 export default defineComponent({
   middleware: ['auth'],
   layout: 'dashboard',
-  components: { StarsViewer, StarsGiver },
+  transition: 'dashboard',
+  components: { StarsViewer, StarsGiver, InstructorProfile },
   setup () {
     const rate = ref(0)
     const comment = ref('')
@@ -321,13 +334,32 @@ export default defineComponent({
       }
     )
 
-    const { load: loadUserComments, result: userCommentAndRate } = useLazyQuery<
-      UserCommentAndRateQuery,
-      UserCommentAndRateQueryVariables
-    >(USERHASRATED, {
-      courseId: ctx.route.value.params.courseid,
-      userId: ctx.store.getters.user.id
-    })
+    const comments = computed(() =>
+      result.value?.course?.comments
+        ?.map(i => {
+          return i.rate === -1
+            ? {
+                comment: i.comment,
+                id: i.id,
+                username: i.user?.name + ' ' + i.user?.lastName,
+                date: i.createdAt
+              }
+            : undefined
+        })
+        .filter(Boolean)
+    )
+
+    const {
+      load: loadUserComments,
+      result: userCommentAndRate,
+      refetch: userCommentAndRateRefresh
+    } = useLazyQuery<UserCommentAndRateQuery, UserCommentAndRateQueryVariables>(
+      USERHASRATED,
+      {
+        courseId: ctx.route.value.params.courseid,
+        userId: ctx.store.getters.user.id
+      }
+    )
 
     const { mutate: runSetRate, onDone: setRateDone } = useMutation<
       SetRateMutation,
@@ -376,25 +408,42 @@ export default defineComponent({
       })
     }
 
-    setRateDone(() => {
+    function yourRateIsSuccessfullySaved () {
       // @ts-ignore
       ctx.$izitoast.success({
         icon: 'icon-person',
-        title: 'Fa:: tanks',
-        message: 'fa:: your rate is successfully saved',
+        title: 'ممنون از شرکت در شما در این نظر سنجی',
+        message: 'امتیاز شما با موفقیت ثبت شد',
         position: 'center',
         onOpening: function () {
-          console.info('callback abriu!')
+          try {
+            ;(document.querySelector('#tab2') as HTMLDivElement).style.opacity =
+              '0.5'
+          } catch (error) {
+            console.info(error)
+          }
         },
         onClosing: function () {
-          console.info('callback abriu!')
+          try {
+            ;(document.querySelector('#tab2') as HTMLDivElement).style.opacity =
+              '1'
+          } catch (error) {
+            console.info(error)
+          }
         }
       })
-      refetch()
+    }
+
+    setRateDone(async () => {
+      yourRateIsSuccessfullySaved()
+      await refetch()
+      userCommentAndRateRefresh()
     })
 
     return {
       result,
+      refetch,
+      comments,
       tabIndex,
       loading,
       userRateThisCourse,

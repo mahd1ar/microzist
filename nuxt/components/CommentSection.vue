@@ -8,7 +8,9 @@
     }"
   >
     <div class="font-bol text-lg text-yellow-700">
-      <span v-if="$store.getters.isLoggedIn"> دیدگاه من </span>
+      <span v-if="$store.getters.isLoggedIn" class="mb-2 inline-block">
+        دیدگاه من
+      </span>
       <div v-else class="text-center">
         برای ارسال دیدگاه
 
@@ -26,6 +28,7 @@
     </div>
     <div v-if="$store.getters.isLoggedIn" class="p-0">
       <div
+        v-if="widthStars"
         class="mb-4 inline-flex cursor-pointer items-center gap-4 bg-yellow-50 px-4 py-2 text-yellow-500"
       >
         <div
@@ -50,7 +53,7 @@
       </div>
 
       <textarea
-        class="w-full border p-3 text-black"
+        class="w-full border p-3 bg-white bg-opacity-75 text-black"
         name=""
         id=""
         cols="30"
@@ -89,12 +92,12 @@ import {
   CreateCommentMutationVariables
 } from '@/types/types'
 
-const { theme = 'gold', widthStars = true, target, targetId } = defineProps({
+const { theme = 'gold', widthStars, target, targetId } = defineProps({
   theme: {
     type: String as PropType<'gray' | 'gold'>,
     default: () => 'gold'
   },
-  widthStars: { type: Boolean },
+  widthStars: { type: Boolean, default: () => false },
   target: {
     type: String as PropType<'course' | 'courseItem'>,
     required: true
@@ -104,6 +107,8 @@ const { theme = 'gold', widthStars = true, target, targetId } = defineProps({
     required: true
   }
 })
+
+const emit = defineEmits(['onDone', 'onError'])
 
 const star = ref(3)
 const comment = ref('')
@@ -124,6 +129,8 @@ onDone(() => {
   alert('fa:: Comment saved')
   // reset comment
   ;(comment.value = ''), (star.value = 3)
+
+  emit('onDone')
 })
 
 function submitComment () {
@@ -140,7 +147,7 @@ function submitComment () {
 
   if (comment.value.trim() === '') {
     // TODO
-    alert('empty comment')
+    alert('fa::empty comment')
     return
   }
 

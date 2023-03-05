@@ -267,7 +267,7 @@ export default withAuth(
                 app.post('/auth-item', async (req, res) => {
                     const context = await ctx.withRequest(req, res);
 
-                    if (ctx.session) {
+                    if (context.session) {
                         const session: GeneralSession = context.session;
                         try {
                             const user: User = await ctx.prisma.User.findUnique(
@@ -348,8 +348,7 @@ export default withAuth(
                 app.post<{ cid: string; eventid: string }, GeneralApiResponse>(
                     '/cart-item',
                     async (req, res) => {
-                        const courseId = req.body.cid;
-                        const eventId = req.body.eventid;
+                        const { cid: courseId, eventId } = req.body;
 
                         const productType = eventId ? 'event' : 'course';
                         const productID = eventId || courseId;
@@ -377,6 +376,7 @@ export default withAuth(
                         }
 
                         // make sure user is logged in
+
                         const {
                             session,
                         }: Partial<{ session?: GeneralSession }> =
@@ -398,7 +398,7 @@ export default withAuth(
                         ].count({
                             where: { id: { equals: productID } },
                         });
-                        console.log({ exists });
+
                         if (exists === 0) {
                             res.status(400).json({
                                 message: 'product dose not exists',
@@ -513,7 +513,9 @@ export default withAuth(
                         //     discount: number;
                         // };
 
-                        if (!req.query.id || typeof req.query.id !== 'string') {
+                        const { id: couponId, cartitem } = req.query;
+
+                        if (!couponId || typeof couponId !== 'string') {
                             res.status(403).json({
                                 ok: false,
                                 message: 'bad request',
@@ -521,21 +523,15 @@ export default withAuth(
                             return;
                         }
 
-                        if (
-                            !req.query.cartitem ||
-                            typeof req.query.cartitem !== 'string'
-                        ) {
+                        if (!cartitem || typeof cartitem !== 'string') {
                             res.status(400).json({
                                 ok: false,
                                 message: 'bad request',
                             });
                             return;
                         }
-                        const cartitem = req.query.cartitem;
-                        // TODO shuld not be numbers only
-                        const couponCode = Number(req.query.id);
 
-                        if (!couponCode) {
+                        if (!couponId) {
                             res.status(403).json({
                                 ok: false,
                                 message: 'coupon is not valid',
@@ -544,10 +540,10 @@ export default withAuth(
                         }
                         const sudoContex = await ctx.sudo();
                         try {
-                            const [coupon] =
-                                await sudoContex.query.Coupon.findMany({
+                            const coupon =
+                                await sudoContex.query.Coupon.findOne({
                                     where: {
-                                        code: { equals: couponCode },
+                                        code: { equals: couponId },
                                     },
                                     query: 'id code remaining',
                                 });
@@ -609,7 +605,10 @@ export default withAuth(
                         const callbackUrl = 'http://localhost:3030/ipg/cb';
 
                         const zibal = new Zibal({
-                            merchant: 'zibal', // Your IPG's Merchant Id (You Can Get it From Zibal's Dashboard)
+                            merchant:
+                                session.data.role === Roles.admin
+                                    ? 'zibal'
+                                    : 'zibal', // Your IPG's Merchant Id (You Can Get it From Zibal's Dashboard)
                             callbackUrl, // The URL Where User will be Redirected to After Payment
                         });
 

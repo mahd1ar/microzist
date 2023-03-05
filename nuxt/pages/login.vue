@@ -70,7 +70,7 @@ import {
   useRouter,
   ref,
   useStore,
-  useRoute,
+  useRoute
 } from '@nuxtjs/composition-api'
 import LOGIN from '@/apollo/m/signin.gql'
 import { SigninMutation, SigninMutationVariables } from '@/types/types'
@@ -82,38 +82,42 @@ import { FetchResult } from 'apollo-link'
 let prvPage: string
 
 export default defineComponent({
-  beforeRouteEnter(to, from, next) {
+  beforeRouteEnter (to, from, next) {
     prvPage = from.fullPath
-
-    if (['/login', '/signup', '/auth-item'].includes(prvPage)) {
+    const forbiddenPaths = ['/login', '/signup', '/auth-item']
+    if (forbiddenPaths.includes(prvPage)) {
       prvPage = '/'
     }
-    // if(prvPage)
+    const queryRedirect: { exists: boolean; path: string } =
+      typeof to.query.redirect === 'string'
+        ? { exists: true, path: to.query.redirect }
+        : { exists: false, path: '/' }
 
-    next((vm) => {
+    if (queryRedirect.exists && forbiddenPaths.includes(queryRedirect.path))
+      queryRedirect.path = '/'
+
+    next(vm => {
       if (vm.$store.getters.isLoggedIn) {
         // TODO defualt determain defualt route
         if (to.query.redirect === 'no') {
           vm.$router.push(vm.localePath('/'))
-        } else if (typeof to.query.redirect === 'string') {
-          vm.$router.push(vm.localePath(to.query.redirect))
+        } else if (queryRedirect.exists) {
+          vm.$router.push(vm.localePath(queryRedirect.path))
         } else {
           vm.$router.push(vm.localePath(prvPage))
         }
       }
     })
   },
-  setup() {
+  setup () {
     const ctx = useContext()
     const route = useRoute()
     const router = useRouter()
     const store = useStore()
 
-    const {
-      mutate: loginMutation,
-      onDone,
-      onError,
-    } = useMutation<SigninMutation>(LOGIN)
+    const { mutate: loginMutation, onDone, onError } = useMutation<
+      SigninMutation
+    >(LOGIN)
 
     const onDoneLoginCallbackDebouncedFn = useDebounceFn(
       async (
@@ -132,7 +136,7 @@ export default defineComponent({
           // @ts-ignore
           ctx.$izitoast.success({
             message: 'خوش آمدید',
-            title: name + ' ' + lastName,
+            title: name + ' ' + lastName
           })
 
           await store.dispatch(
@@ -157,10 +161,10 @@ export default defineComponent({
     const email = ref(ctx.isDev ? 'mahdiyaranari@gmail.com' : '')
     const password = ref(ctx.isDev ? 'Aa12345678' : '')
 
-    async function login() {
+    async function login () {
       const variables: SigninMutationVariables = {
         email: email.value,
-        password: password.value,
+        password: password.value
       }
 
       await loginMutation(variables)
@@ -170,8 +174,8 @@ export default defineComponent({
     return {
       email,
       password,
-      login,
+      login
     }
-  },
+  }
 })
 </script>

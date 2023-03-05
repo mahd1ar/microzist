@@ -27,10 +27,22 @@ export const User = list({
             update: () => true,
         },
         filter: {
+            query: (args) => {
+                if (
+                    args.session &&
+                    (args.session as GeneralSession)?.data.role === Roles.admin
+                )
+                    return true;
+                return {
+                    status: {
+                        equals: 'enable',
+                    },
+                };
+            },
             update: (args) => {
                 if (
                     args.session &&
-                    (args.session as GeneralSession)?.data.role === '0'
+                    (args.session as GeneralSession)?.data.role === Roles.admin
                 )
                     return true;
                 else
@@ -60,6 +72,23 @@ export const User = list({
         }),
 
         password: password({ validation: { isRequired: true } }),
+        // TODO user should no be abled to login if its disbled
+        status: select({
+            options: [
+                {
+                    label: 'enable',
+                    value: 'enable',
+                },
+                {
+                    label: 'disabled',
+                    value: 'disabled',
+                },
+            ],
+            defaultValue: 'enable',
+            ui: {
+                displayMode: 'segmented-control',
+            },
+        }),
         cart: relationship({
             ref: 'Cart.user',
             many: true,

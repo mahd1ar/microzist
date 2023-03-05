@@ -2,7 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-@import 'fontiran.css';
+@import 'fontiran';
+@import 'utils';
+@import 'transitions';
 
 select {
   -webkit-appearance: none;

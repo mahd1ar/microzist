@@ -1,5 +1,5 @@
 <template>
-  <div dir="rtl">
+  <div class="bg-white">
     <div
       class="h-[80vh] bg-neutral-100 text-neutral-800 flex flex-col overflow-hidden relative"
     >
@@ -392,12 +392,11 @@
 
     <section
       class="py-4 pb-24 bg-neutral-100 relative border-t border-gray-200"
-      x-data="{items : [1,2,3,4,5,6]}"
     >
       <div class="absolute top-0 left-0 h-96 w-full">
         <img
           class=" opacity-60 w-full h-full object-cover object-top"
-          src="ce9acc131d.jpg"
+          src="/home/ce9acc131d.jpg"
           alt=""
         />
         <div
@@ -432,103 +431,105 @@
           repellat ad.
         </p>
         <div class="grid grid-cols-3 mt-8 gap-4">
-          <template x-for="i in items" :key="i">
-            <div class="flex shadow-sm group ease-out">
-              <div
-                class="rounded-lg relative p-5 bg-white   duration-500 transition-colors group-hover:bg-indigo-800"
-              >
-                <div class="rounded overflow-hidden relative  duration-500">
-                  <a href="course-details.html">
-                    <img
-                      class="w-full rounded h-full p-2 group-hover:scale-110 duration-1000 transition-transform ease-out "
-                      alt=""
-                      :src="
-                        `https://dreamslms.dreamguystech.com/html/assets/img/course/course-0${i}.jpg`
-                      "
-                    />
-                  </a>
-                  <div
-                    class=" py-2 fa-num px-2 rounded absolute bg-white left-5 bottom-5"
+          <div
+            v-for="i in [1, 2, 3, 4, 5, 6]"
+            :key="i"
+            class="flex shadow-sm group ease-out"
+          >
+            <div
+              class="rounded-lg relative p-5 bg-white   duration-500 transition-colors group-hover:bg-indigo-800"
+            >
+              <div class="rounded overflow-hidden relative  duration-500">
+                <a href="course-details.html">
+                  <img
+                    class="w-full rounded h-full p-2 group-hover:scale-110 duration-1000 transition-transform ease-out "
+                    alt=""
+                    :src="
+                      `https://dreamslms.dreamguystech.com/html/assets/img/course/course-0${i}.jpg`
+                    "
+                  />
+                </a>
+                <div
+                  class=" py-2 fa-num px-2 rounded absolute bg-white left-5 bottom-5"
+                >
+                  <h3
+                    class=" flex flex-row-reverse gap-2 justify-between items-center "
+                    dir="ltr"
                   >
-                    <h3
-                      class=" flex flex-row-reverse gap-2 justify-between items-center "
-                      dir="ltr"
-                    >
-                      <div class="text-2xl text-indigo-500 font-semibold">
-                        300,000
-                      </div>
-                      <span class="text-sm text-black">
-                        تومان
-                      </span>
-                    </h3>
-                  </div>
-                </div>
-                <div class="pt-4">
-                  <div class="w-full inline-block">
-                    <div class=" flex gap-2">
-                      <a
-                        class="rounded-full w-12 h-12 overflow-hidden"
-                        href="instructor-profile.html"
-                      >
-                        <img
-                          src="https://dreamslms.dreamguystech.com/html/assets/img/user/user5.jpg"
-                          alt=""
-                          class="w-full h-full"
-                      /></a>
-
-                      <div class="course-name">
-                        <h4
-                          class="text-neutral-800 group-hover:text-white font-semibold"
-                        >
-                          <a href="instructor-profile.html">Nicole Brown</a>
-                        </h4>
-                        <p
-                          class="text-sm text-neutral-500 group-hover:text-indigo-100"
-                        >
-                          مدرس
-                        </p>
-                      </div>
+                    <div class="text-2xl text-indigo-500 font-semibold">
+                      300,000
                     </div>
-                  </div>
-                  <h3 class="text-xl mb-2 group-hover:text-white">
-                    <a href="course-details.html"
-                      >Information About UI/UX Design Degree</a
-                    >
+                    <span class="text-sm text-black">
+                      تومان
+                    </span>
                   </h3>
-                  <div
-                    class="course-info flex items-center justify-between group-hover:text-indigo-100"
-                  >
-                    <div class="flex items-center gap-1">
-                      <svg class="w-5 h-5" viewBox="0 0 24 24">
-                        <path
-                          fill="currentColor"
-                          d="M14 8.775q0-.225.163-.463q.162-.237.362-.312q.725-.25 1.45-.375T17.5 7.5q.5 0 .988.062q.487.063.962.163q.225.05.387.25q.163.2.163.45q0 .425-.275.625t-.7.1q-.35-.075-.737-.113Q17.9 9 17.5 9q-.65 0-1.275.125q-.625.125-1.2.325q-.45.175-.737-.025q-.288-.2-.288-.65Zm0 5.5q0-.225.163-.463q.162-.237.362-.312q.725-.25 1.45-.375T17.5 13q.5 0 .988.062q.487.063.962.163q.225.05.387.25q.163.2.163.45q0 .425-.275.625t-.7.1q-.35-.075-.737-.113q-.388-.037-.788-.037q-.65 0-1.275.113q-.625.112-1.2.312q-.45.175-.737-.013q-.288-.187-.288-.637Zm0-2.75q0-.225.163-.463q.162-.237.362-.312q.725-.25 1.45-.375t1.525-.125q.5 0 .988.062q.487.063.962.163q.225.05.387.25q.163.2.163.45q0 .425-.275.625t-.7.1q-.35-.075-.737-.113q-.388-.037-.788-.037q-.65 0-1.275.125q-.625.125-1.2.325q-.45.175-.737-.025q-.288-.2-.288-.65ZM6.5 16q1.175 0 2.288.262q1.112.263 2.212.788V7.2q-1.025-.6-2.175-.9Q7.675 6 6.5 6q-.9 0-1.787.175Q3.825 6.35 3 6.7v9.9q.875-.3 1.738-.45Q5.6 16 6.5 16Zm6.5 1.05q1.1-.525 2.213-.788Q16.325 16 17.5 16q.9 0 1.763.15q.862.15 1.737.45V6.7q-.825-.35-1.712-.525Q18.4 6 17.5 6q-1.175 0-2.325.3q-1.15.3-2.175.9Zm-6-5.4Zm5 7.825q-.35 0-.662-.087q-.313-.088-.588-.238q-.975-.575-2.05-.862Q7.625 18 6.5 18q-1.05 0-2.062.275q-1.013.275-1.938.775q-.525.275-1.012-.025Q1 18.725 1 18.15V6.1q0-.275.138-.525q.137-.25.412-.375q1.15-.6 2.4-.9Q5.2 4 6.5 4q1.45 0 2.838.375Q10.725 4.75 12 5.5q1.275-.75 2.663-1.125Q16.05 4 17.5 4q1.3 0 2.55.3q1.25.3 2.4.9q.275.125.413.375q.137.25.137.525v12.05q0 .575-.487.875q-.488.3-1.013.025q-.925-.5-1.938-.775Q18.55 18 17.5 18q-1.125 0-2.2.288q-1.075.287-2.05.862q-.275.15-.587.238q-.313.087-.663.087Z"
-                        />
-                      </svg>
-                      <p class="fa-num text-sm">12 جلسه</p>
-                    </div>
-                    <div class="flex items-center gap-1">
-                      <svg class="w-5 h-5" viewBox="0 0 24 24">
-                        <path
-                          fill="currentColor"
-                          d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8s8 3.58 8 8s-3.58 8-8 8zm.5-13H11v6l5.25 3.15l.75-1.23l-4.5-2.67z"
-                        />
-                      </svg>
-                      <p class="fa-num text-sm">
-                        9hr 30min
+                </div>
+              </div>
+              <div class="pt-4">
+                <div class="w-full inline-block">
+                  <div class=" flex gap-2">
+                    <a
+                      class="rounded-full w-12 h-12 overflow-hidden"
+                      href="instructor-profile.html"
+                    >
+                      <img
+                        src="https://dreamslms.dreamguystech.com/html/assets/img/user/user5.jpg"
+                        alt=""
+                        class="w-full h-full"
+                    /></a>
+
+                    <div class="course-name">
+                      <h4
+                        class="text-neutral-800 group-hover:text-white font-semibold"
+                      >
+                        <a href="instructor-profile.html">Nicole Brown</a>
+                      </h4>
+                      <p
+                        class="text-sm text-neutral-500 group-hover:text-indigo-100"
+                      >
+                        مدرس
                       </p>
                     </div>
                   </div>
-                  <hr class="my-5" />
-                  <button
-                    class="border-indigo-300  font-bold group-hover:text-white group-hover:border-white text-indigo-900 border-2 rounded  w-full text-center py-2"
-                  >
-                    خرید این دوره
-                  </button>
                 </div>
+                <h3 class="text-xl mb-2 group-hover:text-white">
+                  <a href="course-details.html"
+                    >Information About UI/UX Design Degree</a
+                  >
+                </h3>
+                <div
+                  class="course-info flex items-center justify-between group-hover:text-indigo-100"
+                >
+                  <div class="flex items-center gap-1">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24">
+                      <path
+                        fill="currentColor"
+                        d="M14 8.775q0-.225.163-.463q.162-.237.362-.312q.725-.25 1.45-.375T17.5 7.5q.5 0 .988.062q.487.063.962.163q.225.05.387.25q.163.2.163.45q0 .425-.275.625t-.7.1q-.35-.075-.737-.113Q17.9 9 17.5 9q-.65 0-1.275.125q-.625.125-1.2.325q-.45.175-.737-.025q-.288-.2-.288-.65Zm0 5.5q0-.225.163-.463q.162-.237.362-.312q.725-.25 1.45-.375T17.5 13q.5 0 .988.062q.487.063.962.163q.225.05.387.25q.163.2.163.45q0 .425-.275.625t-.7.1q-.35-.075-.737-.113q-.388-.037-.788-.037q-.65 0-1.275.113q-.625.112-1.2.312q-.45.175-.737-.013q-.288-.187-.288-.637Zm0-2.75q0-.225.163-.463q.162-.237.362-.312q.725-.25 1.45-.375t1.525-.125q.5 0 .988.062q.487.063.962.163q.225.05.387.25q.163.2.163.45q0 .425-.275.625t-.7.1q-.35-.075-.737-.113q-.388-.037-.788-.037q-.65 0-1.275.125q-.625.125-1.2.325q-.45.175-.737-.025q-.288-.2-.288-.65ZM6.5 16q1.175 0 2.288.262q1.112.263 2.212.788V7.2q-1.025-.6-2.175-.9Q7.675 6 6.5 6q-.9 0-1.787.175Q3.825 6.35 3 6.7v9.9q.875-.3 1.738-.45Q5.6 16 6.5 16Zm6.5 1.05q1.1-.525 2.213-.788Q16.325 16 17.5 16q.9 0 1.763.15q.862.15 1.737.45V6.7q-.825-.35-1.712-.525Q18.4 6 17.5 6q-1.175 0-2.325.3q-1.15.3-2.175.9Zm-6-5.4Zm5 7.825q-.35 0-.662-.087q-.313-.088-.588-.238q-.975-.575-2.05-.862Q7.625 18 6.5 18q-1.05 0-2.062.275q-1.013.275-1.938.775q-.525.275-1.012-.025Q1 18.725 1 18.15V6.1q0-.275.138-.525q.137-.25.412-.375q1.15-.6 2.4-.9Q5.2 4 6.5 4q1.45 0 2.838.375Q10.725 4.75 12 5.5q1.275-.75 2.663-1.125Q16.05 4 17.5 4q1.3 0 2.55.3q1.25.3 2.4.9q.275.125.413.375q.137.25.137.525v12.05q0 .575-.487.875q-.488.3-1.013.025q-.925-.5-1.938-.775Q18.55 18 17.5 18q-1.125 0-2.2.288q-1.075.287-2.05.862q-.275.15-.587.238q-.313.087-.663.087Z"
+                      />
+                    </svg>
+                    <p class="fa-num text-sm">12 جلسه</p>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24">
+                      <path
+                        fill="currentColor"
+                        d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8s8 3.58 8 8s-3.58 8-8 8zm.5-13H11v6l5.25 3.15l.75-1.23l-4.5-2.67z"
+                      />
+                    </svg>
+                    <p class="fa-num text-sm">
+                      9hr 30min
+                    </p>
+                  </div>
+                </div>
+                <hr class="my-5" />
+                <button
+                  class="border-indigo-300  font-bold group-hover:text-white group-hover:border-white text-indigo-900 border-2 rounded  w-full text-center py-2"
+                >
+                  خرید این دوره
+                </button>
               </div>
             </div>
-          </template>
+          </div>
         </div>
       </div>
     </section>
@@ -542,7 +543,7 @@
       class="absolute top-0 left-0 h-full w-full bg-gradient-to-r from-indigo-500 to-teal-300 opacity-40 mix-blend-multiply">
     </div> -->
 
-      <div x-data="{items : [0,1 ]}" class="relative">
+      <div class="relative">
         <div class="mx-auto container">
           <h2 class="text-2xl  text-center text-indigo-500 font-semibold pt-8">
             بلاگ و خبر ها
@@ -587,55 +588,55 @@
             </article>
           </div>
           <div class="flex flex-col gap-2  w-1/2">
-            <template x-for="i in items" :key="i">
-              <article
-                class="overflow-hidden flex  rounded border border-neutral-200 bg-white  bg-opacity-75 backdrop-blur  shadow-sm"
-              >
-                <div class="aspect-square w-1/3 p-4">
-                  <img
-                    alt="Office"
-                    src="https://images.unsplash.com/photo-1590402494693-bd0499aefe00?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80"
-                    class=" object-cover w-full h-full rounded "
-                  />
-                </div>
+            <article
+              v-for="i in [0, 1]"
+              :key="i"
+              class="overflow-hidden flex  rounded border border-neutral-200 bg-white  bg-opacity-75 backdrop-blur  shadow-sm"
+            >
+              <div class="aspect-square w-1/3 p-4">
+                <img
+                  alt="Office"
+                  src="https://images.unsplash.com/photo-1590402494693-bd0499aefe00?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80"
+                  class=" object-cover w-full h-full rounded "
+                />
+              </div>
 
-                <div
-                  class="p-4 sm:p-6 w-2/3 flex-shrink-0 flex flex-col justify-between"
-                >
-                  <div>
-                    <div
-                      class="bg-indigo-50 text-indigo-500 inline-block text-xs  px-2 py-0.5 rounded"
-                    >
-                      آموزش
-                    </div>
+              <div
+                class="p-4 sm:p-6 w-2/3 flex-shrink-0 flex flex-col justify-between"
+              >
+                <div>
+                  <div
+                    class="bg-indigo-50 text-indigo-500 inline-block text-xs  px-2 py-0.5 rounded"
+                  >
+                    آموزش
                   </div>
-                  <a href="#">
-                    <h3 class="text-lg font-medium text-gray-900">
-                      Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                    </h3>
+                </div>
+                <a href="#">
+                  <h3 class="text-lg font-medium text-gray-900">
+                    Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                  </h3>
+                </a>
+
+                <div class="w-full flex justify-between">
+                  <a
+                    href="#"
+                    class="group  inline-flex items-center gap-1 text-sm font-medium text-indigo-600"
+                  >
+                    ادامه مطلب
+                    <span
+                      aria-hidden="true"
+                      class="block transition group-hover:-translate-x-0.5"
+                    >
+                      &larr;
+                    </span>
                   </a>
 
-                  <div class="w-full flex justify-between">
-                    <a
-                      href="#"
-                      class="group  inline-flex items-center gap-1 text-sm font-medium text-indigo-600"
-                    >
-                      ادامه مطلب
-                      <span
-                        aria-hidden="true"
-                        class="block transition group-hover:-translate-x-0.5"
-                      >
-                        &larr;
-                      </span>
-                    </a>
-
-                    <span class=" flex-center text-xs text-neutral-400">
-                      5 مهر 1400
-                    </span>
-                  </div>
+                  <span class=" flex-center text-xs text-neutral-400">
+                    5 مهر 1400
+                  </span>
                 </div>
-              </article>
-            </template>
+              </div>
+            </article>
           </div>
         </div>
 
@@ -681,146 +682,128 @@
             />
           </div>
 
-          <div
-            class="grid grid-cols-2 gap-6"
-            x-data="{items : [
-          {
-            txt : 'چگونه به یک بازاریاب خوب تبدیل شویم'
-          },
-          {
-            txt : 'نکته ها و ترفند های طراحی وب'
-          },
-          {
-            txt : 'مثل یک موتور جستوگر فکر کنید'
-          },
-          {
-            txt : 'مقدمه ای بر سیستم های بی وقفه'
-          }
-          ] }"
-          >
-            <template x-for="(item,i) in items">
-              <div class="flex group">
-                <div class="w-1/4 relative z-10">
-                  <img
-                    class="w-full aspect-square rounded-2xl border overflow-hidden scale-95 relative -translate-x-5  filter grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:scale-100"
-                    :src="
-                      `https://angfuzsoft.com/html/acadu/demo/assets/img/event/event_1_${i +
-                        1}.jpg`
-                    "
-                    alt=""
-                  />
+          <div class="grid grid-cols-2 gap-6">
+            <div v-for="(item, i) in events" :key="i" class="flex group">
+              <div class="w-1/4 relative z-10">
+                <img
+                  class="w-full aspect-square rounded-2xl border overflow-hidden scale-95 relative -translate-x-5  filter grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:scale-100"
+                  :src="
+                    `https://angfuzsoft.com/html/acadu/demo/assets/img/event/event_1_${i +
+                      1}.jpg`
+                  "
+                  alt=""
+                />
+              </div>
+              <div
+                class="w-3/4 bg-white bg-opacity-90 border rounded-lg p-4 pr-10 p translate-y-5 z-0 flex flex-col gap-2"
+              >
+                <div class="text-neutral-600 flex gap-4 items-center">
+                  <div class="flex gap-2 items-center">
+                    <svg
+                      width="1em"
+                      height="1em"
+                      preserveAspectRatio="xMidYMid meet"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        fill="currentColor"
+                        d="M12 12q.825 0 1.413-.588Q14 10.825 14 10t-.587-1.413Q12.825 8 12 8q-.825 0-1.412.587Q10 9.175 10 10q0 .825.588 1.412Q11.175 12 12 12Zm0 7.35q3.05-2.8 4.525-5.088Q18 11.975 18 10.2q0-2.725-1.738-4.463Q14.525 4 12 4Q9.475 4 7.737 5.737Q6 7.475 6 10.2q0 1.775 1.475 4.062Q8.95 16.55 12 19.35Zm0 2.275q-.2 0-.4-.075t-.35-.2Q7.6 18.125 5.8 15.363Q4 12.6 4 10.2q0-3.75 2.413-5.975Q8.825 2 12 2t5.587 2.225Q20 6.45 20 10.2q0 2.4-1.8 5.163q-1.8 2.762-5.45 5.987q-.15.125-.35.2q-.2.075-.4.075ZM12 10.2Z"
+                      />
+                    </svg>
+
+                    <div class="text-xs font-semibold mt-1">
+                      ساختمان 5
+                    </div>
+                  </div>
+
+                  <strong>.</strong>
+
+                  <div class="flex gap-2 items-center">
+                    <svg
+                      class="w-4 h-4 "
+                      preserveAspectRatio="xMidYMid meet"
+                      viewBox="0 0 24 24"
+                    >
+                      <g
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                      >
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="m12 12l2 3m-2-8v5" />
+                      </g>
+                    </svg>
+                    <div class="text-xs font-semibold mt-1 " dir="ltr">
+                      09:00 am - 11:00 am
+                    </div>
+                  </div>
                 </div>
                 <div
-                  class="w-3/4 bg-white bg-opacity-90 border rounded-lg p-4 pr-10 p translate-y-5 z-0 flex flex-col gap-2"
-                >
-                  <div class="text-neutral-600 flex gap-4 items-center">
-                    <div class="flex gap-2 items-center">
-                      <svg
-                        width="1em"
-                        height="1em"
-                        preserveAspectRatio="xMidYMid meet"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          fill="currentColor"
-                          d="M12 12q.825 0 1.413-.588Q14 10.825 14 10t-.587-1.413Q12.825 8 12 8q-.825 0-1.412.587Q10 9.175 10 10q0 .825.588 1.412Q11.175 12 12 12Zm0 7.35q3.05-2.8 4.525-5.088Q18 11.975 18 10.2q0-2.725-1.738-4.463Q14.525 4 12 4Q9.475 4 7.737 5.737Q6 7.475 6 10.2q0 1.775 1.475 4.062Q8.95 16.55 12 19.35Zm0 2.275q-.2 0-.4-.075t-.35-.2Q7.6 18.125 5.8 15.363Q4 12.6 4 10.2q0-3.75 2.413-5.975Q8.825 2 12 2t5.587 2.225Q20 6.45 20 10.2q0 2.4-1.8 5.163q-1.8 2.762-5.45 5.987q-.15.125-.35.2q-.2.075-.4.075ZM12 10.2Z"
-                        />
-                      </svg>
-
-                      <div class="text-xs font-semibold mt-1">
-                        ساختمان 5
-                      </div>
+                  class="text-black text-xl mb-2 mt-1"
+                  v-text="item.txt"
+                ></div>
+                <div class="grid grid-cols-2 items-center ">
+                  <div class="flex gap-2 items-center">
+                    <div>
+                      <img
+                        class="w-10 h-10 rounded-full border"
+                        src="https://angfuzsoft.com/html/acadu/demo/assets/img/event/avater.jpg"
+                        alt=""
+                      />
                     </div>
-
-                    <strong>.</strong>
-
-                    <div class="flex gap-2 items-center">
-                      <svg
-                        class="w-4 h-4 "
-                        preserveAspectRatio="xMidYMid meet"
-                        viewBox="0 0 24 24"
-                      >
-                        <g
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                        >
-                          <circle cx="12" cy="12" r="9" />
-                          <path d="m12 12l2 3m-2-8v5" />
-                        </g>
-                      </svg>
-                      <div class="text-xs font-semibold mt-1 " dir="ltr">
-                        09:00 am - 11:00 am
-                      </div>
+                    <div>
+                      <span class="text-xs font-bold text-neutral-600">
+                        سخنران
+                      </span>
+                      <h2>
+                        David Smith
+                      </h2>
                     </div>
                   </div>
-                  <div class="text-black text-xl mb-2 mt-1" x-text="item.txt">
-                    What Soul Can Tech Us About Web Design
-                  </div>
-                  <div class="grid grid-cols-2 items-center ">
-                    <div class="flex gap-2 items-center">
-                      <div>
-                        <img
-                          class="w-10 h-10 rounded-full border"
-                          src="https://angfuzsoft.com/html/acadu/demo/assets/img/event/avater.jpg"
-                          alt=""
-                        />
-                      </div>
-                      <div>
-                        <span class="text-xs font-bold text-neutral-600">
-                          سخنران
-                        </span>
-                        <h2>
-                          David Smith
-                        </h2>
-                      </div>
-                    </div>
-                    <div class="flex justify-end items-end h-full">
-                      <template x-if="i === 0">
-                        <a
-                          href=""
-                          class=" bg-emerald-500 flex items-end text-white font-bold px-4 py-1.5 rounded text-sm gap-1 fa-num"
-                        >
-                          <span
-                            class="text-xs text-neutral-600  mr-2 ml-0.5 -translate-y-1"
-                            >S</span
-                          >
-                          <strong class="text-lg" id="secounds">55</strong>
-                          <span
-                            class="text-xs text-neutral-600  mr-2 ml-0.5 -translate-y-1"
-                            >H</span
-                          >
-                          <strong class="text-lg">20</strong>
-                          <span
-                            class="text-xs text-neutral-600  mr-2 ml-0.5 -translate-y-1"
-                            >D</span
-                          >
-                          <strong class="text-lg">4</strong>
-                        </a>
-                      </template>
-                      <template x-if="i !== 0">
-                        <div
-                          class="relative text-white duration-1000 transition-colors group-hover:text-slate-800 group-hover:bg-white  bg-slate-800 px-4 py-1.5 rounded text-sm  shadow-lg flex-center w-28 h-10"
-                        >
-                          <a
-                            href="#"
-                            class=" absolute transition-all group-hover:-translate-y-full duration-700 group-hover:opacity-0 ease-out"
-                            >مشاهده رویداد</a
-                          >
-                          <a
-                            href="#"
-                            class=" hover:scale-105 absolute translate-y-full duration-700 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 ease-out"
-                            >مشاهده رویداد</a
-                          >
-                        </div>
-                      </template>
+                  <div class="flex justify-end items-end h-full">
+                    <a
+                      v-if="i === 0"
+                      href=""
+                      class=" bg-emerald-500 flex items-end text-white font-bold px-4 py-1.5 rounded text-sm gap-1 fa-num"
+                    >
+                      <span
+                        class="text-xs text-neutral-600  mr-2 ml-0.5 -translate-y-1"
+                        >S</span
+                      >
+                      <strong class="text-lg" id="secounds">55</strong>
+                      <span
+                        class="text-xs text-neutral-600  mr-2 ml-0.5 -translate-y-1"
+                        >H</span
+                      >
+                      <strong class="text-lg">20</strong>
+                      <span
+                        class="text-xs text-neutral-600  mr-2 ml-0.5 -translate-y-1"
+                        >D</span
+                      >
+                      <strong class="text-lg">4</strong>
+                    </a>
+
+                    <div
+                      v-else
+                      class="relative text-white duration-1000 transition-colors group-hover:text-slate-800 group-hover:bg-white  bg-slate-800 px-4 py-1.5 rounded text-sm  shadow-lg flex-center w-28 h-10"
+                    >
+                      <a
+                        href="#"
+                        class=" absolute transition-all group-hover:-translate-y-full duration-700 group-hover:opacity-0 ease-out"
+                        >مشاهده رویداد</a
+                      >
+                      <a
+                        href="#"
+                        class=" hover:scale-105 absolute translate-y-full duration-700 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 ease-out"
+                        >مشاهده رویداد</a
+                      >
                     </div>
                   </div>
                 </div>
               </div>
-            </template>
+            </div>
           </div>
         </div>
         <div class="h-52 w-full relative ">
@@ -833,7 +816,7 @@
           ></div>
           <img
             class=" object-contain bottom-0 left-0 max-w-md relative "
-            src="/events.png"
+            src="/home/events.png"
             alt=""
           />
         </div>
@@ -1163,4 +1146,66 @@
   </div>
 </template>
 
-<script lang="ts" setup></script>
+<script lang="ts">
+import { onMounted, ref, defineComponent } from '@nuxtjs/composition-api'
+
+export default defineComponent({
+  head: {
+    script: [
+      {
+        src: '/home/particles.min.js',
+        body: true,
+        once: true,
+        vmid: 'particles'
+      }
+    ]
+  },
+  setup () {
+    const isClient = process.client
+    const events = ref([
+      {
+        txt: 'چگونه به یک بازاریاب خوب تبدیل شویم'
+      },
+      {
+        txt: 'نکته ها و ترفند های طراحی وب'
+      },
+      {
+        txt: 'مثل یک موتور جستوگر فکر کنید'
+      },
+      {
+        txt: 'مقدمه ای بر سیستم های بی وقفه'
+      }
+    ])
+
+    function runParticles () {
+      console.log(runParticles)
+      // @ts-ignore
+      window.particlesJS.load(
+        'particles-js',
+        '/home/particlesjs-config.json',
+        function () {
+          console.log('callback - particles.js config loaded')
+        }
+      )
+    }
+
+    console.log(process.client)
+
+    onMounted(() => {
+      console.log(isClient)
+      if (isClient) {
+        window.addEventListener('DOMContentLoaded', runParticles)
+      } else {
+        ;(document.querySelector(
+          'script[vmid=particles]'
+        ) as HTMLScriptElement).onload = runParticles
+      }
+      // if (isClient)
+      //   window.addEventListener('DOMContentLoaded', event => {
+      //     runParticles()
+      //   })()
+    })
+    return { events }
+  }
+})
+</script>

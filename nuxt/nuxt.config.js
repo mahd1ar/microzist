@@ -22,6 +22,7 @@ export default {
       //   href: 'https://cdnjs.cloudflare.com/ajax/libs/imagehover.css/2.0.0/css/imagehover.min.css',
       // },
     ],
+
   },
 
   // Global CSS: https://go.nuxtjs.dev/config-css

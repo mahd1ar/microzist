@@ -1,17 +1,12 @@
-query userCommentAndRate($userId: ID!, $courseId: ID!){
-  comments(where:{
-    user:{
-      id : {
-        equals : $userId
-      }
+query userCommentAndRate($userId: ID!, $courseId: ID!) {
+  comments(
+    where: {
+      user: { id: { equals: $userId } }
+      course: { id: { equals: $courseId } }
     }
-    course:{
-      id: {
-        equals : $courseId
-      }
-    }
-  }){
+  ) {
     rate
     comment
+    id
   }
 }

@@ -110,7 +110,7 @@ var { withAuth } = (0, import_auth.createAuth)({
 });
 var sessionMaxAge = 60 * 60 * 24 * 30;
 var session = (0, import_session.storedSessions)({
-  store: ({ maxAge }) => ({
+  store: (args) => ({
     async get(key) {
       if (import_fs.default.existsSync(import_path2.default.join(sessionDir, key + ".json"))) {
         const filedata = JSON.parse(
@@ -121,6 +121,7 @@ var session = (0, import_session.storedSessions)({
         console.log("session dose not exists");
     },
     async set(key, value) {
+      const { maxAge } = args;
       import_fs.default.writeFileSync(
         import_path2.default.join(sessionDir, key + ".json"),
         JSON.stringify({ maxAge, value })
@@ -182,7 +183,6 @@ var CartItem = (0, import_core.list)({
   },
   hooks: {
     async validateInput(args) {
-      console.log(args.resolvedData);
       if (args.operation === "update") {
         return;
       }
@@ -314,6 +314,25 @@ var Cart = (0, import_core2.list)({
       initialColumns: ["summery", "user"]
     }
   },
+  hooks: {
+    beforeOperation: async (args) => {
+      if (args.operation !== "delete")
+        return;
+      const sudo = args.context.sudo();
+      try {
+        const itemsWithThisParent = await sudo.query.CartItem.findMany({
+          where: { cart: { id: { equals: args.item.id } } },
+          query: " id "
+        });
+        await sudo.query.CartItem.deleteMany({
+          where: itemsWithThisParent
+        });
+      } catch (error) {
+        console.log(error);
+      }
+      sudo.exitSudo();
+    }
+  },
   fields: {
     summery: (0, import_fields2.virtual)({
       field: import_schema2.graphql.field({
@@ -359,6 +378,25 @@ var import_access3 = require("@keystone-6/core/access");
 var import_fields3 = require("@keystone-6/core/fields");
 var Order = (0, import_core3.list)({
   access: import_access3.allowAll,
+  hooks: {
+    beforeOperation: async (args) => {
+      if (args.operation !== "delete")
+        return;
+      const sudo = args.context.sudo();
+      try {
+        const orderItemsWithThisParentParent = await sudo.query.OrderItem.findMany({
+          where: { order: { id: { equals: args.item.id } } },
+          query: " id "
+        });
+        await sudo.query.OrderItem.deleteMany({
+          where: orderItemsWithThisParentParent
+        });
+      } catch (error) {
+        console.log(error);
+      }
+      sudo.exitSudo();
+    }
+  },
   fields: {
     totalCost: (0, import_fields3.float)(),
     items: (0, import_fields3.relationship)({ ref: "OrderItem.order", many: true }),
@@ -606,8 +644,17 @@ var User = (0, import_core7.list)({
       update: () => true
     },
     filter: {
+      query: (args) => {
+        if (args.session && args.session?.data.role === "0" /* admin */)
+          return true;
+        return {
+          status: {
+            equals: "enable"
+          }
+        };
+      },
       update: (args) => {
-        if (args.session && args.session?.data.role === "0")
+        if (args.session && args.session?.data.role === "0" /* admin */)
           return true;
         else
           return {
@@ -627,6 +674,22 @@ var User = (0, import_core7.list)({
       isIndexed: "unique"
     }),
     password: (0, import_fields7.password)({ validation: { isRequired: true } }),
+    status: (0, import_fields7.select)({
+      options: [
+        {
+          label: "enable",
+          value: "enable"
+        },
+        {
+          label: "disabled",
+          value: "disabled"
+        }
+      ],
+      defaultValue: "enable",
+      ui: {
+        displayMode: "segmented-control"
+      }
+    }),
     cart: (0, import_fields7.relationship)({
       ref: "Cart.user",
       many: true,
@@ -761,7 +824,9 @@ var import_fields12 = require("@keystone-6/core/fields");
 var Coupon = (0, import_core12.list)({
   access: import_access15.allowAll,
   fields: {
-    code: (0, import_fields12.integer)({ validation: { isRequired: true, max: 9999 } }),
+    code: (0, import_fields12.text)({
+      validation: { isRequired: true }
+    }),
     description: (0, import_fields12.text)({ validation: { isRequired: true } }),
     maxAmount: (0, import_fields12.integer)({ validation: { isRequired: true } }),
     remaining: (0, import_fields12.virtual)({
@@ -1609,7 +1674,7 @@ var keystone_default = withAuth(
         });
         app.post("/auth-item", async (req, res) => {
           const context = await ctx.withRequest(req, res);
-          if (ctx.session) {
+          if (context.session) {
             const session2 = context.session;
             try {
               const user = await ctx.prisma.User.findUnique(
@@ -1676,8 +1741,7 @@ var keystone_default = withAuth(
         app.post(
           "/cart-item",
           async (req, res) => {
-            const courseId = req.body.cid;
-            const eventId = req.body.eventid;
+            const { cid: courseId, eventId } = req.body;
             const productType = eventId ? "event" : "course";
             const productID = eventId || courseId;
             const productName = eventId ? "fa:: Event " : "Fa:: Course ";
@@ -1709,7 +1773,6 @@ var keystone_default = withAuth(
             const exists = await sudoContext.query[(0, import_lodash.capitalize)(productType)].count({
               where: { id: { equals: productID } }
             });
-            console.log({ exists });
             if (exists === 0) {
               res.status(400).json({
                 message: "product dose not exists",
@@ -1801,23 +1864,22 @@ var keystone_default = withAuth(
         app.get(
           "/coupon",
           async (req, res) => {
-            if (!req.query.id || typeof req.query.id !== "string") {
+            const { id: couponId, cartitem } = req.query;
+            if (!couponId || typeof couponId !== "string") {
               res.status(403).json({
                 ok: false,
                 message: "bad request"
               });
               return;
             }
-            if (!req.query.cartitem || typeof req.query.cartitem !== "string") {
+            if (!cartitem || typeof cartitem !== "string") {
               res.status(400).json({
                 ok: false,
                 message: "bad request"
               });
               return;
             }
-            const cartitem = req.query.cartitem;
-            const couponCode = Number(req.query.id);
-            if (!couponCode) {
+            if (!couponId) {
               res.status(403).json({
                 ok: false,
                 message: "coupon is not valid"
@@ -1826,9 +1888,9 @@ var keystone_default = withAuth(
             }
             const sudoContex = await ctx.sudo();
             try {
-              const [coupon] = await sudoContex.query.Coupon.findMany({
+              const coupon = await sudoContex.query.Coupon.findOne({
                 where: {
-                  code: { equals: couponCode }
+                  code: { equals: couponId }
                 },
                 query: "id code remaining"
               });
@@ -1877,7 +1939,7 @@ var keystone_default = withAuth(
             }
             const callbackUrl = "http://localhost:3030/ipg/cb";
             const zibal = new Zibal({
-              merchant: "zibal",
+              merchant: session2.data.role === "0" /* admin */ ? "zibal" : "zibal",
               callbackUrl
             });
             try {

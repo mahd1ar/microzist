@@ -84,7 +84,7 @@ const sessionMaxAge = 60 * 60 * 24 * 30;
 //     secret: sessionSecret!,
 // });
 const session = storedSessions({
-    store: ({ maxAge }) => ({
+    store: (args) => ({
         async get(key) {
             if (fs.existsSync(path.join(sessionDir, key + '.json'))) {
                 const filedata = JSON.parse(
@@ -96,6 +96,8 @@ const session = storedSessions({
             } else console.log('session dose not exists');
         },
         async set(key, value) {
+            const { maxAge } = args;
+
             fs.writeFileSync(
                 path.join(sessionDir, key + '.json'),
                 JSON.stringify({ maxAge, value })

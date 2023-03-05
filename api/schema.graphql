@@ -7,6 +7,7 @@ type User {
   lastName: String
   email: String
   password: PasswordState
+  status: String
   cart(where: CartWhereInput! = {}, orderBy: [CartOrderByInput!]! = [], take: Int, skip: Int! = 0): [Cart!]
   cartCount(where: CartWhereInput! = {}): Int
   orders(where: OrderWhereInput! = {}, orderBy: [OrderOrderByInput!]! = [], take: Int, skip: Int! = 0): [Order!]
@@ -45,6 +46,7 @@ input UserWhereInput {
   name: StringFilter
   lastName: StringFilter
   email: StringFilter
+  status: StringNullableFilter
   cart: CartManyRelationFilter
   orders: OrderManyRelationFilter
   role: StringNullableFilter
@@ -97,18 +99,6 @@ input NestedStringFilter {
   not: NestedStringFilter
 }
 
-input CartManyRelationFilter {
-  every: CartWhereInput
-  some: CartWhereInput
-  none: CartWhereInput
-}
-
-input OrderManyRelationFilter {
-  every: OrderWhereInput
-  some: OrderWhereInput
-  none: OrderWhereInput
-}
-
 input StringNullableFilter {
   equals: String
   in: [String!]
@@ -135,6 +125,18 @@ input NestedStringNullableFilter {
   startsWith: String
   endsWith: String
   not: NestedStringNullableFilter
+}
+
+input CartManyRelationFilter {
+  every: CartWhereInput
+  some: CartWhereInput
+  none: CartWhereInput
+}
+
+input OrderManyRelationFilter {
+  every: OrderWhereInput
+  some: OrderWhereInput
+  none: OrderWhereInput
 }
 
 input CourseManyRelationFilter {
@@ -181,6 +183,7 @@ input UserOrderByInput {
   name: OrderDirection
   lastName: OrderDirection
   email: OrderDirection
+  status: OrderDirection
   role: OrderDirection
   createdAt: OrderDirection
   passwordResetIssuedAt: OrderDirection
@@ -197,6 +200,7 @@ input UserUpdateInput {
   lastName: String
   email: String
   password: String
+  status: String
   cart: CartRelateToManyForUpdateInput
   orders: OrderRelateToManyForUpdateInput
   role: String
@@ -262,6 +266,7 @@ input UserCreateInput {
   lastName: String
   email: String
   password: String
+  status: String
   cart: CartRelateToManyForCreateInput
   orders: OrderRelateToManyForCreateInput
   role: String
@@ -378,7 +383,7 @@ input TeacherCreateInput {
 
 type Coupon {
   id: ID!
-  code: Int
+  code: String
   description: String
   maxAmount: Int
   remaining: Int
@@ -396,7 +401,7 @@ input CouponWhereInput {
   OR: [CouponWhereInput!]
   NOT: [CouponWhereInput!]
   id: IDFilter
-  code: IntFilter
+  code: StringFilter
   description: StringFilter
   maxAmount: IntFilter
   belongsTo: CourseManyRelationFilter
@@ -434,7 +439,7 @@ input CouponOrderByInput {
 }
 
 input CouponUpdateInput {
-  code: Int
+  code: String
   description: String
   maxAmount: Int
   belongsTo: CourseRelateToManyForUpdateInput
@@ -447,7 +452,7 @@ input CouponUpdateArgs {
 }
 
 input CouponCreateInput {
-  code: Int
+  code: String
   description: String
   maxAmount: Int
   belongsTo: CourseRelateToManyForCreateInput

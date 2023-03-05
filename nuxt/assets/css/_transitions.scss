@@ -1,0 +1,15 @@
+.dashboard {
+  &-enter-active,
+  &-leave-active {
+    transition: all 0.3s;
+  }
+
+  &-enter {
+    transform: translateX(-25px);
+    opacity: 0;
+  }
+  &-leave-active {
+    transform: translateX(25px);
+    opacity: 0;
+  }
+}

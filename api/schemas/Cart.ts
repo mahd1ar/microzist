@@ -28,6 +28,26 @@ export const Cart = list({
             initialColumns: ['summery', 'user'],
         },
     },
+    hooks: {
+        beforeOperation: async (args) => {
+            if (args.operation !== 'delete') return;
+
+            const sudo = args.context.sudo();
+            try {
+                const itemsWithThisParent = await sudo.query.CartItem.findMany({
+                    where: { cart: { id: { equals: args.item.id } } },
+                    query: ' id ',
+                });
+
+                await sudo.query.CartItem.deleteMany({
+                    where: itemsWithThisParent,
+                });
+            } catch (error) {
+                console.log(error);
+            }
+            sudo.exitSudo();
+        },
+    },
     fields: {
         // quantity: integer({
         //     defaultValue: 1,

@@ -8,7 +8,9 @@ export const Coupon = list({
     // TODO only admin can create this
     access: allowAll,
     fields: {
-        code: integer({ validation: { isRequired: true, max: 9999 } }),
+        code: text({
+            validation: { isRequired: true },
+        }),
         description: text({ validation: { isRequired: true } }),
         maxAmount: integer({ validation: { isRequired: true } }),
         remaining: virtual({

@@ -3,12 +3,10 @@ import { list } from '@keystone-6/core';
 import { allowAll } from '@keystone-6/core/access';
 import {
     float,
-    integer,
     relationship,
     select,
     text,
     timestamp,
-    virtual,
 } from '@keystone-6/core/fields';
 
 export const Order = list({
@@ -20,6 +18,27 @@ export const Order = list({
     // update: () => false,
     // delete: () => false,
     // },
+    hooks: {
+        beforeOperation: async (args) => {
+            if (args.operation !== 'delete') return;
+
+            const sudo = args.context.sudo();
+            try {
+                const orderItemsWithThisParentParent =
+                    await sudo.query.OrderItem.findMany({
+                        where: { order: { id: { equals: args.item.id } } },
+                        query: ' id ',
+                    });
+
+                await sudo.query.OrderItem.deleteMany({
+                    where: orderItemsWithThisParentParent,
+                });
+            } catch (error) {
+                console.log(error);
+            }
+            sudo.exitSudo();
+        },
+    },
     fields: {
         totalCost: float(),
         items: relationship({ ref: 'OrderItem.order', many: true }),

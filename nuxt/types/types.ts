@@ -2942,7 +2942,7 @@ export type CourseQueryVariables = Exact<{
 }>;
 
 
-export type CourseQuery = { __typename?: 'Query', course?: { __typename?: 'Course', id: string, name?: string | null, description?: string | null, rate?: number | null, commentsCount?: number | null, teacher?: { __typename?: 'Teacher', name?: string | null, description?: string | null, image?: { __typename?: 'ImageFieldOutput', id: string, url: string } | null } | null, image?: { __typename?: 'ImageFieldOutput', id: string, url: string } | null, courseItem?: Array<{ __typename?: 'CourseItem', id: string, no?: number | null, name?: string | null, description?: string | null }> | null } | null };
+export type CourseQuery = { __typename?: 'Query', course?: { __typename?: 'Course', id: string, name?: string | null, description?: string | null, rate?: number | null, commentsCount?: number | null, teacher?: { __typename?: 'Teacher', name?: string | null, description?: string | null, image?: { __typename?: 'ImageFieldOutput', id: string, url: string } | null } | null, image?: { __typename?: 'ImageFieldOutput', id: string, url: string } | null, comments?: Array<{ __typename?: 'Comment', id: string, comment?: string | null, rate?: number | null, createdAt?: any | null, user?: { __typename?: 'User', id: string, name?: string | null, lastName?: string | null } | null }> | null, courseItem?: Array<{ __typename?: 'CourseItem', id: string, no?: number | null, name?: string | null, description?: string | null }> | null } | null };
 
 export type CoursesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -2988,4 +2988,4 @@ export type UserCommentAndRateQueryVariables = Exact<{
 }>;
 
 
-export type UserCommentAndRateQuery = { __typename?: 'Query', comments?: Array<{ __typename?: 'Comment', rate?: number | null, comment?: string | null }> | null };
+export type UserCommentAndRateQuery = { __typename?: 'Query', comments?: Array<{ __typename?: 'Comment', rate?: number | null, comment?: string | null, id: string }> | null };

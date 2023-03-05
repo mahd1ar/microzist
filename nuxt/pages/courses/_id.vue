@@ -391,9 +391,13 @@ function share (social: 'telegram' | 'instagram' | 'linkedin' | 'whatsapp') {
 
 async function addToCart (cid: string, cname: string) {
   if (ctx.store.getters.isLoggedIn) {
-    await ctx.$axios.post('/cart-item', {
-      cid: ctx.route.value.params.id
-    })
+    await ctx.$axios.post(
+      '/cart-item',
+      {
+        cid: ctx.route.value.params.id
+      },
+      { withCredentials: true }
+    )
   } else {
     // @ts-ignore
 

@@ -1,6 +1,6 @@
 <template>
-  <div dir="rtl" class="flex min-h-screen">
-    <div class="flex w-full flex-col items-stretch">
+  <div dir="rtl" class="flex h-screen overflow-hidden">
+    <div class="flex w-full flex-col items-stretch bg-white">
       <div class="relative flex-shrink-0 border-b-2 bg-slate-200">
         <div
           aria-hidden="true"
@@ -242,7 +242,7 @@
         </div>
       </div>
 
-      <nuxt class="h-full bg-white" />
+      <nuxt id="dashboard-layout" class="h-full bg-white overflow-auto" />
     </div>
   </div>
 </template>

@@ -8,8 +8,8 @@
 export default {
   layoutTransition: {
     name: 'layout',
-    mode: 'out-in',
-  },
+    mode: 'out-in'
+  }
 }
 </script>
 
