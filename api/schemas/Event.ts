@@ -5,7 +5,8 @@ import {
     integer,
     virtual,
     select,
-    relationship, image
+    relationship,
+    image,
 } from '@keystone-6/core/fields';
 import { componentBlocks } from './component-blocks';
 import { BaseKeystoneTypeInfo, KeystoneContext } from '@keystone-6/core/types';
@@ -15,6 +16,8 @@ import { wordifyfa } from '../data/lib/wordifyfa';
 import { document } from '@keystone-6/fields-document';
 import { allOperations } from '@keystone-6/core/access';
 import { isAdmin, isLoggedIn } from '../data/access';
+import { Session } from '../data/types';
+import { Roles } from '../data/enums';
 export const Event = list({
     access: {
         operation: {
@@ -22,12 +25,23 @@ export const Event = list({
             query: () => true,
             update: isLoggedIn,
         },
+        filter: {
+            query: (args) => {
+                const session = args.context.session as Session | undefined;
+                if (session && session.data.role === Roles.admin) return true;
+                else
+                    return {
+                        status: {
+                            equals: 'AVAILABLE',
+                        },
+                    };
+            },
+        },
     },
 
     hooks: {
         validateInput(args) {
             // TODO deadline must not after starting event
-
         },
     },
 
@@ -43,6 +57,18 @@ export const Event = list({
         }),
         name: text({
             validation: { isRequired: true },
+        }),
+        status: select({
+            options: [
+                { label: 'Draft', value: 'DRAFT' },
+                { label: 'Available', value: 'AVAILABLE' },
+                { label: 'Unavailable', value: 'UNAVAILABLE' },
+            ],
+            defaultValue: 'DRAFT',
+            ui: {
+                displayMode: 'segmented-control',
+                createView: { fieldMode: 'hidden' },
+            },
         }),
         image: image({ storage: 'images' }),
         description: text({ ui: { displayMode: 'textarea' } }),
@@ -75,19 +101,18 @@ export const Event = list({
                 type: graphql.String,
                 async resolve(item) {
                     const { price } = item as unknown as { price: number };
-                    console.log(price)
+
                     if (price) {
                         switch (price) {
                             case 0:
-                                return 'رایگان'
+                                return 'رایگان';
 
                             case -1:
-                                return 'این رویداد قابل ثبت نام نیست'
+                                return 'این رویداد قابل ثبت نام نیست';
                             default:
-                                return `${wordifyfa(price)} تومان `
+                                return `${wordifyfa(price)} تومان `;
                         }
-                    } else
-                        return 'رایگان';
+                    } else return 'رایگان';
                 },
             }),
         }),
@@ -97,7 +122,7 @@ export const Event = list({
                 type: graphql.Int,
                 // @ts-ignore
                 async resolve(
-                    { id, maxAmount }: { id: string, maxAmount: number },
+                    { id, maxAmount }: { id: string; maxAmount: number },
                     _,
                     context: KeystoneContext<BaseKeystoneTypeInfo>
                 ) {
@@ -115,18 +140,6 @@ export const Event = list({
             }),
             // graphQLReturnType: "String",
         }),
-        status: select({
-            options: [
-                { label: 'Draft', value: 'DRAFT' },
-                { label: 'Available', value: 'AVAILABLE' },
-                { label: 'Unavailable', value: 'UNAVAILABLE' },
-            ],
-            defaultValue: 'DRAFT',
-            ui: {
-                displayMode: 'segmented-control',
-                createView: { fieldMode: 'hidden' },
-            },
-        }),
 
         from: persianCalendar({
             label: 'starting date',
@@ -141,20 +154,6 @@ export const Event = list({
         users: relationship({
             ref: 'User.events',
             many: true,
-            hooks: {
-                resolveInput({ operation, resolvedData, context }) {
-                    // Default to the currently logged in user on create.
-
-                    if (
-                        operation === 'create' &&
-                        !resolvedData.users &&
-                        context.session?.itemId
-                    ) {
-                        return { connect: { id: context.session?.itemId } };
-                    }
-                    return resolvedData.users;
-                },
-            },
             ui: {
                 hideCreate: true,
             },
@@ -184,12 +183,17 @@ export const Event = list({
                     if (users.length === 0) {
                         return false;
                     }
+                    console.log(users);
 
-                    if (context.session.itemId === users[0].id) return true;
+                    if (
+                        (users as { id: string }[]).find(
+                            (i) => i.id === context.session.itemId
+                        )
+                    )
+                        return true;
 
                     return false;
                 },
-
             }),
             // graphQLReturnType: "String",
         }),

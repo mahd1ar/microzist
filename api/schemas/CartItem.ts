@@ -1,34 +1,25 @@
 import { list } from '@keystone-6/core';
 import { allOperations, allowAll } from '@keystone-6/core/access';
 import { BaseAccessArgs } from '@keystone-6/core/dist/declarations/src/types/config/access-control';
-import {
-    checkbox,
-    integer,
-    relationship,
-    virtual,
-} from '@keystone-6/core/fields';
+import { integer, relationship, virtual } from '@keystone-6/core/fields';
 import {
     BaseKeystoneTypeInfo,
     BaseListTypeInfo,
     KeystoneContext,
 } from '@keystone-6/core/types';
-import { GeneralSession } from '../data/types';
+import { Session } from '../data/types';
 // import { rules, isSignedIn } from "../access";
-import { GraphQLError } from 'graphql';
 import { kickout } from '../data/utils';
 import { graphql } from '@graphql-ts/schema';
-
-const isUser = (args: BaseAccessArgs<BaseListTypeInfo>) => {
-    if (!!args.session === false) kickout(args.context.req);
-
-    return !!args.session;
-};
+import { capitalize } from 'lodash';
+import Dict from '../data/dict';
+import { isLoggedIn } from '../data/access';
 
 export const CartItem = list({
     access: {
         operation: {
-            ...allOperations(isUser),
-            update: isUser,
+            ...allOperations(isLoggedIn),
+            update: isLoggedIn,
         },
     },
     ui: {
@@ -44,79 +35,98 @@ export const CartItem = list({
             // const x = args.context.query.CartItem.findOne({
             //     where: {id:}
             // })
-            if (args.operation === 'update') {
-                return;
-            }
 
-            if (args.inputData.course === null && args.inputData.event === null)
-                args.addValidationError('select course or event');
-            if (args.inputData.course && args.inputData.event)
-                args.addValidationError('pick one ! "one"');
+            if (args.operation === 'create') {
+                if (
+                    args.inputData.course === null &&
+                    args.inputData.event === null
+                )
+                    args.addValidationError('select course or event');
+                if (args.inputData.course && args.inputData.event)
+                    args.addValidationError('pick one ! "one"');
 
-            // FIND A WAY TO GET FINAL RESAULT
+                // FIND A WAY TO GET FINAL RESAULT
 
-            const coponId: string | undefined =
-                args.resolvedData?.coupon?.connect?.id;
-            const courseId = args.resolvedData?.course?.connect?.id;
-            const eventId = args.resolvedData?.event?.connect?.id;
-
-            if (typeof courseId !== 'string' && typeof eventId !== 'string') {
-                args.addValidationError('enter either courseid or itemid');
-                return;
-            }
-            if (coponId) {
-                const { remaining, belongsTo } =
-                    await args.context.query.Coupon.findOne({
-                        where: {
-                            id: coponId,
-                        },
-                        query: ' remaining , belongsTo { id , name } ',
-                    });
+                const courseId = args.resolvedData?.course?.connect?.id;
+                const eventId = args.resolvedData?.event?.connect?.id;
 
                 if (
-                    !!courseId &&
-                    !belongsTo.some((i: any) => i.id === courseId)
+                    typeof courseId !== 'string' &&
+                    typeof eventId !== 'string'
                 ) {
-                    args.addValidationError(
-                        'fa:: the course dosent belong to this coupon'
-                    );
+                    args.addValidationError('enter either courseid or itemid');
                     return;
                 }
+            }
 
-                if (remaining === 0) {
-                    // remaining dosent matter if u want to delete
+            if (args.operation === 'update') {
+                const coponId: string | undefined =
+                    args.resolvedData?.coupon?.connect?.id ||
+                    args.item.couponId;
+
+                const courseId: string | undefined =
+                    args.resolvedData?.course?.connect?.id ||
+                    args.item.courseId;
+                const eventId: string | undefined =
+                    args.resolvedData?.event?.connect?.id || args.item.eventId;
+                console.log(args.context.session);
+                const productType = eventId ? 'event' : 'course';
+                const productID = eventId || courseId;
+                const productName = eventId ? 'fa:: Event ' : 'Fa:: Course ';
+
+                if (coponId) {
+                    const { remaining, belongsTo } =
+                        await args.context.query.Coupon.findOne({
+                            where: {
+                                id: coponId,
+                            },
+
+                            query: `id remaining , belongsTo: belongsTo${capitalize(
+                                productType
+                            )} { id , name } `,
+                        });
+
+                    if (
+                        !!courseId &&
+                        !belongsTo.some((i: any) => i.id === productID)
+                    ) {
+                        args.addValidationError(Dict.fa.errors.e101);
+                        return;
+                    }
+
+                    if (remaining === 0) {
+                        // remaining dosent matter if u want to delete
+                        if (
+                            args.resolvedData.coupon &&
+                            args.resolvedData.coupon.disconnect === false
+                        )
+                            args.addValidationError(Dict.fa.errors.e102);
+                    }
+
                     if (
                         args.resolvedData.coupon &&
-                        args.resolvedData.coupon.disconnect === false
-                    )
-                        args.addValidationError('fa:: there is no coupon left');
-                }
+                        !!args.resolvedData.coupon.disconnect === false
+                    ) {
+                        const {
+                            cart: [firstcart],
+                        } = await args.context.query.User.findOne({
+                            where: {
+                                id: (args.context.session as Session)?.itemId,
+                            },
+                            query: 'cart { id items { id coupon { id } } }',
+                        });
 
-                // throw an error if user already use siad coupon
-                if (
-                    args.resolvedData.coupon &&
-                    args.resolvedData.coupon.disconnect === false
-                ) {
-                    const {
-                        cart: [firstcart],
-                    } = await args.context.query.User.findOne({
-                        where: {
-                            id: (args.context.session as GeneralSession)
-                                ?.itemId,
-                        },
-                        query: 'cart { id items { id coupon { id } } }',
-                    });
-
-                    if (
-                        firstcart &&
-                        firstcart.items
-                            .map((i: any) => (i.coupon ? i.coupon.id : false))
-                            .filter(Boolean)
-                            .includes(coponId)
-                    )
-                        args.addValidationError(
-                            'fa:: you already use this coupon'
-                        );
+                        if (
+                            firstcart &&
+                            firstcart.items
+                                .map((i: any) =>
+                                    i.coupon ? i.coupon.id : false
+                                )
+                                .filter(Boolean)
+                                .includes(coponId)
+                        )
+                            args.addValidationError(Dict.fa.errors.e103);
+                    }
                 }
             }
         },
@@ -158,13 +168,17 @@ export const CartItem = list({
                                 query: 'course {  price , name }, coupon { discount } event {  price , name }, quantity ',
                             });
 
-                        if (event) return event.price * quantity;
+                        const remainingPercent =
+                            (100 - (coupon?.discount || 0)) / 100;
 
-                        if (coupon) {
-                            return (
-                                ((100 - coupon.discount) * course.price) / 100
-                            );
-                        } else return course.price;
+                        // TODO check if coupon belongs to
+                        if (event) {
+                            return remainingPercent * event.price * quantity;
+                        }
+
+                        if (course) {
+                            return remainingPercent * course.price;
+                        }
                     } catch (error) {
                         return 0;
                     }

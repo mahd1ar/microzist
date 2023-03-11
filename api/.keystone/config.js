@@ -18,6 +18,10 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
@@ -30,8 +34,11 @@ __export(keystone_exports, {
 });
 module.exports = __toCommonJS(keystone_exports);
 var import_core19 = require("@keystone-6/core");
+var import_axios2 = __toESM(require("axios"));
 var import_body_parser = __toESM(require("body-parser"));
-var import_lodash = require("lodash");
+var import_dotenv = __toESM(require("dotenv"));
+var import_lodash2 = require("lodash");
+var import_qs = __toESM(require("qs"));
 var import_ws = __toESM(require("ws"));
 
 // auth.ts
@@ -50,9 +57,12 @@ async function sendResetPasswordEmail(ctx) {
     host: "mail.nikan-alumni.org",
     port: 465,
     secure: true,
+    // true for 465, false for other ports
     auth: {
       user: "nikpeyvand@nikan-alumni.org",
+      // generated ethereal user
       pass: "P@ssw0rd110121"
+      // generated ethereal password
     }
   });
   const options = {
@@ -65,9 +75,14 @@ async function sendResetPasswordEmail(ctx) {
   transporter.use("compile", (0, import_nodemailer_express_handlebars.default)(options));
   let info = await transporter.sendMail({
     from: '"from nikan" <test@nikan-alumni.org>',
+    // sender address
     to: ctx.identity,
+    // list of receivers
     subject: "Hello \u2714 world",
+    // Subject line
     text: "Hello world?",
+    // plain text body
+    // @ts-ignore
     template: "resetpassword",
     context: {
       ...ctx,
@@ -75,6 +90,7 @@ async function sendResetPasswordEmail(ctx) {
         ctx.identity
       )}&token=${ctx.token}`
     }
+    // html: "<b>Hello world?</b>", // html body
   });
   console.log("Message sent: %s", info.messageId);
   console.log("Preview URL: %s", import_nodemailer.default.getTestMessageUrl(info));
@@ -92,7 +108,11 @@ if (import_fs.default.existsSync(sessionDir) === false) {
 var { withAuth } = (0, import_auth.createAuth)({
   listKey: "User",
   identityField: "email",
-  sessionData: "name role createdAt",
+  // this is a GraphQL query fragment for fetching what data will be attached to a context.session
+  //   this can be helpful for when you are writing your access control functions
+  //   you can find out more at https://keystonejs.com/docs/guides/auth-and-access-control
+  sessionData: "name role status createdAt",
+  // sessionData: 'name createdAt role',
   secretField: "password",
   passwordResetLink: {
     sendToken: async ({ identity, itemId, token }) => {
@@ -104,8 +124,15 @@ var { withAuth } = (0, import_auth.createAuth)({
     },
     tokensValidForMins: 60
   },
+  // WARNING: remove initFirstItem functionality in production
+  //   see https://keystonejs.com/docs/config/auth#init-first-item for more
   initFirstItem: {
+    // if there are no items in the database, by configuring this field
+    //   you are asking the Keystone AdminUI to create a new user
+    //   providing inputs for these fields
     fields: ["name", "lastName", "email", "password"]
+    // it uses context.sudo() to do this, which bypasses any access control you might have
+    //   you shouldn't use this in production
   }
 });
 var sessionMaxAge = 60 * 60 * 24 * 30;
@@ -118,7 +145,7 @@ var session = (0, import_session.storedSessions)({
         );
         return filedata.value;
       } else
-        console.log("session dose not exists");
+        console.error("session dose not exists");
     },
     async set(key, value) {
       const { maxAge } = args;
@@ -137,43 +164,96 @@ var session = (0, import_session.storedSessions)({
   maxAge: sessionMaxAge
 });
 
+// data/enums.ts
+var Roles = /* @__PURE__ */ ((Roles2) => {
+  Roles2["admin"] = "0";
+  Roles2["member"] = "50";
+  Roles2["subscriber"] = "100";
+  return Roles2;
+})(Roles || {});
+var FileTypes = /* @__PURE__ */ ((FileTypes2) => {
+  FileTypes2["video"] = "video";
+  FileTypes2["file"] = "file";
+  return FileTypes2;
+})(FileTypes || {});
+
 // data/utils.ts
 var import_axios = __toESM(require("axios"));
+var import_client = require("@prisma/client");
 var formatMoney = (money) => {
   const formatter = new Intl.NumberFormat("fa-IR");
   return formatter.format(money);
 };
+async function getAdminSessionParams() {
+  const prisma = new import_client.PrismaClient();
+  const user = await prisma.user.findFirst({
+    where: {
+      role: {
+        equals: "0" /* admin */
+      },
+      status: { equals: "enable" }
+    }
+  });
+  prisma.$disconnect();
+  return {
+    listKey: "User",
+    itemId: user?.id || "",
+    data: {
+      createdAt: user?.createdAt?.toString() || "",
+      name: user?.name || "",
+      role: "0" /* admin */,
+      status: "enable"
+    }
+  };
+}
 async function kickout(req) {
   if (req?.headers?.userid) {
     const userid = Array.isArray(req.headers.userid) ? req.headers.userid.at(-1) : req.headers.userid;
     await import_axios.default.get("localhost:3030/kick?userid=" + userid);
   }
 }
-function sendCommand(cmd) {
-  console.log(cmd);
-}
-
-// schema.ts
-var import_core18 = require("@keystone-6/core");
-var import_access21 = require("@keystone-6/core/access");
-var import_fields16 = require("@keystone-6/core/fields");
-var import_fields_document2 = require("@keystone-6/fields-document");
 
 // schemas/CartItem.ts
 var import_core = require("@keystone-6/core");
 var import_access = require("@keystone-6/core/access");
 var import_fields = require("@keystone-6/core/fields");
 var import_schema = require("@graphql-ts/schema");
-var isUser = (args) => {
-  if (!!args.session === false)
-    kickout(args.context.req);
-  return !!args.session;
+var import_lodash = require("lodash");
+
+// data/dict.ts
+var Dict = {
+  fa: {
+    generalErrorMessage: "generalErrorMessage",
+    errors: {
+      e101: "\u0686\u0646\u06CC\u0646 \u06A9\u062F\u06CC \u0648\u062C\u0648\u062F \u0646\u062F\u0627\u0631\u062F 101 copon dose not belog to this course or event",
+      e102: "\u0647\u06CC\u0686 \u06A9\u062F \u062A\u062E\u0641\u06CC\u0641\u06CC \u0628\u0627\u0642\u06CC \u0646\u0645\u0627\u0646\u062F\u0647 102",
+      e103: "\u0642\u0628\u0644\u0627 \u0627\u0632 \u0627\u06CC\u0646 \u06A9\u067E\u0646 \u0627\u0633\u062A\u0641\u0627\u062F\u0647 \u06A9\u0631\u062F\u06CC\u062F 103"
+    }
+  }
 };
+var dict_default = Dict;
+
+// data/access.ts
+function isLoggedIn(args) {
+  const { session: session2 } = args;
+  if (!!session2 === false) {
+    kickout(args.context.req);
+    return false;
+  }
+  if (session2?.data.status === "disabled")
+    return false;
+  return !!args.session;
+}
+function isAdmin(args) {
+  return isLoggedIn(args) && args.context.session.data.role === "0" /* admin */;
+}
+
+// schemas/CartItem.ts
 var CartItem = (0, import_core.list)({
   access: {
     operation: {
-      ...(0, import_access.allOperations)(isUser),
-      update: isUser
+      ...(0, import_access.allOperations)(isLoggedIn),
+      update: isLoggedIn
     }
   },
   ui: {
@@ -183,55 +263,68 @@ var CartItem = (0, import_core.list)({
   },
   hooks: {
     async validateInput(args) {
-      if (args.operation === "update") {
-        return;
-      }
-      if (args.inputData.course === null && args.inputData.event === null)
-        args.addValidationError("select course or event");
-      if (args.inputData.course && args.inputData.event)
-        args.addValidationError('pick one ! "one"');
-      const coponId = args.resolvedData?.coupon?.connect?.id;
-      const courseId = args.resolvedData?.course?.connect?.id;
-      const eventId = args.resolvedData?.event?.connect?.id;
-      if (typeof courseId !== "string" && typeof eventId !== "string") {
-        args.addValidationError("enter either courseid or itemid");
-        return;
-      }
-      if (coponId) {
-        const { remaining, belongsTo } = await args.context.query.Coupon.findOne({
-          where: {
-            id: coponId
-          },
-          query: " remaining , belongsTo { id , name } "
-        });
-        if (!!courseId && !belongsTo.some((i) => i.id === courseId)) {
-          args.addValidationError(
-            "fa:: the course dosent belong to this coupon"
-          );
+      if (args.operation === "create") {
+        if (args.inputData.course === null && args.inputData.event === null)
+          args.addValidationError("select course or event");
+        if (args.inputData.course && args.inputData.event)
+          args.addValidationError('pick one ! "one"');
+        const courseId = args.resolvedData?.course?.connect?.id;
+        const eventId = args.resolvedData?.event?.connect?.id;
+        if (typeof courseId !== "string" && typeof eventId !== "string") {
+          args.addValidationError("enter either courseid or itemid");
           return;
         }
-        if (remaining === 0) {
-          if (args.resolvedData.coupon && args.resolvedData.coupon.disconnect === false)
-            args.addValidationError("fa:: there is no coupon left");
-        }
-        if (args.resolvedData.coupon && args.resolvedData.coupon.disconnect === false) {
-          const {
-            cart: [firstcart]
-          } = await args.context.query.User.findOne({
+      }
+      if (args.operation === "update") {
+        const coponId = args.resolvedData?.coupon?.connect?.id || args.item.couponId;
+        const courseId = args.resolvedData?.course?.connect?.id || args.item.courseId;
+        const eventId = args.resolvedData?.event?.connect?.id || args.item.eventId;
+        console.log(args.context.session);
+        const productType = eventId ? "event" : "course";
+        const productID = eventId || courseId;
+        const productName = eventId ? "fa:: Event " : "Fa:: Course ";
+        if (coponId) {
+          const { remaining, belongsTo } = await args.context.query.Coupon.findOne({
             where: {
-              id: args.context.session?.itemId
+              id: coponId
             },
-            query: "cart { id items { id coupon { id } } }"
+            query: `id remaining , belongsTo: belongsTo${(0, import_lodash.capitalize)(
+              productType
+            )} { id , name } `
           });
-          if (firstcart && firstcart.items.map((i) => i.coupon ? i.coupon.id : false).filter(Boolean).includes(coponId))
-            args.addValidationError(
-              "fa:: you already use this coupon"
-            );
+          if (!!courseId && !belongsTo.some((i) => i.id === productID)) {
+            args.addValidationError(dict_default.fa.errors.e101);
+            return;
+          }
+          if (remaining === 0) {
+            if (args.resolvedData.coupon && args.resolvedData.coupon.disconnect === false)
+              args.addValidationError(dict_default.fa.errors.e102);
+          }
+          if (args.resolvedData.coupon && !!args.resolvedData.coupon.disconnect === false) {
+            const {
+              cart: [firstcart]
+            } = await args.context.query.User.findOne({
+              where: {
+                id: args.context.session?.itemId
+              },
+              query: "cart { id items { id coupon { id } } }"
+            });
+            if (firstcart && firstcart.items.map(
+              (i) => i.coupon ? i.coupon.id : false
+            ).filter(Boolean).includes(coponId))
+              args.addValidationError(dict_default.fa.errors.e103);
+          }
         }
       }
     }
   },
   fields: {
+    // quantity: integer({
+    //     defaultValue: 1,
+    //     validation: {
+    //         isRequired: true,
+    //     },
+    // }),
     type: (0, import_fields.virtual)({
       field: import_schema.graphql.field({
         type: import_schema.graphql.String,
@@ -249,18 +342,20 @@ var CartItem = (0, import_core.list)({
     priceWithDiscount: (0, import_fields.virtual)({
       field: import_schema.graphql.field({
         type: import_schema.graphql.Float,
+        // @ts-ignore
         async resolve(item, _args, context) {
           try {
             const { course, coupon, event, quantity } = await context.query.CartItem.findOne({
               where: { id: item.id.toString() },
               query: "course {  price , name }, coupon { discount } event {  price , name }, quantity "
             });
-            if (event)
-              return event.price * quantity;
-            if (coupon) {
-              return (100 - coupon.discount) * course.price / 100;
-            } else
-              return course.price;
+            const remainingPercent = (100 - (coupon?.discount || 0)) / 100;
+            if (event) {
+              return remainingPercent * event.price * quantity;
+            }
+            if (course) {
+              return remainingPercent * course.price;
+            }
           } catch (error) {
             return 0;
           }
@@ -272,41 +367,14 @@ var CartItem = (0, import_core.list)({
 
 // schemas/Cart.ts
 var import_core2 = require("@keystone-6/core");
+var import_access3 = require("@keystone-6/core/access");
 var import_fields2 = require("@keystone-6/core/fields");
 var import_schema2 = require("@graphql-ts/schema");
-
-// data/enums.ts
-var Roles = /* @__PURE__ */ ((Roles2) => {
-  Roles2["admin"] = "0";
-  Roles2["member"] = "50";
-  Roles2["subscriber"] = "100";
-  return Roles2;
-})(Roles || {});
-var FileTypes = /* @__PURE__ */ ((FileTypes2) => {
-  FileTypes2["video"] = "video";
-  FileTypes2["file"] = "file";
-  return FileTypes2;
-})(FileTypes || {});
-
-// data/access.ts
-function isLoggedIn(args) {
-  if (!!args.session === false)
-    kickout(args.context.req);
-  return !!args.session;
-}
-function isAdmin(args) {
-  console.log(args.context.session.data.role);
-  return isLoggedIn(args) && args.context.session.data.role === "0" /* admin */;
-}
-
-// schemas/Cart.ts
 var Cart = (0, import_core2.list)({
+  // TODO [security concern] filter by session id
   access: {
     operation: {
-      query: isLoggedIn,
-      create: isLoggedIn,
-      delete: isLoggedIn,
-      update: isLoggedIn
+      ...(0, import_access3.allOperations)(isLoggedIn)
     }
   },
   ui: {
@@ -328,21 +396,29 @@ var Cart = (0, import_core2.list)({
           where: itemsWithThisParent
         });
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
       sudo.exitSudo();
     }
   },
   fields: {
+    // quantity: integer({
+    //     defaultValue: 1,
+    //     validation: {
+    //         isRequired: true,
+    //     },
+    // }),
     summery: (0, import_fields2.virtual)({
       field: import_schema2.graphql.field({
         type: import_schema2.graphql.String,
+        // @ts-ignore
         async resolve(item, _args, context) {
           const { items } = await context.query.Cart.findOne({
             where: { id: item.id.toString() },
             query: "items { course { name } event { name } }"
           });
-          return items.map((i) => i.event?.name || "").filter(Boolean).join(" . ") + items.map((i) => i.course?.name || "").filter(Boolean).join(" . ");
+          const summeryText = items.map((i) => i.event?.name || "").filter(Boolean).join(" . ") + items.map((i) => i.course?.name || "").filter(Boolean).join(" . ");
+          return summeryText.trim() || "empty cart";
         }
       })
     }),
@@ -355,12 +431,12 @@ var Cart = (0, import_core2.list)({
     totalPrice: (0, import_fields2.virtual)({
       field: import_schema2.graphql.field({
         type: import_schema2.graphql.Float,
+        // @ts-ignore
         async resolve(item, _, context) {
           const { items } = await context.query.Cart.findOne({
             where: { id: item.id.toString() },
             query: "items { priceWithDiscount }"
           });
-          console.log(items);
           return items.reduce(
             (total, { priceWithDiscount }) => total += priceWithDiscount,
             0
@@ -374,10 +450,17 @@ var Cart = (0, import_core2.list)({
 
 // schemas/Order.ts
 var import_core3 = require("@keystone-6/core");
-var import_access3 = require("@keystone-6/core/access");
+var import_access5 = require("@keystone-6/core/access");
 var import_fields3 = require("@keystone-6/core/fields");
 var Order = (0, import_core3.list)({
-  access: import_access3.allowAll,
+  access: import_access5.allowAll,
+  // TODO: adjust access for god sakes
+  // {
+  // create: isSignedIn,
+  // read: rules.canOrder,
+  // update: () => false,
+  // delete: () => false,
+  // },
   hooks: {
     beforeOperation: async (args) => {
       if (args.operation !== "delete")
@@ -392,7 +475,7 @@ var Order = (0, import_core3.list)({
           where: orderItemsWithThisParentParent
         });
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
       sudo.exitSudo();
     }
@@ -421,6 +504,7 @@ var Order = (0, import_core3.list)({
       defaultValue: 0
     }),
     orderDate: (0, import_fields3.timestamp)({ defaultValue: { kind: "now" } })
+    // charge: text(),
   },
   ui: {
     isHidden: process.env.NODE_ENV === "production"
@@ -429,10 +513,16 @@ var Order = (0, import_core3.list)({
 
 // schemas/OrderItem.ts
 var import_core4 = require("@keystone-6/core");
-var import_access4 = require("@keystone-6/core/access");
+var import_access6 = require("@keystone-6/core/access");
 var import_fields4 = require("@keystone-6/core/fields");
 var OrderItem = (0, import_core4.list)({
-  access: import_access4.allowAll,
+  access: import_access6.allowAll,
+  // {
+  //   create: isSignedIn,
+  //   read: rules.canManageOrderItems,
+  //   update: () => false,
+  //   delete: () => false,
+  // },
   fields: {
     name: (0, import_fields4.text)({ validation: { isRequired: true } }),
     description: (0, import_fields4.text)({
@@ -453,6 +543,16 @@ var OrderItem = (0, import_core4.list)({
       }
     }),
     quantity: (0, import_fields4.integer)({ defaultValue: 1 }),
+    // TODO this items has interesting UI filds
+    // photo: relationship({
+    //   ref: "ProductImage",
+    //   ui: {
+    //     displayMode: "cards",
+    //     cardFields: ["image", "altText"],
+    //     inlineCreate: { fields: ["image", "altText"] },
+    //     inlineEdit: { fields: ["image", "altText"] },
+    //   },
+    // }),
     price: (0, import_fields4.integer)(),
     order: (0, import_fields4.relationship)({ ref: "Order.items" })
   }
@@ -461,17 +561,18 @@ var OrderItem = (0, import_core4.list)({
 // schemas/Course.ts
 var import_fields5 = require("@keystone-6/core/fields");
 var import_core5 = require("@keystone-6/core");
-var import_access5 = require("@keystone-6/core/access");
+var import_access7 = require("@keystone-6/core/access");
 var import_schema3 = require("@graphql-ts/schema");
 var Course = (0, import_core5.list)({
   access: {
     operation: {
-      ...(0, import_access5.allOperations)(import_access5.allowAll),
+      ...(0, import_access7.allOperations)(import_access7.allowAll),
       create: isLoggedIn
     },
     filter: {
       query: (args) => {
-        if (args.session && args.session?.data.role === "0")
+        const session2 = args.context.session;
+        if (session2 && session2.data.role === "0" /* admin */)
           return true;
         else
           return {
@@ -513,6 +614,7 @@ var Course = (0, import_core5.list)({
     rate: (0, import_fields5.virtual)({
       field: import_schema3.graphql.field({
         type: import_schema3.graphql.Float,
+        // @ts-ignore
         async resolve(item, _args, context) {
           const query = await context.query.Comment.findMany({
             where: {
@@ -529,13 +631,16 @@ var Course = (0, import_core5.list)({
       ref: "Teacher.courses",
       ui: { labelField: "name" }
     }),
+    // rate: integer({ defaultValue: 3 }),
     image: (0, import_fields5.image)({
       storage: "images"
     }),
     comments: (0, import_fields5.relationship)({
       ref: "Comment.course",
       many: true,
-      ui: {}
+      ui: {
+        // displayMode: 'count',
+      }
     }),
     users: (0, import_fields5.relationship)({
       ref: "User.courses",
@@ -570,6 +675,7 @@ var Course = (0, import_core5.list)({
       },
       field: import_schema3.graphql.field({
         type: import_schema3.graphql.Boolean,
+        // @ts-ignore
         async resolve(item, _, context) {
           if (!context.session)
             return false;
@@ -585,6 +691,7 @@ var Course = (0, import_core5.list)({
           return false;
         }
       })
+      // graphQLReturnType: "String",
     })
   }
 });
@@ -592,13 +699,18 @@ var Course = (0, import_core5.list)({
 // schemas/CourseItems.ts
 var import_fields6 = require("@keystone-6/core/fields");
 var import_core6 = require("@keystone-6/core");
-var import_access7 = require("@keystone-6/core/access");
+var import_access9 = require("@keystone-6/core/access");
 var CourseItem = (0, import_core6.list)({
   access: {
     operation: {
-      ...(0, import_access7.allOperations)(import_access7.allowAll),
+      ...(0, import_access9.allOperations)(import_access9.allowAll),
       create: isLoggedIn
     }
+    // filter: {
+    //   query: rules.canReadProducts,
+    //   update: rules.canManageProducts,
+    //   delete: rules.canManageProducts,
+    // },
   },
   fields: {
     no: (0, import_fields6.integer)({ validation: { min: 1 } }),
@@ -621,14 +733,25 @@ var CourseItem = (0, import_core6.list)({
     comments: (0, import_fields6.relationship)({
       ref: "Comment.courseItem",
       many: true,
-      ui: {}
+      ui: {
+        // displayMode: 'count',
+      }
     })
+    // photo: relationship({
+    //   ref: 'ProductImage.product',
+    //   ui: {
+    //     displayMode: 'cards',
+    //     cardFields: ['image', 'altText'],
+    //     inlineCreate: { fields: ['image', 'altText'] },
+    //     inlineEdit: { fields: ['image', 'altText'] },
+    //   },
+    // }),
   }
 });
 
 // schemas/User.ts
 var import_core7 = require("@keystone-6/core");
-var import_access9 = require("@keystone-6/core/access");
+var import_access11 = require("@keystone-6/core/access");
 var import_fields7 = require("@keystone-6/core/fields");
 var roleKeys = Object.keys(Roles);
 var roleValues = Object.values(Roles);
@@ -639,7 +762,7 @@ var RolesItem = roleKeys.map((key, index) => ({
 var User = (0, import_core7.list)({
   access: {
     operation: {
-      ...(0, import_access9.allOperations)(isAdmin),
+      ...(0, import_access11.allOperations)(isAdmin),
       query: () => true,
       update: () => true
     },
@@ -665,15 +788,23 @@ var User = (0, import_core7.list)({
       }
     }
   },
-  ui: {},
+  ui: {
+    // hide the backend UI from regular users
+    // TODO deal with this later v
+    // hideCreate: (args) => !permissions.canManageUsers(args),
+    // hideDelete: (args) => !permissions.canManageUsers(args),
+  },
   fields: {
     name: (0, import_fields7.text)({ validation: { isRequired: true } }),
     lastName: (0, import_fields7.text)({ validation: { isRequired: true } }),
     email: (0, import_fields7.text)({
       validation: { isRequired: true },
+      // by adding isIndexed: 'unique', we're saying that no user can have the same
+      // email as another user - this may or may not be a good idea for your project
       isIndexed: "unique"
     }),
     password: (0, import_fields7.password)({ validation: { isRequired: true } }),
+    // TODO user should no be abled to login if its disbled
     status: (0, import_fields7.select)({
       options: [
         {
@@ -701,7 +832,7 @@ var User = (0, import_core7.list)({
     orders: (0, import_fields7.relationship)({ ref: "Order.user", many: true }),
     role: (0, import_fields7.select)({
       options: RolesItem,
-      defaultValue: "100"
+      defaultValue: "50" /* member */
     }),
     courses: (0, import_fields7.relationship)({
       ref: "Course.users",
@@ -711,9 +842,15 @@ var User = (0, import_core7.list)({
       ref: "Event.users",
       many: true
     }),
+    // productImages: relationship({
+    //   ref: "ProductImage.user",
+    //   many: true,
+    // }),
     posts: (0, import_fields7.relationship)({ ref: "Post.author", many: true }),
     comments: (0, import_fields7.relationship)({ ref: "Comment.user", many: true }),
+    // images: relationship({ ref: 'Storage.uploadedBy', many: true }),
     createdAt: (0, import_fields7.timestamp)({
+      // this sets the timestamp to Date.now() when the user is first created
       defaultValue: { kind: "now" }
     })
   }
@@ -721,10 +858,10 @@ var User = (0, import_core7.list)({
 
 // schemas/Categoryy.ts
 var import_core8 = require("@keystone-6/core");
-var import_access11 = require("@keystone-6/core/access");
+var import_access13 = require("@keystone-6/core/access");
 var import_fields8 = require("@keystone-6/core/fields");
 var Category = (0, import_core8.list)({
-  access: import_access11.allowAll,
+  access: import_access13.allowAll,
   fields: {
     name: (0, import_fields8.text)({
       validation: { isRequired: true }
@@ -744,10 +881,10 @@ var Category = (0, import_core8.list)({
 
 // schemas/Settings.ts
 var import_core9 = require("@keystone-6/core");
-var import_access12 = require("@keystone-6/core/access");
+var import_access14 = require("@keystone-6/core/access");
 var import_fields9 = require("@keystone-6/core/fields");
 var Settings = (0, import_core9.list)({
-  access: import_access12.allowAll,
+  access: import_access14.allowAll,
   isSingleton: true,
   fields: {
     websiteName: (0, import_fields9.text)(),
@@ -762,10 +899,10 @@ var Settings = (0, import_core9.list)({
 
 // schemas/File.ts
 var import_core10 = require("@keystone-6/core");
-var import_access13 = require("@keystone-6/core/access");
+var import_access15 = require("@keystone-6/core/access");
 var import_fields10 = require("@keystone-6/core/fields");
 var File = (0, import_core10.list)({
-  access: import_access13.allowAll,
+  access: import_access15.allowAll,
   ui: {
     label: "media",
     listView: {
@@ -794,19 +931,30 @@ var File = (0, import_core10.list)({
     type: (0, import_fields10.select)({
       options: Object.keys(FileTypes)
     }),
+    // uploadedBy: relationship({
+    //     ref: 'User.images',
+    //     many: false,
+    // }),
     createdAt: (0, import_fields10.timestamp)({
       defaultValue: { kind: "now" },
       ui: {}
     })
   }
+  // hooks: {
+  //   validateInput: ({ resolvedData, addValidationError }) => {
+  //     if (resolvedData.uploadedBy === undefined) {
+  //       addValidationError('Uploaded By is not defined')
+  //     }
+  //   }
+  // }
 });
 
 // schemas/Tag.ts
 var import_core11 = require("@keystone-6/core");
-var import_access14 = require("@keystone-6/core/access");
+var import_access16 = require("@keystone-6/core/access");
 var import_fields11 = require("@keystone-6/core/fields");
 var Tag = (0, import_core11.list)({
-  access: import_access14.allowAll,
+  access: import_access16.allowAll,
   ui: {
     isHidden: true
   },
@@ -819,10 +967,17 @@ var Tag = (0, import_core11.list)({
 // schemas/Coupon.ts
 var import_schema4 = require("@graphql-ts/schema");
 var import_core12 = require("@keystone-6/core");
-var import_access15 = require("@keystone-6/core/access");
+var import_access17 = require("@keystone-6/core/access");
 var import_fields12 = require("@keystone-6/core/fields");
 var Coupon = (0, import_core12.list)({
-  access: import_access15.allowAll,
+  access: {
+    operation: { ...(0, import_access17.allOperations)(isAdmin), query: isLoggedIn }
+  },
+  ui: {
+    listView: {
+      initialColumns: ["code", "remaining"]
+    }
+  },
   fields: {
     code: (0, import_fields12.text)({
       validation: { isRequired: true }
@@ -832,6 +987,7 @@ var Coupon = (0, import_core12.list)({
     remaining: (0, import_fields12.virtual)({
       field: import_schema4.graphql.field({
         type: import_schema4.graphql.Int,
+        // @ts-ignore
         async resolve({ id, maxAmount }, _, context) {
           try {
             const currentlyInUse = await context.query.CartItem.count({
@@ -848,12 +1004,20 @@ var Coupon = (0, import_core12.list)({
           }
         }
       })
+      // graphQLReturnType: "String",
     }),
-    belongsTo: (0, import_fields12.relationship)({
+    belongsToCourse: (0, import_fields12.relationship)({
       ref: "Course",
       many: true,
       ui: {
-        description: "\u0686\u0647 \u0645\u062D\u0635\u0648\u0644\u0627\u062A\u06CC \u0631\u0627 \u0634\u0627\u0645\u0644 \u0645\u06CC\u0634\u0648\u062F"
+        description: "\u0686\u0647 \u0622\u0645\u0648\u0632\u0634 \u0647\u0627\u06CC\u06CC \u0631\u0627 \u0634\u0627\u0645\u0644 \u0645\u06CC\u0634\u0648\u062F"
+      }
+    }),
+    belongsToEvent: (0, import_fields12.relationship)({
+      ref: "Event",
+      many: true,
+      ui: {
+        description: "\u0686\u0647 \u0631\u0648\u06CC\u062F\u0627\u062F \u0647\u0627\u06CC\u06CC \u0631\u0627 \u0634\u0627\u0645\u0644 \u0645\u06CC\u0634\u0648\u062F"
       }
     }),
     discount: (0, import_fields12.integer)({
@@ -908,7 +1072,12 @@ var hero = (0, import_component_blocks.component)({
 
 // schemas/component-blocks/index.tsx
 var componentBlocks = {
+  //   carousel,
   hero
+  //   callout,
+  //   quote,
+  //   tweet,
+  //   youtubeVideo,
 };
 
 // src/custom-fields/persian-calander/index.ts
@@ -919,14 +1088,18 @@ var persianCalendar = ({
   Jcalandar = "2022-12-03",
   ...config2
 } = {}) => (meta) => (0, import_types.fieldType)({
+  // this configures what data is stored in the database
   kind: "scalar",
   mode: "optional",
   scalar: "String",
   index: isIndexed === true ? "index" : isIndexed || void 0
 })({
+  // this passes through all of the common configuration like access control and etc.
   ...config2,
   hooks: {
     ...config2.hooks,
+    // We use the `validateInput` hook to ensure that the user doesn't set an out of range value.
+    // This hook is the key difference on the backend between the stars field type and the integer field type.
     async validateInput(args) {
       console.log("validation input:");
       console.log(args.resolvedData[meta.fieldKey]);
@@ -941,9 +1114,14 @@ var persianCalendar = ({
       await config2.hooks?.validateInput?.(args);
     }
   },
+  // all of these inputs are optional if they don't make sense for a particular field type
   input: {
     create: {
       arg: import_core14.graphql.arg({ type: import_core14.graphql.String }),
+      // this field type doesn't need to do anything special
+      // but field types can specify resolvers for inputs like they can for their output GraphQL field
+      // this function can be omitted, it is here purely to show how you could change it
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       resolve(val, context) {
         if (val === null) {
           return null;
@@ -957,8 +1135,12 @@ var persianCalendar = ({
     update: { arg: import_core14.graphql.arg({ type: import_core14.graphql.String }) },
     orderBy: { arg: import_core14.graphql.arg({ type: import_types.orderDirectionEnum }) }
   },
+  // this
   output: import_core14.graphql.field({
     type: import_core14.graphql.String,
+    // like the input resolvers, providing the resolver is unnecessary if you're just returning the value
+    // it is shown here to show what you could do
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     resolve({ value, item }, args, context, info) {
       return value;
     }
@@ -1068,7 +1250,7 @@ function wordifyMomentApprox(date, baseDate, suffixBefore = "\u067E\u06CC\u0634"
     return "";
   }
   if (baseDate == null || baseDate == void 0 || baseDate == "") {
-    baseDate = new Date();
+    baseDate = /* @__PURE__ */ new Date();
   }
   if (typeof date == "string") {
     date = new Date(date);
@@ -1136,13 +1318,26 @@ function wordifyMomentApprox(date, baseDate, suffixBefore = "\u067E\u06CC\u0634"
 
 // schemas/Event.ts
 var import_fields_document = require("@keystone-6/fields-document");
-var import_access16 = require("@keystone-6/core/access");
+var import_access19 = require("@keystone-6/core/access");
 var Event = (0, import_core15.list)({
   access: {
     operation: {
-      ...(0, import_access16.allOperations)(isAdmin),
+      ...(0, import_access19.allOperations)(isAdmin),
       query: () => true,
       update: isLoggedIn
+    },
+    filter: {
+      query: (args) => {
+        const session2 = args.context.session;
+        if (session2 && session2.data.role === "0" /* admin */)
+          return true;
+        else
+          return {
+            status: {
+              equals: "AVAILABLE"
+            }
+          };
+      }
     }
   },
   hooks: {
@@ -1160,6 +1355,18 @@ var Event = (0, import_core15.list)({
     }),
     name: (0, import_fields13.text)({
       validation: { isRequired: true }
+    }),
+    status: (0, import_fields13.select)({
+      options: [
+        { label: "Draft", value: "DRAFT" },
+        { label: "Available", value: "AVAILABLE" },
+        { label: "Unavailable", value: "UNAVAILABLE" }
+      ],
+      defaultValue: "DRAFT",
+      ui: {
+        displayMode: "segmented-control",
+        createView: { fieldMode: "hidden" }
+      }
     }),
     image: (0, import_fields13.image)({ storage: "images" }),
     description: (0, import_fields13.text)({ ui: { displayMode: "textarea" } }),
@@ -1192,7 +1399,6 @@ var Event = (0, import_core15.list)({
         type: import_schema5.graphql.String,
         async resolve(item) {
           const { price } = item;
-          console.log(price);
           if (price) {
             switch (price) {
               case 0:
@@ -1211,6 +1417,7 @@ var Event = (0, import_core15.list)({
     remaining: (0, import_fields13.virtual)({
       field: import_schema5.graphql.field({
         type: import_schema5.graphql.Int,
+        // @ts-ignore
         async resolve({ id, maxAmount }, _, context) {
           try {
             const currentlyInUse = await context.query.User.count({
@@ -1223,18 +1430,7 @@ var Event = (0, import_core15.list)({
           }
         }
       })
-    }),
-    status: (0, import_fields13.select)({
-      options: [
-        { label: "Draft", value: "DRAFT" },
-        { label: "Available", value: "AVAILABLE" },
-        { label: "Unavailable", value: "UNAVAILABLE" }
-      ],
-      defaultValue: "DRAFT",
-      ui: {
-        displayMode: "segmented-control",
-        createView: { fieldMode: "hidden" }
-      }
+      // graphQLReturnType: "String",
     }),
     from: persianCalendar({
       label: "starting date"
@@ -1249,21 +1445,19 @@ var Event = (0, import_core15.list)({
     users: (0, import_fields13.relationship)({
       ref: "User.events",
       many: true,
-      hooks: {
-        resolveInput({ operation, resolvedData, context }) {
-          if (operation === "create" && !resolvedData.users && context.session?.itemId) {
-            return { connect: { id: context.session?.itemId } };
-          }
-          return resolvedData.users;
-        }
-      },
       ui: {
         hideCreate: true
       }
     }),
     isAccessible: (0, import_fields13.virtual)({
+      // ui: {
+      //     createView: {
+      //         fieldMode: 'hidden',
+      //     },
+      // },
       field: import_schema5.graphql.field({
         type: import_schema5.graphql.Boolean,
+        // @ts-ignore
         async resolve(item, _, context) {
           if (!context.session)
             return false;
@@ -1274,11 +1468,15 @@ var Event = (0, import_core15.list)({
           if (users.length === 0) {
             return false;
           }
-          if (context.session.itemId === users[0].id)
+          console.log(users);
+          if (users.find(
+            (i) => i.id === context.session.itemId
+          ))
             return true;
           return false;
         }
       })
+      // graphQLReturnType: "String",
     }),
     isUpcomming: (0, import_fields13.virtual)({
       field: import_schema5.graphql.field({
@@ -1287,11 +1485,12 @@ var Event = (0, import_core15.list)({
           const { from } = item;
           if (!from)
             return false;
-          const todayEpoch = ~~(new Date().getTime() / 1e3);
-          const fromEpoch = new Date(from + "T06:00").getTime() / 1e3;
+          const todayEpoch = ~~((/* @__PURE__ */ new Date()).getTime() / 1e3);
+          const fromEpoch = (/* @__PURE__ */ new Date(from + "T06:00")).getTime() / 1e3;
           return todayEpoch < fromEpoch;
         }
       })
+      // graphQLReturnType: "String",
     }),
     isOpen: (0, import_fields13.virtual)({
       field: import_schema5.graphql.field({
@@ -1300,11 +1499,12 @@ var Event = (0, import_core15.list)({
           const { registrationDeadline } = item;
           if (!registrationDeadline)
             return false;
-          const todayEpoch = ~~(new Date().getTime() / 1e3);
-          const deadlineDate = new Date(registrationDeadline + "T06:00").getTime() / 1e3;
+          const todayEpoch = ~~((/* @__PURE__ */ new Date()).getTime() / 1e3);
+          const deadlineDate = (/* @__PURE__ */ new Date(registrationDeadline + "T06:00")).getTime() / 1e3;
           return todayEpoch <= deadlineDate;
         }
       })
+      // graphQLReturnType: "String",
     })
   }
 });
@@ -1314,6 +1514,7 @@ var import_core16 = require("@keystone-6/core");
 var import_fields14 = require("@keystone-6/core/fields");
 var defaultValidatedValue = true;
 var Comment = (0, import_core16.list)({
+  // TODO [security concern] filter by session id
   access: {
     operation: {
       query: isLoggedIn,
@@ -1349,6 +1550,11 @@ var Comment = (0, import_core16.list)({
     rate: (0, import_fields14.integer)({ defaultValue: -1, validation: { min: -1, max: 5 } }),
     createdAt: (0, import_fields14.timestamp)({
       defaultValue: { kind: "now" }
+      // ui: {
+      //     createView: {
+      //         fieldMode: 'hidden',
+      //     },
+      // },
     })
   }
 });
@@ -1356,11 +1562,11 @@ var Comment = (0, import_core16.list)({
 // schemas/Teacher.ts
 var import_fields15 = require("@keystone-6/core/fields");
 var import_core17 = require("@keystone-6/core");
-var import_access19 = require("@keystone-6/core/access");
+var import_access22 = require("@keystone-6/core/access");
 var Teacher = (0, import_core17.list)({
   access: {
     operation: {
-      ...(0, import_access19.allOperations)(isAdmin),
+      ...(0, import_access22.allOperations)(isAdmin),
       query: () => true
     }
   },
@@ -1374,85 +1580,109 @@ var Teacher = (0, import_core17.list)({
   }
 });
 
+// schemas/Post.ts
+var import_core18 = require("@keystone-6/core");
+var import_access24 = require("@keystone-6/core/access");
+var import_fields16 = require("@keystone-6/core/fields");
+var import_fields_document2 = require("@keystone-6/fields-document");
+var Post = (0, import_core18.list)({
+  // WARNING
+  //   for this starter project, anyone can create, query, update and delete anything
+  //   if you want to prevent random people on the internet from accessing your data,
+  //   you can find out more at https://keystonejs.com/docs/guides/auth-and-access-control
+  access: {
+    filter: {
+      query: ({ session: session2 }) => {
+        if (session2?.data.role === "0" /* admin */)
+          return true;
+        return {
+          author: {
+            id: {
+              equals: session2?.itemId
+            }
+          }
+        };
+      }
+    },
+    operation: {
+      ...(0, import_access24.allOperations)(isAdmin),
+      // hint: unconditionally returning `true` is equivalent to using allowAll for this operation
+      query: () => true
+    }
+  },
+  // this is the fields for our Post list
+  fields: {
+    title: (0, import_fields16.text)({ validation: { isRequired: true } }),
+    // the document field can be used for making rich editable content
+    //   you can find out more at https://keystonejs.com/docs/guides/document-fields
+    content: (0, import_fields_document2.document)({
+      formatting: true,
+      layouts: [
+        [1, 1],
+        [1, 1, 1],
+        [2, 1],
+        [1, 2],
+        [1, 2, 1]
+      ],
+      links: true,
+      dividers: true,
+      relationships: {
+        mention: {
+          listKey: "User",
+          label: "Mention",
+          selection: "id name"
+        }
+      }
+    }),
+    example: persianCalendar(),
+    someFieldName: (0, import_fields16.calendarDay)({
+      defaultValue: "1970-01-01",
+      db: { map: "my_date" },
+      validation: { isRequired: true },
+      isIndexed: "unique"
+    }),
+    // with this field, you can set a User as the author for a Post
+    author: (0, import_fields16.relationship)({
+      // we could have used 'User', but then the relationship would only be 1-way
+      ref: "User.posts",
+      // this is some customisations for changing how this will look in the AdminUI
+      ui: {
+        displayMode: "cards",
+        cardFields: ["name", "email"],
+        inlineEdit: { fields: ["name", "email"] },
+        linkToItem: true,
+        inlineConnect: true
+      },
+      // a Post can only have one author
+      //   this is the default, but we show it here for verbosity
+      many: false
+    }),
+    // with this field, you can add some Tags to Posts
+    tags: (0, import_fields16.relationship)({
+      // we could have used 'Tag', but then the relationship would only be 1-way
+      ref: "Tag.posts",
+      // a Post can have many Tags, not just one
+      many: true,
+      // this is some customisations for changing how this will look in the AdminUI
+      ui: {
+        displayMode: "cards",
+        cardFields: ["name"],
+        inlineEdit: { fields: ["name"] },
+        linkToItem: true,
+        inlineConnect: true,
+        inlineCreate: { fields: ["name"] }
+      }
+    })
+  }
+});
+
 // schema.ts
 var lists = {
   User,
   Teacher,
   Coupon,
   Event,
-  Post: (0, import_core18.list)({
-    access: {
-      filter: {
-        query: ({ session: session2 }) => {
-          return {
-            author: {
-              id: {
-                equals: session2?.itemId
-              }
-            }
-          };
-        }
-      },
-      operation: {
-        ...(0, import_access21.allOperations)(import_access21.allowAll),
-        query: (args) => {
-          return true;
-        }
-      }
-    },
-    fields: {
-      title: (0, import_fields16.text)({ validation: { isRequired: true } }),
-      content: (0, import_fields_document2.document)({
-        formatting: true,
-        layouts: [
-          [1, 1],
-          [1, 1, 1],
-          [2, 1],
-          [1, 2],
-          [1, 2, 1]
-        ],
-        links: true,
-        dividers: true,
-        relationships: {
-          mention: {
-            listKey: "User",
-            label: "Mention",
-            selection: "id name"
-          }
-        }
-      }),
-      example: persianCalendar(),
-      someFieldName: (0, import_fields16.calendarDay)({
-        defaultValue: "1970-01-01",
-        db: { map: "my_date" },
-        validation: { isRequired: true },
-        isIndexed: "unique"
-      }),
-      author: (0, import_fields16.relationship)({
-        ref: "User.posts",
-        ui: {
-          displayMode: "cards",
-          cardFields: ["name", "email"],
-          inlineEdit: { fields: ["name", "email"] },
-          linkToItem: true,
-          inlineConnect: true
-        },
-        many: false
-      }),
-      tags: (0, import_fields16.relationship)({
-        ref: "Tag.posts",
-        many: true,
-        ui: {
-          displayMode: "cards",
-          cardFields: ["name"],
-          inlineEdit: { fields: ["name"] },
-          linkToItem: true,
-          inlineConnect: true,
-          inlineCreate: { fields: ["name"] }
-        }
-      })
-    }
-  }),
+  Post,
   Course,
   CourseItem,
   Category,
@@ -1470,9 +1700,13 @@ var lists = {
 var baseUrl = "http://localhost:3030";
 var storage = {
   local: {
+    // Images that use this store will be stored on the local machine
     kind: "local",
+    // This store is used for the image field type
     type: "file",
+    // The URL that is returned in the Keystone GraphQL API
     generateUrl: (path3) => `${baseUrl}/files${path3}`,
+    // The route that will be created in Keystone's backend to serve the images
     serverRoute: {
       path: "/files"
     },
@@ -1490,13 +1724,27 @@ var storage = {
 };
 
 // keystone.ts
-var import_axios2 = __toESM(require("axios"));
-var import_qs = __toESM(require("qs"));
-var import_dotenv = __toESM(require("dotenv"));
 var Zibal = require("zibal");
 var envFile = process.env.NODE_ENV !== "production" ? `.env.dev` : ".env";
 import_dotenv.default.config({ path: envFile });
 var wss;
+function generalBackendErrorHandler(error, res) {
+  console.error(error);
+  if ((0, import_lodash2.get)(error, "extensions.code") === "KS_VALIDATION_FAILURE") {
+    let message = (0, import_lodash2.get)(error, "message", "").split("\n")[1].split(":");
+    message = (0, import_lodash2.remove)(message, (_, i) => i !== 0);
+    res.status(402).json({
+      ok: false,
+      message: message.join(":")
+    });
+    return;
+  }
+  res.status(400).json({
+    ok: false,
+    message: "someting went wrong"
+  });
+  return;
+}
 var keystone_default = withAuth(
   (0, import_core19.config)({
     db: {
@@ -1507,7 +1755,10 @@ var keystone_default = withAuth(
     session,
     storage,
     graphql: {
-      playground: true
+      playground: true,
+      cors: {
+        credentials: true
+      }
     },
     server: {
       cors: {
@@ -1524,28 +1775,30 @@ var keystone_default = withAuth(
         app.get("/setadmin", async (req, res) => {
           const sudoctx = await ctx.sudo();
           try {
-            const userCount = await sudoctx.query.User.count({
+            const [adminUser] = await sudoctx.query.User.findMany({
               where: {
-                email: {
-                  equals: "a.mahdiyar7@yahoo.com"
+                role: {
+                  equals: "0" /* admin */
                 }
               }
             });
-            if (userCount === 1) {
+            if (adminUser) {
               await sudoctx.query.User.updateOne({
                 where: {
-                  id: "clcn1d4qg0056ywhb2o13r9wj"
+                  id: adminUser.id
                 },
                 data: {
-                  role: "0" /* admin */
+                  role: "0" /* admin */,
+                  status: "enable"
                 }
               });
               res.send("userUpdated");
-            } else if (userCount === 0) {
+            } else {
               const { name } = await sudoctx.query.User.createOne(
                 {
                   data: {
                     name: "admin",
+                    status: "enable",
                     lastName: "administrator",
                     email: "a.mahdiyar7@yahoo.com",
                     password: "Aa12345678",
@@ -1555,8 +1808,6 @@ var keystone_default = withAuth(
                 }
               );
               res.send(name + "created");
-            } else {
-              res.send(":(");
             }
           } catch (error) {
             console.error(error);
@@ -1620,7 +1871,6 @@ var keystone_default = withAuth(
             secret,
             response: hcaptchaResponse
           };
-          console.log("here");
           const response = await import_axios2.default.post(
             url,
             import_qs.default.stringify(axiosData),
@@ -1662,8 +1912,7 @@ var keystone_default = withAuth(
               });
               return;
             }
-            console.log("error:");
-            console.log(error);
+            console.error(error);
             res.status(400).json({
               message: "SOMTHING WENT WRON",
               ok: false
@@ -1702,20 +1951,19 @@ var keystone_default = withAuth(
               });
               return;
             }
-            if (!ctx.session) {
+            const context = ctx.withSession(
+              await getAdminSessionParams()
+            );
+            if (!session) {
               res.status(400).send({
                 ok: false,
                 message: "you dont have proper access"
-              });
-              sendCommand({
-                action: "logout",
-                message: "session expoire"
               });
               return;
             }
             const cartid = req.body.cartid;
             try {
-              const deletedCart = await ctx.prisma.CartItem.delete({
+              const deletedCart = await context.query.CartItem.deleteOne({
                 where: {
                   id: cartid
                 }
@@ -1725,43 +1973,32 @@ var keystone_default = withAuth(
                 message: "fa :: deleted successfuly " + deletedCart.id
               });
             } catch (error) {
-              console.log(error);
-              res.status(500).json({
-                ok: false,
-                message: "something went wrong"
-              });
-              sendCommand({
-                action: "show_message",
-                message: "something went wrong",
-                type: "error"
-              });
+              generalBackendErrorHandler(error, res);
             }
           }
         );
         app.post(
           "/cart-item",
           async (req, res) => {
-            const { cid: courseId, eventId } = req.body;
+            const { cid: courseId, eventid: eventId } = req.body;
             const productType = eventId ? "event" : "course";
             const productID = eventId || courseId;
             const productName = eventId ? "fa:: Event " : "Fa:: Course ";
             if (courseId && eventId) {
               res.status(400).json({
                 ok: false,
-                message: "bad request"
+                message: "bad request 1"
               });
               return;
             }
             if ((!courseId || typeof courseId !== "string") && (!eventId || typeof eventId !== "string")) {
               res.status(400).json({
                 ok: false,
-                message: "bad request"
+                message: "bad request 2"
               });
               return;
             }
-            const {
-              session: session2
-            } = await ctx.withRequest(req, res);
+            const { session: session2 } = await ctx.withRequest(req, res);
             if (!session2) {
               res.status(401).send({
                 ok: false,
@@ -1769,8 +2006,11 @@ var keystone_default = withAuth(
               });
               return;
             }
-            const sudoContext = ctx.sudo();
-            const exists = await sudoContext.query[(0, import_lodash.capitalize)(productType)].count({
+            const { itemId: userId } = session2;
+            const adminContext = await ctx.withSession(
+              await getAdminSessionParams()
+            );
+            const exists = await adminContext.query[(0, import_lodash2.capitalize)(productType)].count({
               where: { id: { equals: productID } }
             });
             if (exists === 0) {
@@ -1780,13 +2020,32 @@ var keystone_default = withAuth(
               });
               return;
             }
+            const productCount = await adminContext.query[(0, import_lodash2.capitalize)(productType)].count({
+              where: {
+                users: {
+                  some: {
+                    id: {
+                      equals: userId
+                    }
+                  }
+                }
+              }
+            });
+            console.log({ productCount });
+            if (productCount !== 0) {
+              res.status(400).json({
+                message: "\u0634\u0645\u0627 \u0642\u0628\u0644\u0627 \u062F\u0631 \u0627\u06CC\u0646 \u0645\u0648\u0631\u062F \u062F\u0631 \u0627\u06CC\u0646 \u0645\u0648\u0631\u062F \u062B\u0628\u062A \u0646\u0627\u0645 \u06A9\u0631\u062F\u06CC\u062F",
+                ok: false
+              });
+              return;
+            }
             try {
               let cartId;
-              const [cart] = await sudoContext.query.Cart.findMany({
+              const [cart] = await adminContext.query.Cart.findMany({
                 where: {
                   user: {
                     id: {
-                      equals: session2?.itemId
+                      equals: userId
                     }
                   },
                   AND: {
@@ -1805,7 +2064,7 @@ var keystone_default = withAuth(
               if (cart) {
                 cartId = cart.id;
                 if (cart.items.map(
-                  (i) => (0, import_lodash.get)(i, `${productType}.id`, "")
+                  (i) => (0, import_lodash2.get)(i, `${productType}.id`, "")
                 ).filter(Boolean).includes(productID)) {
                   res.json({
                     ok: false,
@@ -1813,23 +2072,25 @@ var keystone_default = withAuth(
                   });
                   return;
                 }
-                const { id } = await sudoContext.query.CartItem.createOne({
-                  data: {
-                    [productType]: {
-                      connect: {
-                        id: productID
+                const { id } = await adminContext.query.CartItem.createOne(
+                  {
+                    data: {
+                      [productType]: {
+                        connect: {
+                          id: productID
+                        }
+                      },
+                      cart: {
+                        connect: {
+                          id: cartId
+                        }
                       }
                     },
-                    cart: {
-                      connect: {
-                        id: cartId
-                      }
-                    }
-                  },
-                  query: " id "
-                });
+                    query: " id "
+                  }
+                );
               } else {
-                const { id } = await sudoContext.query.Cart.createOne({
+                const { id } = await adminContext.query.Cart.createOne({
                   data: {
                     user: {
                       connect: {
@@ -1849,22 +2110,21 @@ var keystone_default = withAuth(
                   query: "id"
                 });
               }
-            } catch (error) {
-              console.error(error);
-              res.status(400).json({
-                ok: false,
-                message: "someting went wrong"
+              res.status(201).json({
+                ok: true,
+                message: "created"
               });
+            } catch (error) {
+              generalBackendErrorHandler(error, res);
               return;
             }
-            sudoContext.exitSudo();
-            res.status(201).json({ ok: true, message: "created" });
+            ctx.sessionStrategy?.end({ context: adminContext });
           }
         );
-        app.get(
+        app.post(
           "/coupon",
           async (req, res) => {
-            const { id: couponId, cartitem } = req.query;
+            const { id: couponId, cartitem } = req.body;
             if (!couponId || typeof couponId !== "string") {
               res.status(403).json({
                 ok: false,
@@ -1880,22 +2140,25 @@ var keystone_default = withAuth(
               return;
             }
             if (!couponId) {
-              res.status(403).json({
+              res.status(401).json({
                 ok: false,
                 message: "coupon is not valid"
               });
               return;
             }
-            const sudoContex = await ctx.sudo();
+            const sudoContex = await ctx.withSession(
+              await getAdminSessionParams()
+            );
+            console.log("... inja >");
             try {
-              const coupon = await sudoContex.query.Coupon.findOne({
+              const [coupon] = await sudoContex.query.Coupon.findMany({
                 where: {
                   code: { equals: couponId }
                 },
                 query: "id code remaining"
               });
               if (!coupon || !coupon.id) {
-                res.status(403).json({
+                res.status(401).json({
                   ok: false,
                   message: "coupon dosent exists"
                 });
@@ -1915,10 +2178,7 @@ var keystone_default = withAuth(
               });
               res.json({ ok: true, message: "fa::success full" });
             } catch (error) {
-              res.json({
-                ok: false,
-                message: "fa::operation not successfull"
-              });
+              generalBackendErrorHandler(error, res);
             }
             sudoContex.exitSudo();
           }
@@ -1926,11 +2186,9 @@ var keystone_default = withAuth(
         app.get(
           "/checkout",
           async (req, res) => {
-            const {
-              session: session2
-            } = await ctx.withRequest(req, res);
+            const { session: session2 } = await ctx.withRequest(req, res);
             const sudoContext = await ctx.sudo();
-            if (!session2 || session2.itemId) {
+            if (!session2 || !session2.itemId) {
               res.status(401).json({
                 ok: false,
                 message: "fa:: session expires login agin"
@@ -1940,24 +2198,31 @@ var keystone_default = withAuth(
             const callbackUrl = "http://localhost:3030/ipg/cb";
             const zibal = new Zibal({
               merchant: session2.data.role === "0" /* admin */ ? "zibal" : "zibal",
+              // Your IPG's Merchant Id (You Can Get it From Zibal's Dashboard)
               callbackUrl
+              // The URL Where User will be Redirected to After Payment
             });
             try {
               const [{ totalPrice, id: cartid }] = await sudoContext.query.Cart.findMany({
                 where: {
+                  isCompleted: {
+                    equals: false
+                  },
                   user: {
                     id: {
                       equals: session2.itemId
                     }
                   }
                 },
-                query: " totalPrice id"
+                query: " totalPrice id isCompleted"
               });
+              console.log({ cartid });
               if (totalPrice === 0) {
                 const urlSearchParams = new URLSearchParams();
                 const zibalqueryParams = {
                   success: "1",
                   orderId: cartid,
+                  // 'free-' + ~~(Math.random() * 100000),
                   status: "2",
                   trackId: "0"
                 };
@@ -1971,13 +2236,21 @@ var keystone_default = withAuth(
               }
               const response = await zibal.request({
                 amount: totalPrice * 10,
+                // Required - In Rials
                 orderId: cartid,
+                // Optional
                 merchant: process.env.MERCHANT,
+                // As Said Above, You can Specify merchant for Each Transaction too.
                 mobile: "09102124368",
+                // Optional - User's Card Numbers will Show inf Dropdown in Shaparak Page if you Send User's Mobile
                 description: "THIS IS MY DESCRIPTION",
+                // Optional
                 allowedCards: ["5022291092719457"],
+                // Optional - Any Transaction with a Card Number which is not Present in this Array will be Unsuccessful
                 linkToPay: false,
+                // Optional - If true, we will generate a Short Link for this transaction.
                 sms: false
+                // Optional - If true, we will Send the Short Link to User's Mobile
               });
               res.redirect(response.paymentUrl);
             } catch (error) {
@@ -1992,7 +2265,9 @@ var keystone_default = withAuth(
         );
         app.get("/ipg/cb", async (req, res) => {
           if (req.query.success === "0") {
-            res.sendStatus(500).send("fa:: zbal error!");
+            res.redirect(
+              process.env.FRONTENDURL + "/order?" + import_qs.default.stringify(req.query)
+            );
             return;
           }
           try {
@@ -2013,14 +2288,14 @@ var keystone_default = withAuth(
                 id: cartId
               },
               query: `totalPrice
-                                    user { id } 
-                                    items { 
-                                        id
-                                        priceWithDiscount 
-                                        course { id } 
-                                        event { id } 
-                                    }
-                                    isCompleted`
+                                        user { id } 
+                                        items { 
+                                            id
+                                            priceWithDiscount 
+                                            course { id } 
+                                            event { id } 
+                                        }
+                                        isCompleted`
             });
             if (isCompleted) {
               res.status(400).send(
@@ -2088,10 +2363,11 @@ var keystone_default = withAuth(
                 };
               })
             });
-            res.send("orderid is => " + newOrder.id);
             sudoContext.exitSudo();
+            res.redirect(
+              process.env.FRONTENDURL + "/order?" + import_qs.default.stringify(req.query)
+            );
           } catch (error) {
-            console.log(error);
             res.send(error);
           }
         });

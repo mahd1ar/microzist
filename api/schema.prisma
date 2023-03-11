@@ -9,7 +9,6 @@ datasource sqlite {
 
 generator client {
   provider = "prisma-client-js"
-  output   = "node_modules/.prisma/client"
 }
 
 model User {
@@ -21,7 +20,7 @@ model User {
   status                  String?   @default("enable")
   cart                    Cart[]    @relation("Cart_user")
   orders                  Order[]   @relation("Order_user")
-  role                    String?   @default("100")
+  role                    String?   @default("50")
   courses                 Course[]  @relation("Course_users")
   events                  Event[]   @relation("Event_users")
   posts                   Post[]    @relation("Post_author")
@@ -49,31 +48,33 @@ model Coupon {
   code                 String     @default("")
   description          String     @default("")
   maxAmount            Int
-  belongsTo            Course[]   @relation("Coupon_belongsTo")
+  belongsToCourse      Course[]   @relation("Coupon_belongsToCourse")
+  belongsToEvent       Event[]    @relation("Coupon_belongsToEvent")
   discount             Int?
   from_CartItem_coupon CartItem[] @relation("CartItem_coupon")
 }
 
 model Event {
-  id                   String      @id @default(cuid())
-  name                 String      @default("")
-  image_filesize       Int?
-  image_extension      String?
-  image_width          Int?
-  image_height         Int?
-  image_id             String?
-  description          String      @default("")
-  content              String      @default("[{\"type\":\"paragraph\",\"children\":[{\"text\":\"\"}]}]")
-  price                Int?
-  maxAmount            Int
-  status               String?     @default("DRAFT")
-  from                 String?
-  to                   String?
-  registrationDeadline String?
-  location             String      @default("")
-  users                User[]      @relation("Event_users")
-  from_CartItem_event  CartItem[]  @relation("CartItem_event")
-  from_OrderItem_event OrderItem[] @relation("OrderItem_event")
+  id                         String      @id @default(cuid())
+  name                       String      @default("")
+  status                     String?     @default("DRAFT")
+  image_filesize             Int?
+  image_extension            String?
+  image_width                Int?
+  image_height               Int?
+  image_id                   String?
+  description                String      @default("")
+  content                    String      @default("[{\"type\":\"paragraph\",\"children\":[{\"text\":\"\"}]}]")
+  price                      Int?
+  maxAmount                  Int
+  from                       String?
+  to                         String?
+  registrationDeadline       String?
+  location                   String      @default("")
+  users                      User[]      @relation("Event_users")
+  from_Coupon_belongsToEvent Coupon[]    @relation("Coupon_belongsToEvent")
+  from_CartItem_event        CartItem[]  @relation("CartItem_event")
+  from_OrderItem_event       OrderItem[] @relation("OrderItem_event")
 }
 
 model Post {
@@ -91,24 +92,24 @@ model Post {
 }
 
 model Course {
-  id                    String       @id @default(cuid())
-  name                  String       @default("")
-  description           String       @default("")
-  status                String?      @default("DRAFT")
-  price                 Int?
-  teacher               Teacher?     @relation("Course_teacher", fields: [teacherId], references: [id])
-  teacherId             String?      @map("teacher")
-  image_filesize        Int?
-  image_extension       String?
-  image_width           Int?
-  image_height          Int?
-  image_id              String?
-  comments              Comment[]    @relation("Comment_course")
-  users                 User[]       @relation("Course_users")
-  courseItem            CourseItem[] @relation("CourseItem_course")
-  from_Coupon_belongsTo Coupon[]     @relation("Coupon_belongsTo")
-  from_CartItem_course  CartItem[]   @relation("CartItem_course")
-  from_OrderItem_course OrderItem[]  @relation("OrderItem_course")
+  id                          String       @id @default(cuid())
+  name                        String       @default("")
+  description                 String       @default("")
+  status                      String?      @default("DRAFT")
+  price                       Int?
+  teacher                     Teacher?     @relation("Course_teacher", fields: [teacherId], references: [id])
+  teacherId                   String?      @map("teacher")
+  image_filesize              Int?
+  image_extension             String?
+  image_width                 Int?
+  image_height                Int?
+  image_id                    String?
+  comments                    Comment[]    @relation("Comment_course")
+  users                       User[]       @relation("Course_users")
+  courseItem                  CourseItem[] @relation("CourseItem_course")
+  from_Coupon_belongsToCourse Coupon[]     @relation("Coupon_belongsToCourse")
+  from_CartItem_course        CartItem[]   @relation("CartItem_course")
+  from_OrderItem_course       OrderItem[]  @relation("OrderItem_course")
 
   @@index([teacherId])
 }

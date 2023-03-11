@@ -8,18 +8,18 @@ type User {
   email: String
   password: PasswordState
   status: String
-  cart(where: CartWhereInput! = {}, orderBy: [CartOrderByInput!]! = [], take: Int, skip: Int! = 0): [Cart!]
+  cart(where: CartWhereInput! = {}, orderBy: [CartOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CartWhereUniqueInput): [Cart!]
   cartCount(where: CartWhereInput! = {}): Int
-  orders(where: OrderWhereInput! = {}, orderBy: [OrderOrderByInput!]! = [], take: Int, skip: Int! = 0): [Order!]
+  orders(where: OrderWhereInput! = {}, orderBy: [OrderOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: OrderWhereUniqueInput): [Order!]
   ordersCount(where: OrderWhereInput! = {}): Int
   role: String
-  courses(where: CourseWhereInput! = {}, orderBy: [CourseOrderByInput!]! = [], take: Int, skip: Int! = 0): [Course!]
+  courses(where: CourseWhereInput! = {}, orderBy: [CourseOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CourseWhereUniqueInput): [Course!]
   coursesCount(where: CourseWhereInput! = {}): Int
-  events(where: EventWhereInput! = {}, orderBy: [EventOrderByInput!]! = [], take: Int, skip: Int! = 0): [Event!]
+  events(where: EventWhereInput! = {}, orderBy: [EventOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: EventWhereUniqueInput): [Event!]
   eventsCount(where: EventWhereInput! = {}): Int
-  posts(where: PostWhereInput! = {}, orderBy: [PostOrderByInput!]! = [], take: Int, skip: Int! = 0): [Post!]
+  posts(where: PostWhereInput! = {}, orderBy: [PostOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PostWhereUniqueInput): [Post!]
   postsCount(where: PostWhereInput! = {}): Int
-  comments(where: CommentWhereInput! = {}, orderBy: [CommentOrderByInput!]! = [], take: Int, skip: Int! = 0): [Comment!]
+  comments(where: CommentWhereInput! = {}, orderBy: [CommentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CommentWhereUniqueInput): [Comment!]
   commentsCount(where: CommentWhereInput! = {}): Int
   createdAt: DateTime
   passwordResetToken: PasswordState
@@ -315,7 +315,7 @@ type Teacher {
   name: String
   description: String
   image: ImageFieldOutput
-  courses(where: CourseWhereInput! = {}, orderBy: [CourseOrderByInput!]! = [], take: Int, skip: Int! = 0): [Course!]
+  courses(where: CourseWhereInput! = {}, orderBy: [CourseOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CourseWhereUniqueInput): [Course!]
   coursesCount(where: CourseWhereInput! = {}): Int
 }
 
@@ -387,8 +387,10 @@ type Coupon {
   description: String
   maxAmount: Int
   remaining: Int
-  belongsTo(where: CourseWhereInput! = {}, orderBy: [CourseOrderByInput!]! = [], take: Int, skip: Int! = 0): [Course!]
-  belongsToCount(where: CourseWhereInput! = {}): Int
+  belongsToCourse(where: CourseWhereInput! = {}, orderBy: [CourseOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CourseWhereUniqueInput): [Course!]
+  belongsToCourseCount(where: CourseWhereInput! = {}): Int
+  belongsToEvent(where: EventWhereInput! = {}, orderBy: [EventOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: EventWhereUniqueInput): [Event!]
+  belongsToEventCount(where: EventWhereInput! = {}): Int
   discount: Int
 }
 
@@ -404,7 +406,8 @@ input CouponWhereInput {
   code: StringFilter
   description: StringFilter
   maxAmount: IntFilter
-  belongsTo: CourseManyRelationFilter
+  belongsToCourse: CourseManyRelationFilter
+  belongsToEvent: EventManyRelationFilter
   discount: IntNullableFilter
 }
 
@@ -442,7 +445,8 @@ input CouponUpdateInput {
   code: String
   description: String
   maxAmount: Int
-  belongsTo: CourseRelateToManyForUpdateInput
+  belongsToCourse: CourseRelateToManyForUpdateInput
+  belongsToEvent: EventRelateToManyForUpdateInput
   discount: Int
 }
 
@@ -455,7 +459,8 @@ input CouponCreateInput {
   code: String
   description: String
   maxAmount: Int
-  belongsTo: CourseRelateToManyForCreateInput
+  belongsToCourse: CourseRelateToManyForCreateInput
+  belongsToEvent: EventRelateToManyForCreateInput
   discount: Int
 }
 
@@ -463,6 +468,7 @@ type Event {
   id: ID!
   url: String
   name: String
+  status: String
   image: ImageFieldOutput
   description: String
   content: Event_content_Document
@@ -470,12 +476,11 @@ type Event {
   priceFa: String
   maxAmount: Int
   remaining: Int
-  status: String
   from: String
   to: String
   registrationDeadline: String
   location: String
-  users(where: UserWhereInput! = {}, orderBy: [UserOrderByInput!]! = [], take: Int, skip: Int! = 0): [User!]
+  users(where: UserWhereInput! = {}, orderBy: [UserOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: UserWhereUniqueInput): [User!]
   usersCount(where: UserWhereInput! = {}): Int
   isAccessible: Boolean
   isUpcomming: Boolean
@@ -496,10 +501,10 @@ input EventWhereInput {
   NOT: [EventWhereInput!]
   id: IDFilter
   name: StringFilter
+  status: StringNullableFilter
   description: StringFilter
   price: IntNullableFilter
   maxAmount: IntFilter
-  status: StringNullableFilter
   location: StringFilter
   users: UserManyRelationFilter
 }
@@ -513,10 +518,10 @@ input UserManyRelationFilter {
 input EventOrderByInput {
   id: OrderDirection
   name: OrderDirection
+  status: OrderDirection
   description: OrderDirection
   price: OrderDirection
   maxAmount: OrderDirection
-  status: OrderDirection
   from: OrderDirection
   to: OrderDirection
   registrationDeadline: OrderDirection
@@ -525,12 +530,12 @@ input EventOrderByInput {
 
 input EventUpdateInput {
   name: String
+  status: String
   image: ImageFieldInput
   description: String
   content: JSON
   price: Int
   maxAmount: Int
-  status: String
   from: String
   to: String
   registrationDeadline: String
@@ -552,12 +557,12 @@ input EventUpdateArgs {
 
 input EventCreateInput {
   name: String
+  status: String
   image: ImageFieldInput
   description: String
   content: JSON
   price: Int
   maxAmount: Int
-  status: String
   from: String
   to: String
   registrationDeadline: String
@@ -577,7 +582,7 @@ type Post {
   example: String
   someFieldName: CalendarDay
   author: User
-  tags(where: TagWhereInput! = {}, orderBy: [TagOrderByInput!]! = [], take: Int, skip: Int! = 0): [Tag!]
+  tags(where: TagWhereInput! = {}, orderBy: [TagOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TagWhereUniqueInput): [Tag!]
   tagsCount(where: TagWhereInput! = {}): Int
 }
 
@@ -683,11 +688,11 @@ type Course {
   rate: Float
   teacher: Teacher
   image: ImageFieldOutput
-  comments(where: CommentWhereInput! = {}, orderBy: [CommentOrderByInput!]! = [], take: Int, skip: Int! = 0): [Comment!]
+  comments(where: CommentWhereInput! = {}, orderBy: [CommentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CommentWhereUniqueInput): [Comment!]
   commentsCount(where: CommentWhereInput! = {}): Int
-  users(where: UserWhereInput! = {}, orderBy: [UserOrderByInput!]! = [], take: Int, skip: Int! = 0): [User!]
+  users(where: UserWhereInput! = {}, orderBy: [UserOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: UserWhereUniqueInput): [User!]
   usersCount(where: UserWhereInput! = {}): Int
-  courseItem(where: CourseItemWhereInput! = {}, orderBy: [CourseItemOrderByInput!]! = [], take: Int, skip: Int! = 0): [CourseItem!]
+  courseItem(where: CourseItemWhereInput! = {}, orderBy: [CourseItemOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CourseItemWhereUniqueInput): [CourseItem!]
   courseItemCount(where: CourseItemWhereInput! = {}): Int
   isAccessible: Boolean
 }
@@ -784,7 +789,7 @@ type CourseItem {
   description: String
   video: File
   course: Course
-  comments(where: CommentWhereInput! = {}, orderBy: [CommentOrderByInput!]! = [], take: Int, skip: Int! = 0): [Comment!]
+  comments(where: CommentWhereInput! = {}, orderBy: [CommentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CommentWhereUniqueInput): [Comment!]
   commentsCount(where: CommentWhereInput! = {}): Int
 }
 
@@ -862,7 +867,7 @@ type Category {
   name: String
   description: String
   priority: Int
-  parentId(where: CategoryWhereInput! = {}, orderBy: [CategoryOrderByInput!]! = [], take: Int, skip: Int! = 0): [Category!]
+  parentId(where: CategoryWhereInput! = {}, orderBy: [CategoryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CategoryWhereUniqueInput): [Category!]
   parentIdCount(where: CategoryWhereInput! = {}): Int
 }
 
@@ -928,7 +933,7 @@ input CategoryRelateToManyForCreateInput {
 type Tag {
   id: ID!
   name: String
-  posts(where: PostWhereInput! = {}, orderBy: [PostOrderByInput!]! = [], take: Int, skip: Int! = 0): [Post!]
+  posts(where: PostWhereInput! = {}, orderBy: [PostOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PostWhereUniqueInput): [Post!]
   postsCount(where: PostWhereInput! = {}): Int
 }
 
@@ -1027,7 +1032,7 @@ type Settings {
   id: ID!
   websiteName: String
   copyrightText: String
-  highlightedPosts(where: PostWhereInput! = {}, orderBy: [PostOrderByInput!]! = [], take: Int, skip: Int! = 0): [Post!]
+  highlightedPosts(where: PostWhereInput! = {}, orderBy: [PostOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PostWhereUniqueInput): [Post!]
   highlightedPostsCount(where: PostWhereInput! = {}): Int
   jobsList: [String!]
 }
@@ -1160,7 +1165,7 @@ input CartRelateToOneForCreateInput {
 type Cart {
   id: ID!
   summery: String
-  items(where: CartItemWhereInput! = {}, orderBy: [CartItemOrderByInput!]! = [], take: Int, skip: Int! = 0): [CartItem!]
+  items(where: CartItemWhereInput! = {}, orderBy: [CartItemOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CartItemWhereUniqueInput): [CartItem!]
   itemsCount(where: CartItemWhereInput! = {}): Int
   user: User
   totalPrice: Float
@@ -1229,7 +1234,7 @@ input CartItemRelateToManyForCreateInput {
 type Order {
   id: ID!
   totalCost: Float
-  items(where: OrderItemWhereInput! = {}, orderBy: [OrderItemOrderByInput!]! = [], take: Int, skip: Int! = 0): [OrderItem!]
+  items(where: OrderItemWhereInput! = {}, orderBy: [OrderItemOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: OrderItemWhereUniqueInput): [OrderItem!]
   itemsCount(where: OrderItemWhereInput! = {}): Int
   trackId: String
   user: User
@@ -1599,52 +1604,52 @@ enum PasswordResetRedemptionErrorCode {
 }
 
 type Query {
-  users(where: UserWhereInput! = {}, orderBy: [UserOrderByInput!]! = [], take: Int, skip: Int! = 0): [User!]
+  users(where: UserWhereInput! = {}, orderBy: [UserOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: UserWhereUniqueInput): [User!]
   user(where: UserWhereUniqueInput!): User
   usersCount(where: UserWhereInput! = {}): Int
-  teachers(where: TeacherWhereInput! = {}, orderBy: [TeacherOrderByInput!]! = [], take: Int, skip: Int! = 0): [Teacher!]
+  teachers(where: TeacherWhereInput! = {}, orderBy: [TeacherOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TeacherWhereUniqueInput): [Teacher!]
   teacher(where: TeacherWhereUniqueInput!): Teacher
   teachersCount(where: TeacherWhereInput! = {}): Int
-  coupons(where: CouponWhereInput! = {}, orderBy: [CouponOrderByInput!]! = [], take: Int, skip: Int! = 0): [Coupon!]
+  coupons(where: CouponWhereInput! = {}, orderBy: [CouponOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CouponWhereUniqueInput): [Coupon!]
   coupon(where: CouponWhereUniqueInput!): Coupon
   couponsCount(where: CouponWhereInput! = {}): Int
-  events(where: EventWhereInput! = {}, orderBy: [EventOrderByInput!]! = [], take: Int, skip: Int! = 0): [Event!]
+  events(where: EventWhereInput! = {}, orderBy: [EventOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: EventWhereUniqueInput): [Event!]
   event(where: EventWhereUniqueInput!): Event
   eventsCount(where: EventWhereInput! = {}): Int
-  posts(where: PostWhereInput! = {}, orderBy: [PostOrderByInput!]! = [], take: Int, skip: Int! = 0): [Post!]
+  posts(where: PostWhereInput! = {}, orderBy: [PostOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PostWhereUniqueInput): [Post!]
   post(where: PostWhereUniqueInput!): Post
   postsCount(where: PostWhereInput! = {}): Int
-  courses(where: CourseWhereInput! = {}, orderBy: [CourseOrderByInput!]! = [], take: Int, skip: Int! = 0): [Course!]
+  courses(where: CourseWhereInput! = {}, orderBy: [CourseOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CourseWhereUniqueInput): [Course!]
   course(where: CourseWhereUniqueInput!): Course
   coursesCount(where: CourseWhereInput! = {}): Int
-  courseItems(where: CourseItemWhereInput! = {}, orderBy: [CourseItemOrderByInput!]! = [], take: Int, skip: Int! = 0): [CourseItem!]
+  courseItems(where: CourseItemWhereInput! = {}, orderBy: [CourseItemOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CourseItemWhereUniqueInput): [CourseItem!]
   courseItem(where: CourseItemWhereUniqueInput!): CourseItem
   courseItemsCount(where: CourseItemWhereInput! = {}): Int
-  categories(where: CategoryWhereInput! = {}, orderBy: [CategoryOrderByInput!]! = [], take: Int, skip: Int! = 0): [Category!]
+  categories(where: CategoryWhereInput! = {}, orderBy: [CategoryOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CategoryWhereUniqueInput): [Category!]
   category(where: CategoryWhereUniqueInput!): Category
   categoriesCount(where: CategoryWhereInput! = {}): Int
-  tags(where: TagWhereInput! = {}, orderBy: [TagOrderByInput!]! = [], take: Int, skip: Int! = 0): [Tag!]
+  tags(where: TagWhereInput! = {}, orderBy: [TagOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: TagWhereUniqueInput): [Tag!]
   tag(where: TagWhereUniqueInput!): Tag
   tagsCount(where: TagWhereInput! = {}): Int
-  files(where: FileWhereInput! = {}, orderBy: [FileOrderByInput!]! = [], take: Int, skip: Int! = 0): [File!]
+  files(where: FileWhereInput! = {}, orderBy: [FileOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: FileWhereUniqueInput): [File!]
   file(where: FileWhereUniqueInput!): File
   filesCount(where: FileWhereInput! = {}): Int
-  manySettings(where: SettingsWhereInput! = {id: {equals: 1}}, orderBy: [SettingsOrderByInput!]! = [], take: Int, skip: Int! = 0): [Settings!]
+  manySettings(where: SettingsWhereInput! = {id: {equals: 1}}, orderBy: [SettingsOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: SettingsWhereUniqueInput): [Settings!]
   settings(where: SettingsWhereUniqueInput! = {id: 1}): Settings
   manySettingsCount(where: SettingsWhereInput! = {id: {equals: 1}}): Int
-  cartItems(where: CartItemWhereInput! = {}, orderBy: [CartItemOrderByInput!]! = [], take: Int, skip: Int! = 0): [CartItem!]
+  cartItems(where: CartItemWhereInput! = {}, orderBy: [CartItemOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CartItemWhereUniqueInput): [CartItem!]
   cartItem(where: CartItemWhereUniqueInput!): CartItem
   cartItemsCount(where: CartItemWhereInput! = {}): Int
-  carts(where: CartWhereInput! = {}, orderBy: [CartOrderByInput!]! = [], take: Int, skip: Int! = 0): [Cart!]
+  carts(where: CartWhereInput! = {}, orderBy: [CartOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CartWhereUniqueInput): [Cart!]
   cart(where: CartWhereUniqueInput!): Cart
   cartsCount(where: CartWhereInput! = {}): Int
-  orders(where: OrderWhereInput! = {}, orderBy: [OrderOrderByInput!]! = [], take: Int, skip: Int! = 0): [Order!]
+  orders(where: OrderWhereInput! = {}, orderBy: [OrderOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: OrderWhereUniqueInput): [Order!]
   order(where: OrderWhereUniqueInput!): Order
   ordersCount(where: OrderWhereInput! = {}): Int
-  orderItems(where: OrderItemWhereInput! = {}, orderBy: [OrderItemOrderByInput!]! = [], take: Int, skip: Int! = 0): [OrderItem!]
+  orderItems(where: OrderItemWhereInput! = {}, orderBy: [OrderItemOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: OrderItemWhereUniqueInput): [OrderItem!]
   orderItem(where: OrderItemWhereUniqueInput!): OrderItem
   orderItemsCount(where: OrderItemWhereInput! = {}): Int
-  comments(where: CommentWhereInput! = {}, orderBy: [CommentOrderByInput!]! = [], take: Int, skip: Int! = 0): [Comment!]
+  comments(where: CommentWhereInput! = {}, orderBy: [CommentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: CommentWhereUniqueInput): [Comment!]
   comment(where: CommentWhereUniqueInput!): Comment
   commentsCount(where: CommentWhereInput! = {}): Int
   keystone: KeystoneMeta!
@@ -1695,6 +1700,7 @@ type KeystoneAdminUIFieldMeta {
   description: String
   isOrderable: Boolean!
   isFilterable: Boolean!
+  isNonNull: [KeystoneAdminUIFieldMetaIsNonNull!]
   fieldMeta: JSON
   viewsIndex: Int!
   customViewsIndex: Int
@@ -1702,6 +1708,12 @@ type KeystoneAdminUIFieldMeta {
   listView: KeystoneAdminUIFieldMetaListView!
   itemView(id: ID): KeystoneAdminUIFieldMetaItemView
   search: QueryMode
+}
+
+enum KeystoneAdminUIFieldMetaIsNonNull {
+  read
+  create
+  update
 }
 
 type KeystoneAdminUIFieldMetaCreateView {

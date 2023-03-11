@@ -391,17 +391,21 @@ function share (social: 'telegram' | 'instagram' | 'linkedin' | 'whatsapp') {
 
 async function addToCart (cid: string, cname: string) {
   if (ctx.store.getters.isLoggedIn) {
-    await ctx.$axios.post(
-      '/cart-item',
-      {
-        cid: ctx.route.value.params.id
-      },
-      { withCredentials: true }
-    )
+    try {
+      await ctx.$axios.post(
+        '/cart-item',
+        {
+          cid: ctx.route.value.params.id
+        },
+        { withCredentials: true }
+      )
+    } catch (error) {}
   } else {
     // @ts-ignore
 
-    ctx.$izitoast.error({ title: 'fa:: first login to watch => ' + cname })
+    ctx.$izitoast.info({
+      title: 'برای اضافه کردن این دوره به سبد خرید ابتدا ثبت نام کنید'
+    })
   }
 }
 </script>

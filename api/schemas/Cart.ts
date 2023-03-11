@@ -1,5 +1,5 @@
 import { list } from '@keystone-6/core';
-import { allowAll } from '@keystone-6/core/access';
+import { allOperations, allowAll } from '@keystone-6/core/access';
 import { BaseAccessArgs } from '@keystone-6/core/dist/declarations/src/types/config/access-control';
 import {
     checkbox,
@@ -17,10 +17,7 @@ export const Cart = list({
     // TODO [security concern] filter by session id
     access: {
         operation: {
-            query: isLoggedIn,
-            create: isLoggedIn,
-            delete: isLoggedIn,
-            update: isLoggedIn,
+            ...allOperations(isLoggedIn),
         },
     },
     ui: {
@@ -43,7 +40,7 @@ export const Cart = list({
                     where: itemsWithThisParent,
                 });
             } catch (error) {
-                console.log(error);
+                console.error(error);
             }
             sudo.exitSudo();
         },
@@ -69,7 +66,7 @@ export const Cart = list({
                         query: 'items { course { name } event { name } }',
                     });
 
-                    return (
+                    const summeryText =
                         items
                             .map((i: any) => i.event?.name || '')
                             .filter(Boolean)
@@ -77,8 +74,9 @@ export const Cart = list({
                         items
                             .map((i: any) => i.course?.name || '')
                             .filter(Boolean)
-                            .join(' . ')
-                    );
+                            .join(' . ');
+
+                    return summeryText.trim() || 'empty cart';
                 },
             }),
         }),
@@ -101,7 +99,7 @@ export const Cart = list({
                         where: { id: item.id.toString() },
                         query: 'items { priceWithDiscount }',
                     });
-                    console.log(items);
+
                     return items.reduce(
                         (
                             total: number,

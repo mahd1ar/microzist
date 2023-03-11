@@ -35,7 +35,7 @@ export default {
 }
 
 #__nuxt::before {
-  content: 'microzist';
+  content: 'ZistDialogue';
   position: absolute;
   color: rgb(243, 243, 243);
   top: 50%;

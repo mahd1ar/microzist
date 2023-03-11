@@ -16,17 +16,12 @@
     </button>
     <div v-show="show" class="absolute top-0 flex items-end px-2">
       <div class="flex flex-col">
-        <label
-          for="full-name"
-          class="w-16 flex-shrink-0 items-center text-sm text-white"
-        >
-          کد تخفیف
-        </label>
         <input
+          placeholder="کد تخفیف"
           type="text"
           v-model="input"
           @input="() => $emit('update:code', input)"
-          class="w-32 border border-gray-300 bg-white/10 py-1 px-2 text-lg text-white outline-none"
+          class="w-32 rounded  border border-gray-300 placeholder:text-base bg-white/10 py-1 px-2 text-lg text-white outline-none"
         />
       </div>
       <button
@@ -51,26 +46,26 @@ import { ref } from '@nuxtjs/composition-api'
 const { code } = defineProps({
   code: {
     type: String,
-    default: '',
-  },
+    default: ''
+  }
 })
 
 const emit = defineEmits(['submit'])
 
 const input = ref(code)
 const show = ref(false)
-function toggle() {
+function toggle () {
   show.value = !show.value
 }
-function clean() {
+function clean () {
   input.value = ''
 }
-function goBack() {
+function goBack () {
   toggle()
   clean()
 }
 
-function submit() {
+function submit () {
   emit('submit')
   goBack()
 }

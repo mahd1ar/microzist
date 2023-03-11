@@ -47,6 +47,7 @@ export type Cart = {
 
 
 export type CartItemsArgs = {
+  cursor?: InputMaybe<CartItemWhereUniqueInput>;
   orderBy?: Array<CartItemOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -207,6 +208,7 @@ export type Category = {
 
 
 export type CategoryParentIdArgs = {
+  cursor?: InputMaybe<CategoryWhereUniqueInput>;
   orderBy?: Array<CategoryOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -360,9 +362,11 @@ export type CommentWhereUniqueInput = {
 
 export type Coupon = {
   __typename?: 'Coupon';
-  belongsTo?: Maybe<Array<Course>>;
-  belongsToCount?: Maybe<Scalars['Int']>;
-  code?: Maybe<Scalars['Int']>;
+  belongsToCourse?: Maybe<Array<Course>>;
+  belongsToCourseCount?: Maybe<Scalars['Int']>;
+  belongsToEvent?: Maybe<Array<Event>>;
+  belongsToEventCount?: Maybe<Scalars['Int']>;
+  code?: Maybe<Scalars['String']>;
   description?: Maybe<Scalars['String']>;
   discount?: Maybe<Scalars['Int']>;
   id: Scalars['ID'];
@@ -371,7 +375,8 @@ export type Coupon = {
 };
 
 
-export type CouponBelongsToArgs = {
+export type CouponBelongsToCourseArgs = {
+  cursor?: InputMaybe<CourseWhereUniqueInput>;
   orderBy?: Array<CourseOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -379,13 +384,28 @@ export type CouponBelongsToArgs = {
 };
 
 
-export type CouponBelongsToCountArgs = {
+export type CouponBelongsToCourseCountArgs = {
   where?: CourseWhereInput;
 };
 
+
+export type CouponBelongsToEventArgs = {
+  cursor?: InputMaybe<EventWhereUniqueInput>;
+  orderBy?: Array<EventOrderByInput>;
+  skip?: Scalars['Int'];
+  take?: InputMaybe<Scalars['Int']>;
+  where?: EventWhereInput;
+};
+
+
+export type CouponBelongsToEventCountArgs = {
+  where?: EventWhereInput;
+};
+
 export type CouponCreateInput = {
-  belongsTo?: InputMaybe<CourseRelateToManyForCreateInput>;
-  code?: InputMaybe<Scalars['Int']>;
+  belongsToCourse?: InputMaybe<CourseRelateToManyForCreateInput>;
+  belongsToEvent?: InputMaybe<EventRelateToManyForCreateInput>;
+  code?: InputMaybe<Scalars['String']>;
   description?: InputMaybe<Scalars['String']>;
   discount?: InputMaybe<Scalars['Int']>;
   maxAmount?: InputMaybe<Scalars['Int']>;
@@ -416,8 +436,9 @@ export type CouponUpdateArgs = {
 };
 
 export type CouponUpdateInput = {
-  belongsTo?: InputMaybe<CourseRelateToManyForUpdateInput>;
-  code?: InputMaybe<Scalars['Int']>;
+  belongsToCourse?: InputMaybe<CourseRelateToManyForUpdateInput>;
+  belongsToEvent?: InputMaybe<EventRelateToManyForUpdateInput>;
+  code?: InputMaybe<Scalars['String']>;
   description?: InputMaybe<Scalars['String']>;
   discount?: InputMaybe<Scalars['Int']>;
   maxAmount?: InputMaybe<Scalars['Int']>;
@@ -427,8 +448,9 @@ export type CouponWhereInput = {
   AND?: InputMaybe<Array<CouponWhereInput>>;
   NOT?: InputMaybe<Array<CouponWhereInput>>;
   OR?: InputMaybe<Array<CouponWhereInput>>;
-  belongsTo?: InputMaybe<CourseManyRelationFilter>;
-  code?: InputMaybe<IntFilter>;
+  belongsToCourse?: InputMaybe<CourseManyRelationFilter>;
+  belongsToEvent?: InputMaybe<EventManyRelationFilter>;
+  code?: InputMaybe<StringFilter>;
   description?: InputMaybe<StringFilter>;
   discount?: InputMaybe<IntNullableFilter>;
   id?: InputMaybe<IdFilter>;
@@ -461,6 +483,7 @@ export type Course = {
 
 
 export type CourseCommentsArgs = {
+  cursor?: InputMaybe<CommentWhereUniqueInput>;
   orderBy?: Array<CommentOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -474,6 +497,7 @@ export type CourseCommentsCountArgs = {
 
 
 export type CourseCourseItemArgs = {
+  cursor?: InputMaybe<CourseItemWhereUniqueInput>;
   orderBy?: Array<CourseItemOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -487,6 +511,7 @@ export type CourseCourseItemCountArgs = {
 
 
 export type CourseUsersArgs = {
+  cursor?: InputMaybe<UserWhereUniqueInput>;
   orderBy?: Array<UserOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -524,6 +549,7 @@ export type CourseItem = {
 
 
 export type CourseItemCommentsArgs = {
+  cursor?: InputMaybe<CommentWhereUniqueInput>;
   orderBy?: Array<CommentOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -728,6 +754,7 @@ export type Event = {
 
 
 export type EventUsersArgs = {
+  cursor?: InputMaybe<UserWhereUniqueInput>;
   orderBy?: Array<UserOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -1005,6 +1032,7 @@ export type KeystoneAdminUiFieldMeta = {
   description?: Maybe<Scalars['String']>;
   fieldMeta?: Maybe<Scalars['JSON']>;
   isFilterable: Scalars['Boolean'];
+  isNonNull?: Maybe<Array<KeystoneAdminUiFieldMetaIsNonNull>>;
   isOrderable: Scalars['Boolean'];
   itemView?: Maybe<KeystoneAdminUiFieldMetaItemView>;
   label: Scalars['String'];
@@ -1027,6 +1055,12 @@ export type KeystoneAdminUiFieldMetaCreateView = {
 export enum KeystoneAdminUiFieldMetaCreateViewFieldMode {
   Edit = 'edit',
   Hidden = 'hidden'
+}
+
+export enum KeystoneAdminUiFieldMetaIsNonNull {
+  Create = 'create',
+  Read = 'read',
+  Update = 'update'
 }
 
 export type KeystoneAdminUiFieldMetaItemView = {
@@ -1760,6 +1794,7 @@ export type Order = {
 
 
 export type OrderItemsArgs = {
+  cursor?: InputMaybe<OrderItemWhereUniqueInput>;
   orderBy?: Array<OrderItemOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -1963,6 +1998,7 @@ export type Post = {
 
 
 export type PostTagsArgs = {
+  cursor?: InputMaybe<TagWhereUniqueInput>;
   orderBy?: Array<TagOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2115,6 +2151,7 @@ export type QueryCartItemArgs = {
 
 
 export type QueryCartItemsArgs = {
+  cursor?: InputMaybe<CartItemWhereUniqueInput>;
   orderBy?: Array<CartItemOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2128,6 +2165,7 @@ export type QueryCartItemsCountArgs = {
 
 
 export type QueryCartsArgs = {
+  cursor?: InputMaybe<CartWhereUniqueInput>;
   orderBy?: Array<CartOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2141,6 +2179,7 @@ export type QueryCartsCountArgs = {
 
 
 export type QueryCategoriesArgs = {
+  cursor?: InputMaybe<CategoryWhereUniqueInput>;
   orderBy?: Array<CategoryOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2164,6 +2203,7 @@ export type QueryCommentArgs = {
 
 
 export type QueryCommentsArgs = {
+  cursor?: InputMaybe<CommentWhereUniqueInput>;
   orderBy?: Array<CommentOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2182,6 +2222,7 @@ export type QueryCouponArgs = {
 
 
 export type QueryCouponsArgs = {
+  cursor?: InputMaybe<CouponWhereUniqueInput>;
   orderBy?: Array<CouponOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2205,6 +2246,7 @@ export type QueryCourseItemArgs = {
 
 
 export type QueryCourseItemsArgs = {
+  cursor?: InputMaybe<CourseItemWhereUniqueInput>;
   orderBy?: Array<CourseItemOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2218,6 +2260,7 @@ export type QueryCourseItemsCountArgs = {
 
 
 export type QueryCoursesArgs = {
+  cursor?: InputMaybe<CourseWhereUniqueInput>;
   orderBy?: Array<CourseOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2236,6 +2279,7 @@ export type QueryEventArgs = {
 
 
 export type QueryEventsArgs = {
+  cursor?: InputMaybe<EventWhereUniqueInput>;
   orderBy?: Array<EventOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2254,6 +2298,7 @@ export type QueryFileArgs = {
 
 
 export type QueryFilesArgs = {
+  cursor?: InputMaybe<FileWhereUniqueInput>;
   orderBy?: Array<FileOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2267,6 +2312,7 @@ export type QueryFilesCountArgs = {
 
 
 export type QueryManySettingsArgs = {
+  cursor?: InputMaybe<SettingsWhereUniqueInput>;
   orderBy?: Array<SettingsOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2290,6 +2336,7 @@ export type QueryOrderItemArgs = {
 
 
 export type QueryOrderItemsArgs = {
+  cursor?: InputMaybe<OrderItemWhereUniqueInput>;
   orderBy?: Array<OrderItemOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2303,6 +2350,7 @@ export type QueryOrderItemsCountArgs = {
 
 
 export type QueryOrdersArgs = {
+  cursor?: InputMaybe<OrderWhereUniqueInput>;
   orderBy?: Array<OrderOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2321,6 +2369,7 @@ export type QueryPostArgs = {
 
 
 export type QueryPostsArgs = {
+  cursor?: InputMaybe<PostWhereUniqueInput>;
   orderBy?: Array<PostOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2344,6 +2393,7 @@ export type QueryTagArgs = {
 
 
 export type QueryTagsArgs = {
+  cursor?: InputMaybe<TagWhereUniqueInput>;
   orderBy?: Array<TagOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2362,6 +2412,7 @@ export type QueryTeacherArgs = {
 
 
 export type QueryTeachersArgs = {
+  cursor?: InputMaybe<TeacherWhereUniqueInput>;
   orderBy?: Array<TeacherOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2380,6 +2431,7 @@ export type QueryUserArgs = {
 
 
 export type QueryUsersArgs = {
+  cursor?: InputMaybe<UserWhereUniqueInput>;
   orderBy?: Array<UserOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2420,6 +2472,7 @@ export type Settings = {
 
 
 export type SettingsHighlightedPostsArgs = {
+  cursor?: InputMaybe<PostWhereUniqueInput>;
   orderBy?: Array<PostOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2508,6 +2561,7 @@ export type Tag = {
 
 
 export type TagPostsArgs = {
+  cursor?: InputMaybe<PostWhereUniqueInput>;
   orderBy?: Array<PostOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2582,6 +2636,7 @@ export type Teacher = {
 
 
 export type TeacherCoursesArgs = {
+  cursor?: InputMaybe<CourseWhereUniqueInput>;
   orderBy?: Array<CourseOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2667,10 +2722,12 @@ export type User = {
   posts?: Maybe<Array<Post>>;
   postsCount?: Maybe<Scalars['Int']>;
   role?: Maybe<Scalars['String']>;
+  status?: Maybe<Scalars['String']>;
 };
 
 
 export type UserCartArgs = {
+  cursor?: InputMaybe<CartWhereUniqueInput>;
   orderBy?: Array<CartOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2684,6 +2741,7 @@ export type UserCartCountArgs = {
 
 
 export type UserCommentsArgs = {
+  cursor?: InputMaybe<CommentWhereUniqueInput>;
   orderBy?: Array<CommentOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2697,6 +2755,7 @@ export type UserCommentsCountArgs = {
 
 
 export type UserCoursesArgs = {
+  cursor?: InputMaybe<CourseWhereUniqueInput>;
   orderBy?: Array<CourseOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2710,6 +2769,7 @@ export type UserCoursesCountArgs = {
 
 
 export type UserEventsArgs = {
+  cursor?: InputMaybe<EventWhereUniqueInput>;
   orderBy?: Array<EventOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2723,6 +2783,7 @@ export type UserEventsCountArgs = {
 
 
 export type UserOrdersArgs = {
+  cursor?: InputMaybe<OrderWhereUniqueInput>;
   orderBy?: Array<OrderOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2736,6 +2797,7 @@ export type UserOrdersCountArgs = {
 
 
 export type UserPostsArgs = {
+  cursor?: InputMaybe<PostWhereUniqueInput>;
   orderBy?: Array<PostOrderByInput>;
   skip?: Scalars['Int'];
   take?: InputMaybe<Scalars['Int']>;
@@ -2776,6 +2838,7 @@ export type UserCreateInput = {
   passwordResetToken?: InputMaybe<Scalars['String']>;
   posts?: InputMaybe<PostRelateToManyForCreateInput>;
   role?: InputMaybe<Scalars['String']>;
+  status?: InputMaybe<Scalars['String']>;
 };
 
 export type UserManyRelationFilter = {
@@ -2793,6 +2856,7 @@ export type UserOrderByInput = {
   passwordResetIssuedAt?: InputMaybe<OrderDirection>;
   passwordResetRedeemedAt?: InputMaybe<OrderDirection>;
   role?: InputMaybe<OrderDirection>;
+  status?: InputMaybe<OrderDirection>;
 };
 
 export type UserRelateToManyForCreateInput = {
@@ -2839,6 +2903,7 @@ export type UserUpdateInput = {
   passwordResetToken?: InputMaybe<Scalars['String']>;
   posts?: InputMaybe<PostRelateToManyForUpdateInput>;
   role?: InputMaybe<Scalars['String']>;
+  status?: InputMaybe<Scalars['String']>;
 };
 
 export type UserWhereInput = {
@@ -2860,6 +2925,7 @@ export type UserWhereInput = {
   passwordResetToken?: InputMaybe<PasswordFilter>;
   posts?: InputMaybe<PostManyRelationFilter>;
   role?: InputMaybe<StringNullableFilter>;
+  status?: InputMaybe<StringNullableFilter>;
 };
 
 export type UserWhereUniqueInput = {
@@ -2902,6 +2968,14 @@ export type SigninMutationVariables = Exact<{
 
 export type SigninMutation = { __typename?: 'Mutation', authenticateUserWithPassword?: { __typename?: 'UserAuthenticationWithPasswordFailure', message: string } | { __typename?: 'UserAuthenticationWithPasswordSuccess', sessionToken: string, item: { __typename?: 'User', id: string, lastName?: string | null, name?: string | null, email?: string | null } } | null };
 
+export type UpdateCartItemQuantityMutationVariables = Exact<{
+  cartitemId: Scalars['ID'];
+  quantity: Scalars['Int'];
+}>;
+
+
+export type UpdateCartItemQuantityMutation = { __typename?: 'Mutation', updateCartItem?: { __typename?: 'CartItem', id: string, quantity?: number | null } | null };
+
 export type UpdateMyInfoMutationVariables = Exact<{
   id: Scalars['ID'];
   name: Scalars['String'];
@@ -2921,7 +2995,7 @@ export type CartByUserQueryVariables = Exact<{
 }>;
 
 
-export type CartByUserQuery = { __typename?: 'Query', carts?: Array<{ __typename?: 'Cart', id: string, totalPrice?: number | null, items?: Array<{ __typename?: 'CartItem', id: string, priceWithDiscount?: number | null, type?: string | null, coupon?: { __typename?: 'Coupon', id: string, code?: number | null, discount?: number | null } | null, course?: { __typename?: 'Course', id: string, name?: string | null, priceFa?: string | null, price?: number | null, image?: { __typename?: 'ImageFieldOutput', id: string, url: string } | null } | null, event?: { __typename?: 'Event', id: string, name?: string | null, price?: number | null, priceFa?: string | null, image?: { __typename?: 'ImageFieldOutput', id: string, url: string } | null } | null }> | null }> | null };
+export type CartByUserQuery = { __typename?: 'Query', carts?: Array<{ __typename?: 'Cart', id: string, totalPrice?: number | null, items?: Array<{ __typename?: 'CartItem', id: string, priceWithDiscount?: number | null, type?: string | null, quantity?: number | null, coupon?: { __typename?: 'Coupon', id: string, code?: string | null, discount?: number | null } | null, course?: { __typename?: 'Course', id: string, name?: string | null, priceFa?: string | null, price?: number | null, image?: { __typename?: 'ImageFieldOutput', id: string, url: string } | null } | null, event?: { __typename?: 'Event', id: string, name?: string | null, price?: number | null, priceFa?: string | null, image?: { __typename?: 'ImageFieldOutput', id: string, url: string } | null } | null }> | null }> | null };
 
 export type CourseItemQueryVariables = Exact<{
   id: Scalars['ID'];

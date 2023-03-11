@@ -35,6 +35,15 @@ declare module '*/signin.gql' {
 }
     
 
+declare module '*/update-cartItem-quantity.gql' {
+  import { DocumentNode } from 'graphql';
+  const defaultDocument: DocumentNode;
+  export const updateCartItemQuantity: DocumentNode;
+
+  export default defaultDocument;
+}
+    
+
 declare module '*/update-my-info.gql' {
   import { DocumentNode } from 'graphql';
   const defaultDocument: DocumentNode;

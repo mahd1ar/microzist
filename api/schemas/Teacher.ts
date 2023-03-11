@@ -12,7 +12,7 @@ import { isAdmin, isLoggedIn } from '../data/access';
 import { graphql } from '@graphql-ts/schema';
 import { BaseKeystoneTypeInfo, KeystoneContext } from '@keystone-6/core/types';
 import { formatMoney } from '../data/utils';
-import { GeneralSession } from '../data/types';
+import { Session } from '../data/types';
 
 export const Teacher = list({
     access: {
@@ -27,6 +27,6 @@ export const Teacher = list({
         image: image({
             storage: 'images',
         }),
-        courses: relationship({ ref: 'Course.teacher', many: true })
+        courses: relationship({ ref: 'Course.teacher', many: true }),
     },
 });

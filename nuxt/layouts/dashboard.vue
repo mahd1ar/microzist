@@ -79,7 +79,7 @@
                   to="/dashboard/course/list"
                   class="rounded-md px-2 py-2 text-gray-800 xl:px-4"
                 >
-                  courses
+                  دوره های آموزشی
                 </nuxt-link>
               </li>
             </ul>

@@ -9,7 +9,7 @@ import {
 } from '@keystone-6/core/fields';
 import { isAdmin } from '../data/access';
 import { Roles } from '../data/enums';
-import { GeneralSession } from '../data/types';
+import { Session } from '../data/types';
 // import { permissions, rules } from "../access";
 
 const roleKeys = Object.keys(Roles);
@@ -30,7 +30,7 @@ export const User = list({
             query: (args) => {
                 if (
                     args.session &&
-                    (args.session as GeneralSession)?.data.role === Roles.admin
+                    (args.session as Session)?.data.role === Roles.admin
                 )
                     return true;
                 return {
@@ -42,13 +42,13 @@ export const User = list({
             update: (args) => {
                 if (
                     args.session &&
-                    (args.session as GeneralSession)?.data.role === Roles.admin
+                    (args.session as Session)?.data.role === Roles.admin
                 )
                     return true;
                 else
                     return {
                         id: {
-                            equals: (args.session as GeneralSession)?.itemId,
+                            equals: (args.session as Session)?.itemId,
                         },
                     };
             },
@@ -100,7 +100,7 @@ export const User = list({
         orders: relationship({ ref: 'Order.user', many: true }),
         role: select({
             options: RolesItem,
-            defaultValue: '100',
+            defaultValue: Roles.member,
         }),
         courses: relationship({
             ref: 'Course.users',

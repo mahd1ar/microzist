@@ -34,7 +34,7 @@ export const Order = list({
                     where: orderItemsWithThisParentParent,
                 });
             } catch (error) {
-                console.log(error);
+                console.error(error);
             }
             sudo.exitSudo();
         },

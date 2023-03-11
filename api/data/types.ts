@@ -1,6 +1,6 @@
 import { Roles } from './enums';
 
-export type GeneralSession =
+export type Session =
     | {
           listKey: string;
           itemId: string;
@@ -8,6 +8,7 @@ export type GeneralSession =
               name: string;
               role: Roles;
               createdAt: string;
+              status: 'disabled' | 'enable';
           };
       }
     | undefined;

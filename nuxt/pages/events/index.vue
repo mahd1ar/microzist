@@ -3,7 +3,7 @@
     <loading-indicator kind="dna" :loading="loading">
       <template>
         <div class="container mt-12">
-          <h2 class="text-3xl">fa::upcomming Events</h2>
+          <h2 class="text-3xl">رویداد های پیش رو</h2>
 
           <!-- <div class="bg-slate-900 text-slate-50 border rounded-xl p-6 relative">
             <div class="flex justify-between">
@@ -26,7 +26,7 @@
               <div
                 class="h-64 w-full rounded-t bg-cover bg-top"
                 :style="{
-                  backgroundImage: `url(${upcommings[0].image?.url || ''})`,
+                  backgroundImage: `url(${upcommings[0].image?.url || ''})`
                 }"
               ></div>
               <div class="flex w-full flex-col md:flex-row">
@@ -39,14 +39,14 @@
                 </div>
                 <div class="p-4 font-normal text-slate-800 md:w-3/4">
                   <h1
-                    class="mb-3 mt-2 text-4xl font-bold leading-none tracking-tight text-slate-800"
+                    class="mb-3 mt-2 text-4xl font-bold  tracking-tight text-slate-800 "
                   >
                     {{ upcommings[0].name }}
                   </h1>
-                  <p class="leading-normal">
+                  <!-- <p class="leading-normal">
                     {{ upcommings[0].description }}
-                  </p>
-                  <div class="mt-4 flex flex-row items-center text-gray-700">
+                  </p> -->
+                  <div class="mt-8 flex flex-row items-center text-gray-700">
                     <div class="w-1/2 text-lg">
                       هزینه :
                       <strong> {{ upcommings[0].priceFa }} </strong>
@@ -71,7 +71,7 @@
               </div>
             </div>
             <div v-else class="text-center text-gray-500">
-              Fa::there is no upcomming
+              فعلا رویدادی برای برگزاری وجود ندارد
             </div>
           </div>
         </div>
@@ -117,7 +117,7 @@ import {
   computed,
   defineComponent,
   useContext,
-  useStore,
+  useStore
 } from '@nuxtjs/composition-api'
 import { useQuery } from '@vue/apollo-composable/dist'
 import LoadingIndicator from '~/components/LoadingIndicator.vue'
@@ -127,10 +127,10 @@ const { result, loading } = useQuery<EventsQuery, EventsQueryVariables>(EVENTS)
 const ctx = useContext()
 
 const upcommings = computed(
-  () => result.value?.events?.filter((i) => i.isUpcomming) || []
+  () => result.value?.events?.filter(i => i.isUpcomming) || []
 )
 
 const passed = computed(
-  () => result.value?.events?.filter((i) => !i.isUpcomming) || []
+  () => result.value?.events?.filter(i => !i.isUpcomming) || []
 )
 </script>

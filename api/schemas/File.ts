@@ -9,8 +9,8 @@ export const File = list({
         label: 'media',
 
         listView: {
-            defaultFieldMode: 'hidden'
-        }
+            defaultFieldMode: 'hidden',
+        },
     },
     hooks: {
         async resolveInput({ resolvedData, operation }) {
@@ -25,7 +25,6 @@ export const File = list({
                                 .toLowerCase()
                         )
                     ) {
-                        // console.log(929)
                         resolvedData.type = 'video';
                     }
                 }

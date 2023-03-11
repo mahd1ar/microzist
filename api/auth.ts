@@ -46,7 +46,7 @@ const { withAuth } = createAuth({
     // this is a GraphQL query fragment for fetching what data will be attached to a context.session
     //   this can be helpful for when you are writing your access control functions
     //   you can find out more at https://keystonejs.com/docs/guides/auth-and-access-control
-    sessionData: 'name role createdAt',
+    sessionData: 'name role status createdAt',
     // sessionData: 'name createdAt role',
     secretField: 'password',
     passwordResetLink: {
@@ -93,7 +93,7 @@ const session = storedSessions({
                         .toString()
                 );
                 return filedata.value;
-            } else console.log('session dose not exists');
+            } else console.error('session dose not exists');
         },
         async set(key, value) {
             const { maxAge } = args;

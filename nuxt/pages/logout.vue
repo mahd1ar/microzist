@@ -32,11 +32,9 @@ export default defineComponent({
 
     const onDoneDebouncedFn = useDebounceFn(() => {
       // @ts-ignore
-      ctx.$izitoast.info({ title: 'fa:: success' })
+      ctx.$izitoast.info({ title: 'به امید دیدار' })
       ctx.store.dispatch('toggleUser', false)
-      // setTimeout(() => {
-      //   location.href = '/'
-      // }, 2500)
+
       router.push('/')
     }, 300)
 

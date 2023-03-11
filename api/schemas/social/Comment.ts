@@ -8,7 +8,7 @@ import {
 } from '@keystone-6/core/fields';
 import { isAdmin, isLoggedIn } from '../../data/access';
 import { Roles } from '../../data/enums';
-import { GeneralSession } from '../../data/types';
+import { Session } from '../../data/types';
 const defaultValidatedValue = true;
 export const Comment = list({
     // TODO [security concern] filter by session id
@@ -22,15 +22,11 @@ export const Comment = list({
     },
     hooks: {
         resolveInput: ({ resolvedData, context }) => {
-
-            if (
-
-                (context.session as GeneralSession)?.data.role === Roles.admin
-            ) {
+            if ((context.session as Session)?.data.role === Roles.admin) {
                 if (!resolvedData.user)
                     resolvedData.user = {
                         connect: {
-                            id: (context.session as GeneralSession)?.itemId,
+                            id: (context.session as Session)?.itemId,
                         },
                     };
 
@@ -38,7 +34,7 @@ export const Comment = list({
             }
 
             resolvedData.user = {
-                connect: { id: (context.session as GeneralSession)?.itemId },
+                connect: { id: (context.session as Session)?.itemId },
             };
             resolvedData.isValidated = defaultValidatedValue;
             return resolvedData;

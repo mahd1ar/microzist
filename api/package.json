@@ -10,12 +10,14 @@
     "postinstall": "keystone postinstall",
     "frontend:dev": "cd frontend && yarn dev --host",
     "frontend:codegen": "cd frontend && yarn codegen --watch",
-    "runall": "npm-run-all --parallel dev frontend:*"
+    "runall": "npm-run-all --parallel dev frontend:*",
+    "generate": "keystone prisma migrate dev",
+    "deploy": "keystone build && keystone prisma migrate deploy"
   },
   "dependencies": {
-    "@keystone-6/auth": "^6.0.0",
-    "@keystone-6/core": "^4.0.1",
-    "@keystone-6/fields-document": "^6.0.0",
+    "@keystone-6/auth": "^7.0.0",
+    "@keystone-6/core": "^5.1.0",
+    "@keystone-6/fields-document": "^7.0.0",
     "dotenv": "^16.0.3",
     "lodash": "^4.17.21",
     "nodemailer": "^6.8.0",

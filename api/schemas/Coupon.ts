@@ -1,12 +1,19 @@
 import { graphql } from '@graphql-ts/schema';
 import { list } from '@keystone-6/core';
-import { allowAll } from '@keystone-6/core/access';
+import { allowAll, allOperations } from '@keystone-6/core/access';
 import { integer, relationship, text, virtual } from '@keystone-6/core/fields';
 import { BaseKeystoneTypeInfo, KeystoneContext } from '@keystone-6/core/types';
+import { isAdmin, isLoggedIn } from '../data/access';
 
 export const Coupon = list({
-    // TODO only admin can create this
-    access: allowAll,
+    access: {
+        operation: { ...allOperations(isAdmin), query: isLoggedIn },
+    },
+    ui: {
+        listView: {
+            initialColumns: ['code', 'remaining'],
+        },
+    },
     fields: {
         code: text({
             validation: { isRequired: true },
@@ -41,11 +48,18 @@ export const Coupon = list({
             }),
             // graphQLReturnType: "String",
         }),
-        belongsTo: relationship({
+        belongsToCourse: relationship({
             ref: 'Course',
             many: true,
             ui: {
-                description: 'چه محصولاتی را شامل میشود',
+                description: 'چه آموزش هایی را شامل میشود',
+            },
+        }),
+        belongsToEvent: relationship({
+            ref: 'Event',
+            many: true,
+            ui: {
+                description: 'چه رویداد هایی را شامل میشود',
             },
         }),
         discount: integer({

@@ -26,7 +26,7 @@
           </transition>
 
           <h2 class="text-center text-2xl font-semibold text-gray-700">
-            Microzist
+            ZistDialogue
           </h2>
           <p class="text-center text-xl text-gray-600">Welcome back!</p>
 
@@ -144,14 +144,14 @@ import MotionDna from '@/components/misc/MotionDNA.vue'
 let prvPage: string
 
 export default defineComponent({
-  beforeRouteEnter(to, from, next) {
+  beforeRouteEnter (to, from, next) {
     prvPage = from.fullPath
 
     if (['/login', '/signup', '/auth-item'].includes(prvPage)) {
       prvPage = '/'
     }
 
-    next((vm) => {
+    next(vm => {
       if (vm.$store.getters.isLoggedIn) {
         // TODO defualt determain defualt route
         if (to.query.redirect === 'no') {
@@ -166,9 +166,9 @@ export default defineComponent({
   },
   components: {
     VueHcaptcha,
-    MotionDna,
+    MotionDna
   },
-  setup() {
+  setup () {
     const ctx = useContext()
     const router = useRouter()
     const firstname = ref(ctx.isDev ? 'sara' : '')
@@ -179,12 +179,12 @@ export default defineComponent({
     const loading = ref(false)
     let hCaptchTocken = ''
 
-    function hCaptchTockenVerify(token: string) {
+    function hCaptchTockenVerify (token: string) {
       console.log(token)
       hCaptchTocken = token
     }
 
-    function submit() {
+    function submit () {
       loading.value = true
 
       ctx.$axios
@@ -194,9 +194,9 @@ export default defineComponent({
           email: email.value,
           password: password.value,
           're-password': re_password.value,
-          token: hCaptchTocken,
+          token: hCaptchTocken
         })
-        .then(async (res) => {
+        .then(async res => {
           router.push('/login')
         })
 
@@ -213,9 +213,9 @@ export default defineComponent({
       re_password,
       hCaptchTockenVerify,
       submit,
-      loading,
+      loading
     }
-  },
+  }
 })
 </script>
 

@@ -12,7 +12,8 @@ import { isLoggedIn } from '../data/access';
 import { graphql } from '@graphql-ts/schema';
 import { BaseKeystoneTypeInfo, KeystoneContext } from '@keystone-6/core/types';
 import { formatMoney } from '../data/utils';
-import { GeneralSession } from '../data/types';
+import { Session } from '../data/types';
+import { Roles } from '../data/enums';
 
 export const Course = list({
     access: {
@@ -22,11 +23,8 @@ export const Course = list({
         },
         filter: {
             query: (args) => {
-                if (
-                    args.session &&
-                    (args.session as GeneralSession)?.data.role === '0'
-                )
-                    return true;
+                const session = args.context.session as Session | undefined;
+                if (session && session.data.role === Roles.admin) return true;
                 else
                     return {
                         status: {

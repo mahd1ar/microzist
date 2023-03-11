@@ -1,17 +1,18 @@
 import { config } from '@keystone-6/core';
+import axios from 'axios';
 import bodyParser from 'body-parser';
-import { capitalize, get } from 'lodash';
+import dotenv from 'dotenv';
+import { capitalize, get, remove } from 'lodash';
+import qs from 'qs';
 import WebSocket from 'ws';
 import { session, withAuth } from './auth';
-import { GeneralApiResponse, GeneralSession } from './data/types';
-import { sendCommand } from './data/utils';
+import { Roles } from './data/enums';
+import { GeneralApiResponse, Session } from './data/types';
+import { getAdminSessionParams } from './data/utils';
 import { lists } from './schema';
 import { storage } from './storage';
+import express from 'express';
 const Zibal = require('zibal');
-import axios from 'axios';
-import qs from 'qs';
-import dotenv from 'dotenv';
-import { Roles } from './data/enums';
 
 const envFile = process.env.NODE_ENV !== 'production' ? `.env.dev` : '.env';
 dotenv.config({ path: envFile });
@@ -38,6 +39,30 @@ type User = {
     passwordResetRedeemedAt: Date;
 };
 
+function generalBackendErrorHandler(
+    error: unknown,
+    res: express.Response<GeneralApiResponse>
+) {
+    console.error(error);
+    if (get(error, 'extensions.code') === 'KS_VALIDATION_FAILURE') {
+        let message = get(error, 'message', '').split('\n')[1].split(':');
+
+        message = remove(message, (_, i) => i !== 0);
+
+        res.status(402).json({
+            ok: false,
+            message: message.join(':'),
+        });
+        return;
+    }
+
+    res.status(400).json({
+        ok: false,
+        message: 'someting went wrong',
+    });
+    return;
+}
+
 export default withAuth(
     config({
         db: {
@@ -49,6 +74,9 @@ export default withAuth(
         storage,
         graphql: {
             playground: true,
+            cors: {
+                credentials: true,
+            },
         },
         server: {
             cors: {
@@ -68,30 +96,31 @@ export default withAuth(
                 app.get('/setadmin', async (req, res) => {
                     const sudoctx = await ctx.sudo();
                     try {
-                        const userCount = await sudoctx.query.User.count({
+                        const [adminUser] = await sudoctx.query.User.findMany({
                             where: {
-                                email: {
-                                    equals: 'a.mahdiyar7@yahoo.com',
+                                role: {
+                                    equals: Roles.admin,
                                 },
                             },
                         });
 
-                        if (userCount === 1) {
+                        if (adminUser) {
                             await sudoctx.query.User.updateOne({
                                 where: {
-                                    // TODO fix it
-                                    id: 'clcn1d4qg0056ywhb2o13r9wj',
+                                    id: adminUser.id,
                                 },
                                 data: {
                                     role: Roles.admin,
+                                    status: 'enable',
                                 },
                             });
                             res.send('userUpdated');
-                        } else if (userCount === 0) {
+                        } else {
                             const { name } = await sudoctx.query.User.createOne(
                                 {
                                     data: {
                                         name: 'admin',
+                                        status: 'enable',
                                         lastName: 'administrator',
                                         email: 'a.mahdiyar7@yahoo.com',
                                         password: 'Aa12345678',
@@ -102,8 +131,6 @@ export default withAuth(
                             );
 
                             res.send(name + 'created');
-                        } else {
-                            res.send(':(');
                         }
                     } catch (error) {
                         console.error(error);
@@ -114,6 +141,11 @@ export default withAuth(
 
                 app.get('/test', async (req, res) => {
                     try {
+                        // const session = await ctx.withSession({
+                        //     itemId: 'clcn1d4qg0056ywhb2o13r9wj',
+                        //     data: {},
+                        // });
+
                         res.send('test url');
                     } catch (error) {
                         console.log('WHAT THE FUCK?');
@@ -199,7 +231,7 @@ export default withAuth(
                         secret,
                         response: hcaptchaResponse,
                     };
-                    console.log('here');
+
                     const response = await axios.post(
                         url,
                         qs.stringify(axiosData),
@@ -251,8 +283,8 @@ export default withAuth(
                             });
                             return;
                         }
-                        console.log('error:');
-                        console.log(error);
+
+                        console.error(error);
 
                         res.status(400).json({
                             message: 'SOMTHING WENT WRON',
@@ -268,7 +300,7 @@ export default withAuth(
                     const context = await ctx.withRequest(req, res);
 
                     if (context.session) {
-                        const session: GeneralSession = context.session;
+                        const session: Session = context.session;
                         try {
                             const user: User = await ctx.prisma.User.findUnique(
                                 {
@@ -300,16 +332,16 @@ export default withAuth(
                             });
                             return;
                         }
+                        const context = ctx.withSession(
+                            await getAdminSessionParams()
+                        );
 
-                        if (!ctx.session) {
+                        if (!session) {
                             res.status(400).send({
                                 ok: false,
                                 message: 'you dont have proper access',
                             });
-                            sendCommand({
-                                action: 'logout',
-                                message: 'session expoire',
-                            });
+
                             return;
                         }
 
@@ -317,7 +349,7 @@ export default withAuth(
 
                         try {
                             const deletedCart =
-                                await ctx.prisma.CartItem.delete({
+                                await context.query.CartItem.deleteOne({
                                     where: {
                                         id: cartid,
                                     },
@@ -327,19 +359,10 @@ export default withAuth(
                                 ok: true,
                                 message:
                                     'fa :: deleted successfuly ' +
-                                    deletedCart.id,
+                                    deletedCart!.id,
                             });
                         } catch (error) {
-                            console.log(error);
-                            res.status(500).json({
-                                ok: false,
-                                message: 'something went wrong',
-                            });
-                            sendCommand({
-                                action: 'show_message',
-                                message: 'something went wrong',
-                                type: 'error',
-                            });
+                            generalBackendErrorHandler(error, res);
                         }
                     }
                 );
@@ -348,7 +371,7 @@ export default withAuth(
                 app.post<{ cid: string; eventid: string }, GeneralApiResponse>(
                     '/cart-item',
                     async (req, res) => {
-                        const { cid: courseId, eventId } = req.body;
+                        const { cid: courseId, eventid: eventId } = req.body;
 
                         const productType = eventId ? 'event' : 'course';
                         const productID = eventId || courseId;
@@ -359,7 +382,7 @@ export default withAuth(
                         if (courseId && eventId) {
                             res.status(400).json({
                                 ok: false,
-                                message: 'bad request',
+                                message: 'bad request 1',
                             });
                             return;
                         }
@@ -370,16 +393,14 @@ export default withAuth(
                         ) {
                             res.status(400).json({
                                 ok: false,
-                                message: 'bad request',
+                                message: 'bad request 2',
                             });
                             return;
                         }
 
                         // make sure user is logged in
 
-                        const {
-                            session,
-                        }: Partial<{ session?: GeneralSession }> =
+                        const { session }: Partial<{ session?: Session }> =
                             await ctx.withRequest(req, res);
 
                         if (!session) {
@@ -391,9 +412,13 @@ export default withAuth(
                             return;
                         }
 
-                        const sudoContext = ctx.sudo();
+                        const { itemId: userId } = session;
 
-                        const exists = await sudoContext.query[
+                        const adminContext = await ctx.withSession(
+                            await getAdminSessionParams()
+                        );
+
+                        const exists = await adminContext.query[
                             capitalize(productType)
                         ].count({
                             where: { id: { equals: productID } },
@@ -407,14 +432,38 @@ export default withAuth(
                             return;
                         }
 
+                        // make sure user dos not already purchesed this course or event
+                        const productCount = await adminContext.query[
+                            capitalize(productType)
+                        ].count({
+                            where: {
+                                users: {
+                                    some: {
+                                        id: {
+                                            equals: userId,
+                                        },
+                                    },
+                                },
+                            },
+                        });
+                        console.log({ productCount });
+                        if (productCount !== 0) {
+                            res.status(400).json({
+                                message:
+                                    'شما قبلا در این مورد در این مورد ثبت نام کردید',
+                                ok: false,
+                            });
+                            return;
+                        }
+
                         try {
                             let cartId: string;
                             const [cart] =
-                                await sudoContext.query.Cart.findMany({
+                                await adminContext.query.Cart.findMany({
                                     where: {
                                         user: {
                                             id: {
-                                                equals: session?.itemId,
+                                                equals: userId,
                                             },
                                         },
                                         AND: {
@@ -450,24 +499,26 @@ export default withAuth(
                                 }
 
                                 const { id } =
-                                    await sudoContext.query.CartItem.createOne({
-                                        data: {
-                                            [productType]: {
-                                                connect: {
-                                                    id: productID,
+                                    await adminContext.query.CartItem.createOne(
+                                        {
+                                            data: {
+                                                [productType]: {
+                                                    connect: {
+                                                        id: productID,
+                                                    },
+                                                },
+                                                cart: {
+                                                    connect: {
+                                                        id: cartId,
+                                                    },
                                                 },
                                             },
-                                            cart: {
-                                                connect: {
-                                                    id: cartId,
-                                                },
-                                            },
-                                        },
-                                        query: ' id ',
-                                    });
+                                            query: ' id ',
+                                        }
+                                    );
                             } else {
                                 const { id } =
-                                    await sudoContext.query.Cart.createOne({
+                                    await adminContext.query.Cart.createOne({
                                         data: {
                                             user: {
                                                 connect: {
@@ -487,22 +538,21 @@ export default withAuth(
                                         query: 'id',
                                     });
                             }
-                        } catch (error) {
-                            console.error(error);
-                            res.status(400).json({
-                                ok: false,
-                                message: 'someting went wrong',
+                            res.status(201).json({
+                                ok: true,
+                                message: 'created',
                             });
+                        } catch (error) {
+                            generalBackendErrorHandler(error, res);
                             return;
                         }
 
-                        sudoContext.exitSudo();
-                        res.status(201).json({ ok: true, message: 'created' });
+                        ctx.sessionStrategy?.end({ context: adminContext });
                     }
                 );
 
                 // add coupon
-                app.get<{ id: string; cartitem: string }, GeneralApiResponse>(
+                app.post<{ id: string; cartitem: string }, GeneralApiResponse>(
                     '/coupon',
                     async (req, res) => {
                         // type Coupon = {
@@ -513,7 +563,7 @@ export default withAuth(
                         //     discount: number;
                         // };
 
-                        const { id: couponId, cartitem } = req.query;
+                        const { id: couponId, cartitem } = req.body;
 
                         if (!couponId || typeof couponId !== 'string') {
                             res.status(403).json({
@@ -532,16 +582,20 @@ export default withAuth(
                         }
 
                         if (!couponId) {
-                            res.status(403).json({
+                            res.status(401).json({
                                 ok: false,
                                 message: 'coupon is not valid',
                             });
                             return;
                         }
-                        const sudoContex = await ctx.sudo();
+
+                        const sudoContex = await ctx.withSession(
+                            await getAdminSessionParams()
+                        );
+                        console.log('... inja >');
                         try {
-                            const coupon =
-                                await sudoContex.query.Coupon.findOne({
+                            const [coupon] =
+                                await sudoContex.query.Coupon.findMany({
                                     where: {
                                         code: { equals: couponId },
                                     },
@@ -549,7 +603,7 @@ export default withAuth(
                                 });
 
                             if (!coupon || !coupon.id) {
-                                res.status(403).json({
+                                res.status(401).json({
                                     ok: false,
                                     message: 'coupon dosent exists',
                                 });
@@ -571,13 +625,7 @@ export default withAuth(
 
                             res.json({ ok: true, message: 'fa::success full' });
                         } catch (error) {
-                            // console.error(String('======'));
-                            // console.error(String(error));
-                            // console.error(error);
-                            res.json({
-                                ok: false,
-                                message: 'fa::operation not successfull',
-                            });
+                            generalBackendErrorHandler(error, res);
                         }
 
                         sudoContex.exitSudo();
@@ -588,13 +636,11 @@ export default withAuth(
                 app.get<{}, GeneralApiResponse>(
                     '/checkout',
                     async (req, res) => {
-                        const {
-                            session,
-                        }: Partial<{ session: GeneralSession }> =
+                        const { session }: Partial<{ session: Session }> =
                             await ctx.withRequest(req, res);
                         const sudoContext = await ctx.sudo();
 
-                        if (!session || session.itemId) {
+                        if (!session || !session.itemId) {
                             res.status(401).json({
                                 ok: false,
                                 message: 'fa:: session expires login agin',
@@ -616,14 +662,19 @@ export default withAuth(
                             const [{ totalPrice, id: cartid }] =
                                 await sudoContext.query.Cart.findMany({
                                     where: {
+                                        isCompleted: {
+                                            equals: false,
+                                        },
                                         user: {
                                             id: {
                                                 equals: session.itemId,
                                             },
                                         },
                                     },
-                                    query: ' totalPrice id',
+                                    query: ' totalPrice id isCompleted',
                                 });
+
+                            console.log({ cartid });
 
                             if (totalPrice === 0) {
                                 const urlSearchParams = new URLSearchParams();
@@ -677,8 +728,11 @@ export default withAuth(
                 //calback
                 app.get<ZibalCBQuery, any>('/ipg/cb', async (req, res) => {
                     if (req.query.success === '0') {
-                        // TODO redicet the motherfucker to frontend
-                        res.sendStatus(500).send('fa:: zbal error!');
+                        res.redirect(
+                            process.env.FRONTENDURL +
+                                '/order?' +
+                                qs.stringify(req.query)
+                        );
                         return;
                     }
 
@@ -705,14 +759,14 @@ export default withAuth(
                                 id: cartId,
                             },
                             query: `totalPrice
-                                    user { id } 
-                                    items { 
-                                        id
-                                        priceWithDiscount 
-                                        course { id } 
-                                        event { id } 
-                                    }
-                                    isCompleted`,
+                                        user { id } 
+                                        items { 
+                                            id
+                                            priceWithDiscount 
+                                            course { id } 
+                                            event { id } 
+                                        }
+                                        isCompleted`,
                         });
 
                         if (isCompleted) {
@@ -807,12 +861,14 @@ export default withAuth(
                             }),
                         });
 
-                        // TODO redirect to frontend
-                        res.send('orderid is => ' + newOrder.id);
-
+                        // res.send('orderid is => ' + newOrder.id);
                         sudoContext.exitSudo();
+                        res.redirect(
+                            process.env.FRONTENDURL +
+                                '/order?' +
+                                qs.stringify(req.query)
+                        );
                     } catch (error) {
-                        console.log(error);
                         res.send(error);
                     }
                 });

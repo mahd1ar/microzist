@@ -150,9 +150,9 @@
             </div>
             <div
               v-if="myCourses?.user?.courses?.length === 0"
-              class="text-black"
+              class="text-gray-500 text-center"
             >
-              fa:: you have none
+              هیچ دوره ای وجود ندارد
             </div>
           </section>
         </div>

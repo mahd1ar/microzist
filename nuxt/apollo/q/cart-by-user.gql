@@ -1,9 +1,6 @@
 query CartByUser($user: ID!) {
   carts(
-    where: {
-      isCompleted: { equals: false }
-      AND: [{ user: { id: { equals: $user } } }]
-    }
+    where: { isCompleted: { equals: false }, user: { id: { equals: $user } } }
   ) {
     id
     totalPrice
@@ -11,6 +8,7 @@ query CartByUser($user: ID!) {
       id
       priceWithDiscount
       type
+      quantity
       coupon {
         id
         code
@@ -21,7 +19,7 @@ query CartByUser($user: ID!) {
         name
         priceFa
         price
-        image{
+        image {
           id
           url
         }
@@ -31,7 +29,7 @@ query CartByUser($user: ID!) {
         name
         price
         priceFa
-        image{
+        image {
           id
           url
         }

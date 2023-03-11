@@ -172,13 +172,14 @@
           </aside>
           <div class="w-2/3 flex-shrink-0">
             <json-content
-              v-if="result?.event?.isUpcomming"
+              v-if="!result?.event?.isUpcomming"
               :content="result?.event?.content?.document"
             />
             <div v-else>
-              <p class="text-lg text-black">
-                {{ result?.event?.description }}
-              </p>
+              <div
+                class="text-lg text-gray-900"
+                v-html="result?.event?.description?.split('\n').join('</br>')"
+              ></div>
             </div>
           </div>
         </div>
@@ -197,25 +198,35 @@ import { PersianCalander } from '@/data/utils'
 
 export default defineComponent({
   name: 'EventPage',
-  setup() {
+  setup () {
     const ctx = useContext()
 
-    const { result, loading } = useQuery<EventQuery, EventQueryVariables>(
-      EVENTQ,
-      {
-        id: ctx.route.value.params.id,
-      }
-    )
+    const { result, loading, onResult } = useQuery<
+      EventQuery,
+      EventQueryVariables
+    >(EVENTQ, {
+      id: ctx.route.value.params.id
+    })
 
-    async function registerEvent(eventid: string, eventname: string) {
+    onResult(({ data }) => {
+      console.log(data.event)
+    })
+
+    async function registerEvent (eventid: string, eventname: string) {
       if (ctx.store.getters.isLoggedIn) {
-        await ctx.$axios.post('/cart-item', {
-          eventid,
-        })
+        try {
+          await ctx.$axios.post(
+            '/cart-item',
+            {
+              eventid
+            },
+            { withCredentials: true }
+          )
+        } catch (error) {}
       } else {
         // @ts-ignore
         ctx.$izitoast.error({
-          title: 'fa:: first login to register => ' + eventname,
+          title: 'fa:: first login to register => ' + eventname
         })
       }
     }
@@ -225,9 +236,9 @@ export default defineComponent({
       result,
       registerEvent,
       convertDate: (input: string) =>
-        input ? new PersianCalander(input).toLetterMounth().join(' ') : '',
+        input ? new PersianCalander(input).toLetterMounth().join(' ') : ''
     }
-  },
+  }
 })
 </script>
 

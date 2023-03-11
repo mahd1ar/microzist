@@ -80,12 +80,15 @@ import { useDebounceFn } from '@vueuse/core'
 import { FetchResult } from 'apollo-link'
 
 let prvPage: string
+let prvPath: string
 
 export default defineComponent({
   beforeRouteEnter (to, from, next) {
     prvPage = from.fullPath
+    prvPath = from.path
+
     const forbiddenPaths = ['/login', '/signup', '/auth-item']
-    if (forbiddenPaths.includes(prvPage)) {
+    if (forbiddenPaths.includes(prvPath)) {
       prvPage = '/'
     }
     const queryRedirect: { exists: boolean; path: string } =
@@ -159,7 +162,7 @@ export default defineComponent({
     onDone(onDoneLoginCallbackDebouncedFn)
 
     const email = ref(ctx.isDev ? 'mahdiyaranari@gmail.com' : '')
-    const password = ref(ctx.isDev ? 'Aa12345678' : '')
+    const password = ref(ctx.isDev ? 'master33' : '')
 
     async function login () {
       const variables: SigninMutationVariables = {
